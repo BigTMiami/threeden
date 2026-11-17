@@ -1,0 +1,66 @@
+# Removing a module keeps what's in it: in the page's vault ("Removed from the page"), or, on a page with no vault,
+# under the module list's "Removed" tab. Either way it can be put back with its contents; Undo drops the copy; empty modules leave nothing.
+from playwright.sync_api import sync_playwright
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
+    st=lambda js: pg.evaluate("async()=>{const s=await import('./js/state/store.js'); "+js+"}")
+    def edit(space):
+        pg.evaluate(f"location.hash='#space-{space}'"); pg.wait_for_timeout(700)
+        st("s.setEditMode(true)"); pg.wait_for_timeout(400)
+    def remove(module_id):
+        pg.locator(f'[data-module-id="{module_id}"] [aria-label="Remove module"]').first.click(); pg.wait_for_timeout(400)
+    # 1. A page with a vault: 14 Juniper Lane's meeting agenda note
+    edit('juniper')
+    html_before=st("return s.getModule('house-note').data.html.length")
+    remove('house-note')
+    toast=pg.locator('.toast').last.inner_text(); print('toast:', toast.replace('\n',' '))
+    if 'House vault' not in toast: errs.append('toast should name the vault')
+    kept=st("const v=s.getModule('house-vault').data.items; const f=v.find(i=>i.name==='Removed from the page'); const n=v.find(i=>i.parentId===f?.id); return [Boolean(f), n?.kind, n?.name, n?.html?.length]")
+    print('in vault:', kept)
+    if not kept[0] or kept[1]!='note' or kept[3]!=html_before: errs.append('note not kept in vault')
+    pg.locator('.library__tab', has_text='Removed').click(); pg.wait_for_timeout(200)
+    rows=pg.locator('.library__removed-item').all_inner_texts(); print('removed tab:', [r.replace('\n',' | ') for r in rows])
+    pg.locator('.library__removed-item').first.get_by_role('button', name='Put back').click(); pg.wait_for_timeout(500)
+    back=st("const m=s.getCurrentSpace().modules.find(m=>m.type==='note'); return [m?.title, m?.data.html.length, s.getModule('house-vault').data.items.some(i=>i.name==='Removed from the page')]")
+    print('put back:', back)
+    if back[1]!=html_before or back[2]: errs.append('put back failed or folder left behind')
+    # 2. Undo drops the copy
+    nid=st("return s.getCurrentSpace().modules.find(m=>m.type==='note').id")
+    remove(nid); pg.locator('.toast').last.get_by_role('button', name='Undo').click(); pg.wait_for_timeout(400)
+    after_undo=st("return [s.getCurrentSpace().modules.some(m=>m.type==='note'), s.getModule('house-vault').data.items.filter(i=>i.removed).length]")
+    print('after undo:', after_undo)
+    if after_undo != [True, 0]: errs.append('undo should restore and drop the copy')
+    # 3. Put back from the vault itself: remove the grocery list, open its copy in the vault
+    remove('house-grocery')
+    st("s.setEditMode(false)"); pg.wait_for_timeout(400)
+    pg.evaluate("location.hash='#module-house-vault'"); pg.wait_for_timeout(800)
+    v=pg.locator('#module-page-view')
+    v.get_by_text('Removed from the page').first.click(); pg.wait_for_timeout(400)
+    v.get_by_text('Groceries', exact=True).first.click(); pg.wait_for_timeout(600)
+    print('bar:', v.locator('.vault-removed-bar').inner_text().replace('\n',' ') if v.locator('.vault-removed-bar').count() else 'none')
+    v.get_by_role('button', name='Put back on the page').click(); pg.wait_for_timeout(500)
+    print('grocery back:', st("return s.getSpace('juniper').modules.some(m=>m.type==='grocery' && m.data.items.length>3)"))
+    # 4. A page with no vault
+    noVault=st("return s.getState().spaces.find(x=>x.kind==='group' && x.memberIds.includes('m-leo') && !x.modules.some(m=>m.type==='vault') && x.modules.some(m=>m.type==='todo'||m.type==='announcements'))?.id")
+    print('page with no vault:', noVault)
+    edit(noVault)
+    mid=st("const sp=s.getCurrentSpace(); return (sp.modules.find(m=>m.type==='todo'&&m.data.tasks?.length)||sp.modules.find(m=>m.type==='announcements'&&m.data.posts?.length)).id")
+    remove(mid)
+    print('toast:', pg.locator('.toast').last.inner_text().replace('\n',' '))
+    print('on page:', st("return (s.getCurrentSpace().removedModules||[]).map(r=>r.module.id)"))
+    pg.locator('.library__tab', has_text='Removed').click(); pg.wait_for_timeout(200)
+    print('tab:', pg.locator('.library__tab.is-active').inner_text(), '|', pg.locator('.library__removed-item').count())
+    pg.locator('.library__removed-item').first.get_by_role('button', name='Put back').click(); pg.wait_for_timeout(400)
+    print('back on page:', st(f"return s.getCurrentSpace().modules.some(m=>m.id==='{mid}')"), '| left:', st("return (s.getCurrentSpace().removedModules||[]).length"))
+    # 5. An empty module leaves nothing
+    pg.locator('.library__tab', has_text='Add').click(); pg.wait_for_timeout(150)
+    nm=st("return s.addModule('note').id"); pg.wait_for_timeout(300)
+    remove(nm)
+    print('empty note kept:', st("return (s.getCurrentSpace().removedModules||[]).length"))
+    if st("return (s.getCurrentSpace().removedModules||[]).length"): errs.append('empty module should not be kept')
+    print('empty tab text:', pg.locator('.library__tab').all_inner_texts())
+    print('errors', errs)
+    b.close()

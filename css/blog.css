@@ -1,0 +1,1801 @@
+/*
+ * blog.css — the blog modules (js/modules/blog/) and the lightbox.
+ *
+ *   .gallery     Photo gallery: a grid of square thumbnails
+ *   .carousel    Photo carousel: one photo, arrows, dots, caption below
+ *   .blog-doc    Document: a title, a byline and the writing
+ *   .lightbox    a photo shown large over the page (js/ui/lightbox.js)
+ */
+
+/* ─── Photo gallery ─────────────────────────────────────────────────────── */
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+}
+
+.gallery--page {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.gallery.is-drop-target {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: 4px;
+}
+
+.gallery .module-empty {
+  grid-column: 1 / -1;
+}
+
+.gallery__item {
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-page);
+  cursor: zoom-in;
+}
+
+.gallery__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.gallery__item:hover img {
+  transform: scale(1.04);
+}
+
+.gallery__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: var(--font-size-small);
+}
+
+.gallery__count {
+  color: var(--color-text-muted);
+}
+
+/* ─── Photo carousel ────────────────────────────────────────────────────── */
+
+.carousel {
+  outline: none;
+}
+
+.carousel:focus-visible .carousel__frame {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.carousel__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: #202122;
+}
+
+.carousel__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+
+.carousel__nav {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  color: var(--color-text);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.carousel:hover .carousel__nav,
+.carousel:focus-within .carousel__nav {
+  opacity: 1;
+}
+
+.carousel__nav--prev {
+  left: 8px;
+}
+
+.carousel__nav--next {
+  right: 8px;
+}
+
+.carousel__below {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.carousel__caption {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  font-style: italic;
+}
+
+.carousel__dots {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.carousel__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid var(--color-text-faint);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.carousel__dot.is-current {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+@media (hover: none) {
+  .carousel__nav {
+    opacity: 1;
+  }
+}
+
+/* Full page: the show, then managing slides. */
+.carousel-page__show {
+  max-width: 900px;
+  margin: 0 auto 20px;
+}
+
+.carousel-page__manage {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.carousel-page__heading {
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.carousel-page__settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.carousel-page__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carousel-page__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-faint);
+}
+
+.carousel-page__row .input {
+  flex: 1 1 auto;
+}
+
+.carousel-page__thumb {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+/* ─── Document ──────────────────────────────────────────────────────────── */
+
+.blog-doc__title,
+.blog-doc__title-input {
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 1.25;
+}
+
+.blog-doc__title-input:focus {
+  outline: none;
+  box-shadow: 0 1px 0 var(--color-accent);
+}
+
+.blog-doc__byline {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.blog-doc__body {
+  line-height: 1.6;
+}
+
+/* Full page: a comfortable reading width. */
+.blog-doc--page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.blog-doc--page .blog-doc__title,
+.blog-doc--page .blog-doc__title-input {
+  font-size: 32px;
+}
+
+.blog-doc--page .rich-text__content {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* ─── Lightbox ──────────────────────────────────────────────────────────── */
+
+body.has-lightbox {
+  overflow: hidden;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 22, 26, 0.92);
+}
+
+.lightbox__stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 48px 16px 16px;
+}
+
+.lightbox__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: min(1100px, calc(100% - 120px));
+  margin: 0;
+}
+
+.lightbox__image {
+  max-width: 100%;
+  max-height: calc(100vh - 190px);
+  object-fit: contain;
+  background: #fff;
+  touch-action: none; /* pinch, pan, and swipe are handled in js/ui/lightbox.js */
+  user-select: none;
+  -webkit-user-drag: none;
+  cursor: zoom-in;
+  will-change: transform;
+}
+
+.lightbox__image.is-zoomed {
+  cursor: grab;
+  position: relative;
+  z-index: 1; /* over the ‹ › buttons while you look around */
+}
+
+.lightbox__caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 8px;
+  color: #eaecf0;
+  text-align: center;
+}
+
+.lightbox__count {
+  color: #a2a9b1;
+  font-size: var(--font-size-small);
+}
+
+.lightbox__close,
+.lightbox__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+}
+
+.lightbox__nav {
+  width: 48px;
+  height: 64px;
+  border-radius: var(--radius);
+}
+
+.lightbox__nav:hover,
+.lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.lightbox__tools {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lightbox__caption-input {
+  width: 320px;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .lightbox__figure {
+    max-width: 100%;
+  }
+
+  .lightbox__nav {
+    position: absolute;
+    bottom: 12px;
+  }
+
+  .lightbox__nav--prev { left: 12px; }
+  .lightbox__nav--next { right: 12px; }
+}
+
+/* ─── Blog feeds (js/modules/blog-feeds/) ───────────────────────────────── */
+
+.feed-module {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-module--page {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.feed-module__posts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-module__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.feed-module__square {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: var(--color-surface-muted);
+  cursor: pointer;
+}
+
+.feed-module__square img,
+.feed-module__square video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-module__square:hover img {
+  opacity: 0.85;
+}
+
+.feed-module__count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 0 5px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+}
+
+.feed-module__all {
+  align-self: flex-start;
+}
+
+/* One post */
+.feed-post {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-faint);
+  background: var(--color-surface);
+}
+
+.feed-post.is-focused {
+  border-color: var(--color-accent-border);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.feed-post__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-post__who {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.feed-post__name {
+  font-weight: bold;
+}
+
+.feed-post__time {
+  color: var(--color-text-faint);
+  font-size: var(--font-size-small);
+}
+
+.feed-post__tools {
+  display: inline-flex;
+  gap: 8px;
+  font-size: var(--font-size-small);
+}
+
+.feed-post__text {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Pictures and videos, one at a time (renderMedia in feed-post.js). The
+   frame takes the first picture's shape (--shape = width ÷ height, kept
+   between 4:5 and 1.91:1) and the rest slide through it. */
+.feed-post__media {
+  position: relative;
+  width: 100%;
+  max-height: var(--media-max, 420px);
+  aspect-ratio: var(--shape, 4 / 3);
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+
+/* An upright picture in a wide column would be taller than the limit: keep the shape, and center it. */
+@supports (width: min(1px, 2px)) {
+  .feed-post__media {
+    width: min(100%, calc(var(--media-max, 420px) * var(--shape, 1.333)));
+    margin-inline: auto;
+  }
+}
+
+.feed-module--page .feed-post__media {
+  --media-max: 560px;
+}
+
+/* In the Feed's narrow column, pictures run the full width of the card. */
+.feed-item .feed-post__media {
+  --media-max: 640px;
+}
+
+.feed-post__track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.28s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-post__track { transition: none; }
+}
+
+.feed-post__slide {
+  flex: 0 0 100%;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.feed-post__slide--video {
+  cursor: auto;
+}
+
+.feed-post__slide img,
+.feed-post__slide video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+}
+
+/* A picture much wider or taller than the frame is shown whole. */
+.feed-post__slide.is-whole img,
+.feed-post__slide.is-whole video {
+  object-fit: contain;
+}
+
+.feed-post__arrow {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #16181a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.feed-post__arrow[hidden] { display: none; }
+.feed-post__arrow--previous { left: 8px; }
+.feed-post__arrow--next { right: 8px; }
+
+.feed-post__count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.feed-post__dots {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  display: flex;
+  gap: 5px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.feed-post__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.feed-post__dot.is-on { background: #fff; }
+
+/* The words sit under the pictures, as a caption. */
+.feed-post__media + .feed-post__text { margin-top: 8px; }
+
+
+.feed-post__video {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+  background: #000;
+}
+
+.feed-post__file,
+.feed-post__event {
+  margin: 8px 0 0;
+}
+
+.feed-post__editor {
+  margin-top: 8px;
+}
+
+/* Writing a post */
+.feed-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.feed-composer__text {
+  resize: none;
+}
+
+.feed-composer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.feed-composer__spacer {
+  flex: 1 1 auto;
+}
+
+.feed-composer__counter {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.feed-composer__counter.is-over {
+  color: var(--color-danger);
+  font-weight: bold;
+}
+
+.feed-composer__previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feed-composer__previews:empty {
+  display: none;
+}
+
+.feed-composer__thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.feed-composer__thumb img,
+.feed-composer__thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-composer__remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+
+.feed-composer__attachment {
+  flex-basis: 100%;
+}
+
+.feed-composer__attachment p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.feed-composer__panel:empty {
+  display: none;
+}
+
+.feed-composer__event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feed-module--page .feed-module__grid {
+  gap: 6px;
+}
+
+.feed-module__count-line {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+/* A photo post opened from the grid (photo-viewer.js) */
+.photo-viewer__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1000px, 94vw);
+  max-height: 92vh;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.photo-viewer__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  background: var(--color-surface);
+}
+
+.photo-viewer__body {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.photo-viewer__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  background: #111;
+}
+
+.photo-viewer__media {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.photo-viewer__step {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  padding: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  color: var(--color-text);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.photo-viewer__step:disabled {
+  display: none;
+}
+
+.photo-viewer__step--prev {
+  left: 8px;
+}
+
+.photo-viewer__step--next {
+  right: 8px;
+}
+
+.photo-viewer__dots {
+  position: absolute;
+  bottom: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.photo-viewer__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.photo-viewer__dot.is-current {
+  background: #fff;
+}
+
+.photo-viewer__side {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--color-border-faint);
+}
+
+.photo-viewer__side .feed-post {
+  border: 0;
+  padding-top: 14px;
+  padding-right: 40px;
+}
+
+.photo-viewer__nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-border-faint);
+}
+
+.photo-viewer__nav[hidden],
+.photo-viewer__nav [hidden],
+.photo-viewer__post-step[hidden] {
+  display: none;
+}
+
+.photo-viewer__nav-side--end {
+  justify-self: end;
+}
+
+.photo-viewer__position {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+/* Previous / next post beside the panel (wide screens). */
+.photo-viewer__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+}
+
+.photo-viewer__gutter {
+  flex: 0 0 48px;
+  display: flex;
+  justify-content: center;
+}
+
+.photo-viewer__post-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+}
+
+.photo-viewer__post-step:hover {
+  background: var(--color-surface-hover, var(--color-surface));
+  color: var(--color-accent);
+}
+
+@media (max-width: 1180px) {
+  .photo-viewer__gutter {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .photo-viewer__body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+
+  .photo-viewer__side {
+    border-left: 0;
+  }
+}
+
+.sub-viewer.photo-viewer {
+  align-items: center;
+  padding: 16px;
+}
+
+.feed-post__attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.feed-post__files {
+  margin: 0;
+}
+
+/* ─── A document from a vault, open in a post (js/modules/blog-feeds/file-preview.js) ─── */
+
+.file-preview {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.file-preview__top,
+.file-preview__bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.file-preview__top {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.file-preview__icon {
+  display: inline-flex;
+  color: var(--color-text-muted);
+}
+
+.file-preview__top {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.file-preview__name {
+  flex: 1 1 12em;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-preview__kind {
+  margin-left: auto;
+  flex-shrink: 0;
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.file-preview__bottom {
+  border-top: 1px solid var(--color-border);
+}
+
+.file-preview__spacer {
+  flex: 1;
+}
+
+/* The page itself: reads like a document, clipped to about a screenful
+   with a fade until "Keep reading". */
+.file-preview__page {
+  position: relative;
+  padding: 16px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.file-preview__page.is-clipped {
+  max-height: 260px;
+  overflow: hidden;
+}
+
+.file-preview__page.is-clipped:not(.is-short)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 72px;
+  background: linear-gradient(to bottom, transparent, var(--color-surface));
+  pointer-events: none;
+}
+
+.file-preview__note > :first-child {
+  margin-top: 0;
+}
+
+.file-preview__note > :last-child {
+  margin-bottom: 0;
+}
+
+.file-preview__text {
+  margin: 0;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.file-preview__page--table,
+.file-preview__page--image,
+.file-preview__page--pdf,
+.file-preview__page--module {
+  padding: 0;
+}
+
+.file-preview__page--module {
+  padding: 8px;
+}
+
+.file-preview__table-wrap {
+  overflow-x: auto;
+}
+
+.file-preview__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.file-preview__table th,
+.file-preview__table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.file-preview__table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+}
+
+.file-preview__note-line {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.file-preview__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  background: var(--color-surface-muted);
+}
+
+.file-preview__pdf {
+  display: block;
+  width: 100%;
+  height: 420px;
+  border: 0;
+}
+
+/* A read-only board or list: looking, not working, in the preview. */
+.file-preview__module {
+  min-height: 120px;
+}
+
+@media (max-width: 640px) {
+  .file-preview__page {
+    padding: 12px 14px;
+  }
+
+  .file-preview__page.is-clipped {
+    max-height: 220px;
+  }
+
+  .file-preview__pdf {
+    height: 320px;
+  }
+}
+
+/* A post without pictures, opened from a General feed: just the post. */
+.photo-viewer__panel.is-words {
+  width: min(680px, 94vw);
+}
+
+.photo-viewer__panel.is-words .photo-viewer__body {
+  grid-template-columns: minmax(0, 1fr);
+  overflow-y: auto;
+}
+
+.photo-viewer__panel.is-words .photo-viewer__stage {
+  display: none;
+}
+
+/* ─── General feeds: a list or a grid, every post the same size
+   (js/modules/blog-feeds/feed-layouts.js) ─────────────────────────────── */
+
+.feed-layout-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.feed-layout-controls__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+
+.feed-layout-controls__panel[hidden] {
+  display: none;
+}
+
+.feed-layout-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-layout-controls__label {
+  width: 70px;
+  color: var(--color-text-muted);
+}
+
+.feed-layout-controls__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.feed-layout {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The shared picture box. */
+.feed-layout__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-layout__visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-accent-soft);
+  background-size: cover;
+  background-position: center;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.feed-layout__visual--words {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 12px;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.feed-layout__words {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  overflow: hidden;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.feed-layout__visual--quote {
+  font-family: Georgia, serif;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.feed-layout__visual--file,
+.feed-layout__visual--link,
+.feed-layout__visual--poll {
+  padding: 10px;
+}
+
+.feed-layout__visual-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--color-text);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.feed-layout__visual-snippet {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.feed-layout__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+  padding: 4px 8px 6px;
+  border-top: 4px solid var(--color-danger);
+  border-radius: 3px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  line-height: 1.1;
+}
+
+.feed-layout__date span {
+  color: var(--color-danger);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.feed-layout__date strong {
+  font-size: 22px;
+}
+
+/* Grid: tiles of one size and shape. */
+.feed-layout--grid {
+  display: grid;
+  grid-template-columns: repeat(var(--feed-columns, 3), minmax(0, 1fr));
+  gap: 6px;
+}
+
+.feed-tile {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.feed-layout--tall .feed-tile {
+  aspect-ratio: 4 / 5;
+}
+
+.feed-layout--wide .feed-tile {
+  aspect-ratio: 4 / 3;
+}
+
+.feed-tile:hover,
+.feed-tile:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.feed-tile__badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 5px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+}
+
+.feed-tile__caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  padding: 18px 8px 6px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: #fff;
+  font-size: 12px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* List: rows of one height, with a picture box of one size. */
+.feed-layout--list {
+  display: flex;
+  flex-direction: column;
+  --feed-thumb: 88px;
+}
+
+.feed-layout--thumb-small {
+  --feed-thumb: 56px;
+}
+
+.feed-layout--thumb-large {
+  --feed-thumb: 128px;
+}
+
+.feed-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-faint);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.feed-row:hover,
+.feed-row:focus-visible {
+  background: var(--color-surface-muted);
+}
+
+.feed-row__thumb {
+  flex: none;
+  width: var(--feed-thumb);
+  height: var(--feed-thumb);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+
+.feed-row__thumb .feed-layout__date {
+  min-width: 0;
+  padding: 3px 6px 4px;
+  transform: scale(0.9);
+}
+
+.feed-layout--thumb-small .feed-row__thumb .feed-layout__date {
+  transform: scale(0.72);
+}
+
+.feed-row__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.feed-row__title {
+  overflow: hidden;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-row__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--feed-lines, 3);
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.feed-row__meta {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .feed-layout--grid {
+    grid-template-columns: repeat(min(var(--feed-columns, 3), 3), minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .feed-layout__words {
+    -webkit-line-clamp: 5;
+    font-size: 13px;
+  }
+
+  .feed-layout--thumb-large {
+    --feed-thumb: 96px;
+  }
+}
+
+/* A document in a grid tile: the page itself, small, on a soft backdrop. */
+.feed-layout__visual--doc {
+  align-items: stretch;
+  justify-content: center;
+  padding: 14px 12% 0;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.feed-layout__page {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 11px;
+  border: 1px solid var(--color-border-faint);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.feed-layout__page::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, var(--color-surface));
+  pointer-events: none;
+}
+
+.file-mini {
+  font-size: 10px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.file-mini h1,
+.file-mini h2,
+.file-mini h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.file-mini p,
+.file-mini ul,
+.file-mini ol {
+  margin: 0 0 5px;
+}
+
+.file-mini ul,
+.file-mini ol {
+  padding-left: 14px;
+}
+
+.file-mini .file-preview__text {
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+/* Tables and boards are drawn at their real size and shrunk to fit. */
+.file-mini--table,
+.file-mini--module {
+  width: 200%;
+  transform: scale(0.5);
+  transform-origin: top left;
+  font-size: 13px;
+}
+
+.file-mini .file-preview__note-line {
+  display: none;
+}
+
+.feed-tile__docname {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 6px 8px;
+  border-top: 1px solid var(--color-border-faint);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-tile--file .feed-layout__visual--doc {
+  padding-bottom: 30px;
+}
+
+/* Notes keep their editor styles elsewhere; in a tile, everything is small. */
+.file-mini--note .file-preview__note,
+.file-mini--note .file-preview__note * {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.file-mini--note .file-preview__note h1,
+.file-mini--note .file-preview__note h2,
+.file-mini--note .file-preview__note h3 {
+  margin: 0 0 4px;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1.25;
+}
+
+.file-mini--note .file-preview__note p,
+.file-mini--note .file-preview__note ul {
+  margin: 0 0 5px;
+}
+
+/* ─── A connected event under a post's pictures (renderEventStrip in feed-post.js) ─── */
+.event-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--event-color, var(--color-accent));
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+
+/* Right under the pictures, it reads as their footer. */
+.feed-post__media + .event-strip {
+  margin-top: 4px;
+}
+
+.event-strip--missing {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.event-strip__date {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  color: inherit;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.event-strip__month {
+  color: var(--event-color, var(--color-accent));
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.event-strip__day {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.event-strip__text {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.event-strip__title {
+  overflow: hidden;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-strip__meta {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-strip__rsvp {
+  flex: none;
+}
+
+/* The merged Document module (js/modules/note.js): the title on a card is smaller; on the full page it sits on the paper. */
+.note .blog-doc__title-input { font-size: 18px; margin-bottom: 4px; }
+.note-page__paper .blog-doc__title-input { font-size: 30px; margin-bottom: 8px; }
+.note-doc .blog-doc__title { font-size: 20px; }
+.note-doc--page { max-width: 760px; margin: 0 auto; }
+.note-doc--page .blog-doc__title { font-size: 30px; }
+
+/* The name strip under a document tile: one line, cut with … */
+.feed-tile__docname-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* An article in a tile: the headline reads like one. */
+.feed-layout__visual--doc.is-article .file-mini--note .file-preview__note h1,
+.feed-layout__visual--doc.is-article .file-mini--note .file-preview__note h2 {
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* The New post box (feed-composer.js): a short text box that grows, then scrolls; the preview card on top. */
+.feed-composer textarea.feed-composer__text {
+  min-height: 0;
+  resize: none;
+  line-height: 1.45;
+}
+
+.feed-compose-modal .feed-composer textarea.feed-composer__text {
+  min-height: 0;
+}
+
+.feed-composer__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.feed-composer__preview[hidden] { display: none; }
+
+.feed-composer__preview-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.feed-composer__preview-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.feed-composer__preview-card .feed-post {
+  border: 0;
+  margin: 0;
+}
+
+/* Nothing to do in a preview: no menu, no comment box. */
+.feed-composer__preview-card .post-menu,
+.feed-composer__preview-card .reactions__comments {
+  display: none;
+}
+
+/* Dragging a post to another feed on the page (feed-move.js). */
+.is-post-draggable {
+  cursor: grab;
+}
+
+.is-post-draggable.is-being-dragged {
+  opacity: 0.45;
+}
+
+.module-frame.is-post-drop,
+.module-frame.is-post-drop-no {
+  position: relative;
+}
+
+.module-frame.is-post-drop {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: 3px;
+}
+
+.module-frame.is-post-drop-no {
+  outline: 2px dashed var(--color-border-strong);
+  outline-offset: 3px;
+}
+
+.module-frame.is-post-drop::after,
+.module-frame.is-post-drop-no::after {
+  content: attr(data-drop-label);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: var(--shadow-raised);
+}
+
+.module-frame.is-post-drop-no::after {
+  background: var(--color-text-muted);
+}
+
+.feed-drag-ghost {
+  pointer-events: none;
+  max-width: 280px;
+}
+
+.feed-drag-ghost span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.is-post-draggable img,
+.is-post-draggable video {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Text boxes that grow with what's written (js/ui/auto-grow.js). */
+textarea.is-auto-grow {
+  min-height: 0;
+  resize: none;
+  line-height: 1.45;
+}
+
+.feed-post__editor {
+  margin-top: 10px;
+}
+
+/* Photo and video tiles: the words show only while the pointer is over the tile (or it has keyboard focus).
+   On touch screens, where nothing hovers, the picture stands alone; tapping opens the post. */
+.feed-tile--photo .feed-tile__caption,
+.feed-tile--video .feed-tile__caption {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.feed-tile--photo:hover .feed-tile__caption,
+.feed-tile--video:hover .feed-tile__caption,
+.feed-tile--photo:focus-visible .feed-tile__caption,
+.feed-tile--video:focus-visible .feed-tile__caption {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-tile--photo .feed-tile__caption,
+  .feed-tile--video .feed-tile__caption {
+    transition: none;
+    transform: none;
+  }
+}

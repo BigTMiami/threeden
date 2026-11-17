@@ -1,0 +1,55 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+import os; os.makedirs('test-output/out', exist_ok=True)
+errs=[]
+def st(pg, js): return pg.evaluate(f"(async()=>{{const s=await import('./js/state/store.js'); {js} }})()")
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
+    # Leo sees the shared draft
+    pg.evaluate("location.hash='#module-tenants-bulletin'"); pg.wait_for_timeout(900)
+    v=pg.locator('#module-page-view')
+    first=v.locator('.article-teaser').first
+    print('first teaser:', first.inner_text().replace('\n',' | ')[:120])
+    first.locator('.article-teaser__link').click(); pg.wait_for_timeout(500)
+    print('reader kicker:', v.locator('.article-kicker--draft').inner_text(), '| byline:', v.locator('.news-article__meta .article-byline').inner_text())
+    v.get_by_role('button', name='Edit').first.click(); pg.wait_for_timeout(500)
+    print('coauthors row:', v.locator('.article-coauthors').inner_text().replace('\n',' | '))
+    print('from note:', v.locator('.article-editor__from').inner_text())
+    pg.screenshot(path='test-output/coauthor-editor.png')
+    # add Maya as co-author and save
+    v.locator('select[aria-label="Add a co-author"]').select_option(label='Maya Chen'); pg.wait_for_timeout(200)
+    v.get_by_role('button', name='Save draft').click(); pg.wait_for_timeout(500)
+    print('toast:', pg.locator('.toast').last.inner_text())
+    a=st(pg, "const m=s.getModule('tenants-bulletin'); const x=m.data.articles.find(a=>a.id==='tenants-art-3'); return [x.coauthorIds, x.lastEditedBy, !!x.editedBy['m-leo']]")
+    print('saved:', a)
+    print('maya notified:', st(pg, "return s.getState().notifications.filter(n=>n.recipientId==='m-maya' && /co-write/.test(n.text)).length"))
+    # conflict: simulate Priya saving after Leo opened
+    v.get_by_role('button', name='Edit').first.click(); pg.wait_for_timeout(400)
+    st(pg, "const m=s.getModule('tenants-bulletin'); const data=structuredClone(m.data); const x=data.articles.find(a=>a.id==='tenants-art-3'); x.updatedAt=Date.now(); x.lastEditedBy='m-priya'; x.dek='Priya changed this'; s.updateModuleData('tenants-bulletin', data); return 1")
+    v.get_by_role('button', name='Save draft').click(); pg.wait_for_timeout(300)
+    print('conflict:', v.locator('.article-editor p.form-error').inner_text())
+    v.get_by_role('button', name='Load theirs').click(); pg.wait_for_timeout(400)
+    print('loaded theirs dek:', v.locator('.article-editor__dek').input_value())
+    # a draft others can't see
+    st(pg, "const a=await import('./js/state/accounts.js'); a.signIn('m-iris'); return 1"); pg.wait_for_timeout(300)
+    pg.evaluate("location.hash='#groups'"); pg.wait_for_timeout(200); pg.evaluate("location.hash='#module-tenants-bulletin'"); pg.wait_for_timeout(800)
+    print('iris sees draft:', pg.locator('#module-page-view').inner_text().count('What we’ll ask Crestline'))
+    st(pg, "const a=await import('./js/state/accounts.js'); a.signIn('m-leo'); return 1"); pg.wait_for_timeout(300)
+    # vault note → article
+    pg.evaluate("location.hash='#module-tenants-vault'"); pg.wait_for_timeout(800)
+    v=pg.locator('#module-page-view')
+    v.get_by_text('Flyer text: why join the union').first.click(); pg.wait_for_timeout(500)
+    print('note bar:', v.locator('.vault-note__article').inner_text().replace('\n',' | '))
+    pg.screenshot(path='test-output/vault-note-article.png')
+    v.locator('.vault-note__article').get_by_role('button', name='Turn into an article').click(); pg.wait_for_timeout(900)
+    print('now at:', pg.evaluate('location.hash'), '| editor headline:', pg.locator('#module-page-view .article-editor__headline').input_value())
+    print('coauthors:', pg.locator('#module-page-view .article-coauthors').inner_text().replace('\n',' | '))
+    print('note links back:', st(pg, "const m=s.getModule('tenants-vault'); return m.data.items.find(i=>i.id==='tenants-note-flyer').articleDraft?.moduleId"))
+    # editors tracked when Leo types in a note
+    pg.evaluate("location.hash='#module-tenants-vault'"); pg.wait_for_timeout(700)
+    v=pg.locator('#module-page-view'); v.get_by_text('Crestline meeting').first.click(); pg.wait_for_timeout(300); v.get_by_text('Meeting prep: our asks').first.click(); pg.wait_for_timeout(400)
+    print('existing draft link:', v.locator('.vault-note__article').inner_text().replace('\n',' | '))
+    print('errors', errs[:3])
+    b.close()

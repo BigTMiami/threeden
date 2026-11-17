@@ -1,0 +1,519 @@
+/*
+ * editor.css — the homepage grid, module frames, and edit-mode tools
+ * (library, drag handles, drop indicator, resize handle).
+ */
+
+/* ─── Module library (sidebar) ─────────────────────────────────────────── */
+
+.library {
+  position: sticky;
+  top: 0;
+  flex: 0 0 var(--library-width);
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 20px 16px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+}
+
+.library__title {
+  font-size: 20px;
+}
+
+.library__hint {
+  margin: 2px 0 12px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.library__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library-item {
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: grab;
+}
+
+.library-item:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+}
+
+.library-item--soon {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.library-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.library-item__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.library-item__label {
+  font-weight: bold;
+}
+
+.library-item__description {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.library-item__grip {
+  color: var(--color-text-faint);
+}
+
+.library-item__soon {
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ─── Homepage grid ────────────────────────────────────────────────────── */
+
+/* Positioned so the drop indicator can sit on top of it. */
+.homepage {
+  position: relative;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* Fixed-height rows: each module spans a set number of them (its `rows`). */
+  grid-auto-rows: var(--grid-row-height);
+  gap: var(--grid-gap);
+}
+
+.module-grid--editing {
+  min-height: 200px;
+  padding: 0;
+  outline: 1px dashed var(--color-border-strong);
+  outline-offset: 8px;
+}
+
+.module-grid__empty {
+  grid-column: 1 / -1;
+  grid-row: span 6;
+  padding: 48px 16px;
+  border: 2px dashed var(--color-border-strong);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* On small screens every module takes the full width. */
+@media (max-width: 760px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-grid > * {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ─── Module frame ─────────────────────────────────────────────────────── */
+
+.module-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden; /* The frame's size is fixed; the body scrolls instead. */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.module-frame__header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border-faint);
+}
+
+.module-frame__icon {
+  display: inline-flex;
+  color: var(--color-accent);
+}
+
+.module-frame__title {
+  flex: 1;
+  font-size: 19px;
+}
+
+.module-frame__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: auto; /* At the end of a module's scroll, the page carries on. */
+  padding: 12px 14px 14px;
+  scrollbar-width: thin;
+}
+
+/* Edit mode */
+
+.module-frame--editing {
+  border-color: var(--color-border-strong);
+}
+
+.module-frame--editing:hover {
+  border-color: var(--color-accent);
+}
+
+.module-frame__grip {
+  display: inline-flex;
+  padding: 4px 2px;
+  color: var(--color-text-faint);
+  cursor: grab;
+  touch-action: none;
+}
+
+.module-frame__grip:active {
+  cursor: grabbing;
+}
+
+.module-frame__title-input {
+  flex: none;
+  max-width: 60%;
+  padding: 2px 6px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.module-frame__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* In edit mode the header and the strip above it are drag handles. */
+.is-drag-handle {
+  cursor: grab;
+  touch-action: none; /* Let touch drags move the module instead of scrolling. */
+  user-select: none;
+}
+
+.module-frame__header.is-drag-handle:hover {
+  background: var(--color-surface-muted);
+}
+
+.module-frame__drag-strip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border-faint);
+  color: var(--color-text-faint);
+}
+
+/* The grip icon is vertical dots; turn it sideways for the strip. */
+.module-frame__drag-strip svg {
+  transform: rotate(90deg);
+}
+
+.module-frame__drag-strip:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* The module being dragged stays in place, faded, until it's dropped. */
+.module-frame.is-drag-source {
+  opacity: 0.35;
+}
+
+/* While dragging: grabbing cursor everywhere, no accidental text selection. */
+body.is-dragging-module,
+body.is-dragging-module * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* The small card that follows the pointer (js/editor/pointer-drag.js). */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-accent-hover);
+  font-weight: bold;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.module-frame.is-resizing {
+  outline: 2px solid var(--color-accent);
+}
+
+/* ─── Drop indicator (where a dragged module will land) ────────────────── */
+
+.drop-indicator {
+  display: none;
+  position: absolute;
+  width: 4px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+  pointer-events: none;
+}
+
+/* ─── Resize handle (bottom-right corner of each module in edit mode) ──── */
+
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.resize-handle:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 1px;
+}
+
+.resize-label:not(:empty) {
+  position: absolute;
+  right: 26px;
+  bottom: 0;
+  padding: 2px 6px;
+  background: var(--color-text);
+  color: #ffffff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Expand (↗) button in a module's header (modules with a full-page view). */
+.module-frame__open {
+  margin-left: auto;
+  color: var(--color-link);
+}
+
+.module-frame--editing .module-frame__open {
+  margin-left: 0;
+}
+
+/* ─── Library: "From your vaults" (js/editor/library.js) ───────────────── */
+
+.library__vaults {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.library__vault {
+  margin-top: 10px;
+}
+
+.library__vault-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+}
+
+.library__vault-where {
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+
+.library-item--file .library-item__label {
+  font-size: 13px;
+}
+
+/* A blog's library: "Feeds" first, then the other blog modules */
+.library__section {
+  margin: 12px 0 2px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* "Add modules" and the library's close button are for phones only (below). */
+.space-header__add-modules,
+.library__close {
+  display: none;
+}
+
+.library__header {
+  position: relative;
+}
+
+/* "More modules": the rest of the list, behind one button (js/editor/library.js). */
+.library__more {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+.library__more:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+.library__list[hidden] { display: none; }
+
+/* The module list's two tabs: Add, and Removed (js/editor/library.js, js/state/module-backups.js). */
+.library__tabs { display: flex; gap: 4px; margin: 4px 0 8px; border-bottom: 1px solid var(--color-border); }
+.library__tab { padding: 6px 10px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-small); cursor: pointer; }
+.library__tab.is-active { border-bottom-color: var(--color-accent); color: var(--color-text); font-weight: bold; }
+.library__removed-item { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--color-border-faint); }
+.library__removed-text { display: flex; flex-direction: column; min-width: 0; }
+.library__removed-text .library-item__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library__removed-item .button { white-space: nowrap; }
+.library__removed-empty { margin-top: 8px; }
+
+/* ─── Page layouts other than the grid (grid.js, page-layouts.js) ───────── */
+
+.module-grid.module-grid--layout { display: flex; flex-direction: column; gap: var(--grid-gap); grid-auto-rows: unset; }
+.layout-row { display: flex; gap: var(--grid-gap); align-items: flex-start; min-width: 0; }
+.layout-col { display: flex; flex-direction: column; gap: var(--grid-gap); min-width: 0; flex: 1 1 0; }
+.module-grid:not(.module-grid--editing) .layout-col.is-empty { display: none; }
+.module-grid--editing .layout-col.is-empty { min-height: 140px; border: 2px dashed var(--color-border); border-radius: 10px; justify-content: center; }
+.layout-col__drop-here { margin: 0; padding: 16px; text-align: center; color: var(--color-text-muted); font-size: var(--font-size-small); }
+.layout-note { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-small); }
+
+/* How a module sits in a column. */
+.module-frame--grow { height: auto; min-height: 360px; overflow: visible; }
+.module-frame--grow > .module-frame__body { overflow: visible; flex: none; }
+.module-frame--fill { height: max(480px, calc(100vh - 260px)); }
+.module-frame--tile { height: 380px; }
+
+/* Spotlight: sides, a wide middle. */
+.layout-col--side { flex: 1 1 0; }
+.layout-col--center { flex: 2.3 1 0; }
+.layout-row--spotlight .layout-col--side { max-width: 340px; }
+/* Main and sidebar; storefront's main and rail. */
+.layout-col--main { flex: 2.4 1 0; }
+.layout-row--sidebar .layout-col--side, .layout-row--storefront .layout-col--side { flex: 1 1 0; max-width: 380px; }
+.layout-col--hero > .module-frame { width: 100%; }
+.layout-col--third, .layout-col--half { flex: 1 1 0; }
+/* Single column. */
+.layout-row--single { justify-content: center; }
+.layout-col--single { flex: 0 1 720px; }
+/* Even tiles: three across. */
+.layout-col--tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Lanes: sideways. */
+.layout-col--lanes { flex-direction: row; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.layout-col--lanes > .module-frame { flex: 0 0 340px; scroll-snap-align: start; }
+/* Timeline: a spine with when each module was last active. */
+.layout-col--timeline { position: relative; gap: 14px; max-width: 900px; margin: 0 auto; width: 100%; }
+.layout-col--timeline::before { content: ''; position: absolute; left: 94px; top: 6px; bottom: 6px; width: 2px; background: var(--color-border); }
+.timeline__item { display: grid; grid-template-columns: 80px 14px minmax(0, 1fr); gap: 0 10px; align-items: start; }
+.timeline__when { text-align: right; font-size: var(--font-size-small); font-weight: 700; color: var(--color-accent); padding-top: 14px; }
+.timeline__dot { width: 12px; height: 12px; border-radius: 50%; background: var(--color-accent); margin-top: 16px; position: relative; z-index: 1; box-shadow: 0 0 0 3px var(--color-page); }
+/* Channels: a list and one open module. */
+.layout-row--channels { align-items: flex-start; }
+.channels__list { flex: 0 0 220px; position: sticky; top: 16px; display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; }
+.channels__item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.channels__item:hover { background: var(--color-surface-muted); }
+.channels__item.is-open { background: var(--color-accent-soft); color: var(--color-accent); font-weight: 700; }
+.channels__item > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.channels__panel { flex: 1 1 0; }
+/* Narrower screens: side columns go under the main one. */
+@media (max-width: 1000px) {
+  .layout-row--spotlight, .layout-row--sidebar, .layout-row--storefront, .layout-row--three { flex-wrap: wrap; }
+  .layout-row--spotlight .layout-col--center, .layout-col--main { flex-basis: 100%; order: -1; }
+  .layout-row--spotlight .layout-col--side, .layout-row--sidebar .layout-col--side, .layout-row--storefront .layout-col--side { max-width: none; flex: 1 1 280px; }
+  .layout-col--third { flex: 1 1 260px; }
+  .layout-col--tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.drop-indicator--outline { background: transparent; border: 3px solid var(--color-accent); border-radius: 12px; box-shadow: 0 0 0 4px var(--color-accent-soft); }
+
+/* The Layout menu in the edit bar (edit-bar.js). */
+.layout-menu__wrap { position: relative; }
+.layout-menu__button { display: inline-flex; align-items: center; gap: 6px; }
+.layout-menu__button .layout-menu__sketch { width: 22px; height: 15px; }
+.layout-menu { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 50; width: min(560px, 92vw); max-height: 70vh; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 8px; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: 12px; box-shadow: var(--shadow-raised); }
+.layout-menu[hidden] { display: none; }
+.layout-menu__item { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid transparent; border-radius: 8px; background: none; text-align: left; font: inherit; color: var(--color-text); cursor: pointer; }
+.layout-menu__item:hover { background: var(--color-surface-muted); }
+.layout-menu__item.is-current { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.layout-menu__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: var(--font-size-small); color: var(--color-text-muted); }
+.layout-menu__text strong { font-size: var(--font-size-body); color: var(--color-text); }
+.layout-menu__sketch { flex: none; }
+.layout-menu__sketch rect { fill: var(--color-border-faint); stroke: var(--color-border-strong); stroke-width: 0.25; }
+.layout-menu__sketch rect.is-featured { fill: var(--color-accent-soft); stroke: var(--color-accent); }
+.edit-bar__featured { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-small); color: var(--color-text-muted); }
+@media (max-width: 640px) { .layout-menu { grid-template-columns: minmax(0, 1fr); left: auto; right: -80px; } }
+
+/* Edit mode: the header wraps instead of hiding its buttons, so Remove is always in reach. */
+.module-frame--editing > .module-frame__header { flex-wrap: wrap; row-gap: 4px; }
+.module-frame--editing .module-frame__title-input { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.module-frame--editing .module-frame__controls { margin-left: auto; flex: none; }
+
+/* The Modules panel ends with a border too. */
+.library { border-bottom: 1px solid var(--color-border); border-bottom-right-radius: 10px; }
+
+/* Edit mode: where a module comes on phones (module-frame.js renderPhoneNumber). */
+.module-frame__phone { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 6px; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-muted); background: var(--color-surface); flex: none; cursor: pointer; }
+.module-frame__phone:hover, .module-frame__phone:focus-within { border-color: var(--color-accent); color: var(--color-accent); }
+.module-frame__phone-select { border: 0; background: none; font: inherit; font-size: var(--font-size-small); font-weight: 700; color: inherit; padding: 2px 0; cursor: pointer; font-variant-numeric: tabular-nums; }
+.edit-bar__phone-reset { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-small); }
+/* In layouts, only modules with a set height can be resized (the rest follow their content or their column). */
+.module-frame--grow:not(.module-frame--featured) .resize-handle, .module-frame--fill .resize-handle, .module-frame--tile .resize-handle { display: none; }

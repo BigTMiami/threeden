@@ -1,0 +1,26 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Theo R
+N:R;Theo;;;
+EMAIL;type=INTERNET;type=HOME:theo@example.com
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Priya Nair
+TEL;type=CELL:+1 (555) 201-0001
+EMAIL:priya@example.com
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Ana Ruiz
+TEL;type=CELL:(555) 301-4455
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Okoro;Bayo;;;
+item1.EMAIL;type=INTERNET:bayo@example.org
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:No Way To Reach
+END:VCARD

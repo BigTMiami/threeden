@@ -1,0 +1,25 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+import os, time; os.makedirs('test-output/out', exist_ok=True)
+errs=[]
+def store(pg, js): return pg.evaluate(f"(async()=>{{const s=await import('./js/state/store.js'); {js} }})()")
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()')
+    t=time.time(); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000); print('load s:', round(time.time()-t,1))
+    print('year people:', store(pg, "return s.getState().members.filter(m=>m.growth?.year).length"))
+    print('year groups:', store(pg, "return s.getState().spaces.filter(x=>x.id.startsWith('y-') && x.id!=='y-community').length"))
+    print('themes:', store(pg, "return s.getModule('y-community-forum').data.threads.length"))
+    pg.evaluate("location.hash='#module-y-community-forum'"); pg.wait_for_timeout(1200)
+    print('threads shown:', pg.locator('.forum-thread:visible').count(), '| pinned:', pg.locator('.forum-thread--pinned:visible').count(), '| new:', pg.locator('.forum-thread:visible', has_text='New').count())
+    print('first:', pg.locator('.forum-thread').first.inner_text().replace('\n',' | ')[:110])
+    pg.screenshot(path='test-output/community-forum.png')
+    # year people are not on the sign-in screen
+    store(pg, "const a=await import('./js/state/accounts.js'); a.signOut && a.signOut()")
+    pg.evaluate("location.hash='#signin'"); pg.wait_for_timeout(800)
+    names=store(pg, "return s.getState().members.filter(m=>m.growth?.year).slice(0,40).map(m=>m.name)")
+    txt=pg.locator('body').inner_text()
+    print('year people on sign-in:', sum(1 for n in names if n in txt))
+    print('errors', errs[:3])
+    b.close()

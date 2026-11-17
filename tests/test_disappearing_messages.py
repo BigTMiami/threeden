@@ -1,0 +1,25 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    for vw in [1300,400]:
+        pg=b.new_page(viewport={'width':vw,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+        pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(500)
+        pg.evaluate("location.hash='#messages'"); pg.wait_for_timeout(500)
+        msv=pg.locator('#messages-view')
+        msv.locator('.conversation-list a, .conversation-list button, [class*=conversation]').first.click(); pg.wait_for_timeout(400)
+        sel=msv.locator('.thread__timer-select')
+        print(vw, 'timer select:', sel.count())
+        sel.select_option(label='Disappear after 5 minutes'); pg.wait_for_timeout(200)
+        print(' notice:', msv.locator('.thread__notice').last.inner_text(), '| bar:', msv.locator('.thread__timer-text').inner_text())
+        msv.locator('.thread__input').fill('This will vanish'); msv.locator('.thread__input').press('Enter'); pg.wait_for_timeout(200)
+        print(' expires label:', msv.locator('.message__expires').last.inner_text())
+        pg.screenshot(path=f'test-output/t112_{vw}.png')
+        n=pg.evaluate("(async()=>{const m=await import('./js/state/messages.js'); return m.purgeExpiredMessages(Date.now()+6*60*1000)})()"); pg.wait_for_timeout(200)
+        print(' purged:', n, '| still shown:', msv.get_by_text('This will vanish').count())
+        sel=msv.locator('.thread__timer-select'); sel.select_option(label='Messages stay'); pg.wait_for_timeout(200)
+        print(' off notice:', msv.locator('.thread__notice').last.inner_text())
+        pg.close()
+    b.close()
+print('ERRORS', errs)

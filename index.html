@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <title>3den · Homepage editor prototype</title>
+
+  <!-- Add to Home Screen: opens full screen, like an app (see README.md, "Phones") -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="3den">
+
+  <!-- Styles, from most general to most specific. See README.md. -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/page-parts.css">
+  <link rel="stylesheet" href="css/settings.css">
+  <link rel="stylesheet" href="css/messages.css">
+  <link rel="stylesheet" href="css/modules.css">
+  <link rel="stylesheet" href="css/events.css">
+  <link rel="stylesheet" href="css/calendar.css">
+  <link rel="stylesheet" href="css/relationship.css">
+  <link rel="stylesheet" href="css/blog.css">
+  <link rel="stylesheet" href="css/feed.css">
+  <link rel="stylesheet" href="css/submissions.css">
+  <link rel="stylesheet" href="css/budget.css">
+  <link rel="stylesheet" href="css/canvas.css">
+  <link rel="stylesheet" href="css/sheet.css">
+  <link rel="stylesheet" href="css/photo-editor.css">
+  <link rel="stylesheet" href="css/chips.css">
+  <!-- Last, so it can rearrange everything for phones -->
+  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/themes.css">
+</head>
+<body>
+
+  <!-- Top bar: same on every 3den page -->
+  <header class="app-bar">
+    <!-- The name, then a blue home button that opens your own homepage (js/editor/app-bar.js) -->
+    <div id="app-logo" class="app-bar__logo"></div>
+    <!-- Groups menu and other sections (js/editor/app-bar.js) -->
+    <nav id="app-nav" class="app-bar__nav" aria-label="Main"></nav>
+    <!-- Search: people, groups, events, or the page you're on (js/editor/search-box.js) -->
+    <div id="app-search" class="app-bar__search"></div>
+
+    <!-- Your own homepage and avatar, on the right (js/editor/app-bar.js) -->
+    <div id="app-account" class="app-bar__account"></div>
+  </header>
+
+  <div class="page">
+    <!-- Module library: only shown in edit mode (js/editor/library.js) -->
+    <aside id="module-library" class="library" aria-label="Module library" hidden></aside>
+
+    <main class="page__main">
+      <!-- View 1: a homepage, personal or group (#space-… or no hash) -->
+      <div id="homepage-view">
+        <!-- Shown while previewing unsaved settings (js/main.js, js/groups/settings-drafts.js) -->
+        <div id="preview-banner" class="preview-banner" role="region" aria-label="Preview" hidden></div>
+
+        <!-- Space name and the Edit/Done button (js/editor/space-header.js) -->
+        <section id="space-header" class="space-header"></section>
+
+        <!-- New accounts: "We set this up for…" and Get started (js/onboarding/get-started.js) -->
+        <div id="onboarding-slot" class="onboarding-slot" hidden></div>
+
+        <!-- Phones: a chip per module, to swipe or jump between them (js/editor/module-swiper.js) -->
+        <nav id="module-strip" class="module-strip" aria-label="Modules" hidden></nav>
+
+        <!-- The homepage grid of modules (js/editor/grid.js) -->
+        <div id="homepage-grid" class="homepage"></div>
+      </div>
+
+      <!-- View 2: one module full-page (js/editor/module-page.js) -->
+      <div id="module-page-view" class="module-page" hidden></div>
+
+      <!-- View 3: settings: a space's (js/groups/settings-page.js), your account
+           (js/account/account-page.js), or "Create a group" -->
+      <div id="settings-view" class="settings-page" hidden></div>
+
+      <!-- View 4: Messages (js/messages/messages-page.js) -->
+      <div id="messages-view" hidden></div>
+
+      <!-- View 5: signed out: sign in or create an account (js/account/auth-view.js) -->
+      <div id="auth-view" hidden></div>
+
+      <p class="page__note">
+        Prototype: changes are saved in this browser only ·
+        <a href="phone.html">See 3den on an iPhone</a>
+      </p>
+    </main>
+  </div>
+
+  <!-- Phones: Home · Blog · Groups · Messages · Alerts (js/editor/tab-bar.js) -->
+  <nav id="tab-bar" class="tab-bar" aria-label="Sections" hidden></nav>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+def store(pg, js): return pg.evaluate(f"(async()=>{{const s=await import('./js/state/store.js'); {js} }})()")
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
+    gid=store(pg,"const me=s.getCurrentUser(); const g=s.getSpaces().find(x=>x.kind==='group'&&x.memberIds.includes(me.id)&&['owner','admin'].includes(x.roles?.[me.id])); return g?.id")
+    print('admin group:', gid)
+    # 58 rename group in place
+    pg.evaluate(f"location.hash='#space-{gid}'"); pg.wait_for_timeout(700)
+    name=pg.locator('h1.space-header__name')
+    old=name.inner_text(); name.click(); pg.wait_for_timeout(100)
+    inp=pg.locator('.space-header__name input'); inp.fill(old+' Club'); inp.press('Enter'); pg.wait_for_timeout(300)
+    print('58 renamed:', pg.locator('h1.space-header__name').inner_text())
+    # Escape cancels
+    pg.locator('h1.space-header__name').click(); pg.locator('.space-header__name input').fill('Nope'); pg.locator('.space-header__name input').press('Escape'); pg.wait_for_timeout(200)
+    print('   after Esc:', pg.locator('h1.space-header__name').inner_text())
+    # 65 edit bar
+    pg.locator('.space-header__actions').get_by_role('button', name='Edit', exact=True).click(); pg.get_by_role('menuitem', name='Edit this page').click(); pg.wait_for_timeout(300)
+    bar=pg.locator('.edit-bar'); print('65 bar:', bar.inner_text().replace('\n',' | '))
+    pg.screenshot(path='test-output/editbar.png')
+    bar.get_by_role('button', name='See it as a member').click(); pg.wait_for_timeout(400)
+    print('   member view bar:', bar.inner_text().replace('\n',' | '), '| settings btn:', pg.locator('.space-header a', has_text='Settings').count(), '| edit btn:', pg.locator('.space-header__actions').get_by_role('button', name='Edit', exact=True).count(), '| name editable:', pg.locator('h1.space-header__name.in-place').count())
+    pg.screenshot(path='test-output/memberview.png')
+    bar.get_by_role('button', name='Back to editing').click(); pg.wait_for_timeout(300)
+    print('   back:', store(pg,'return s.isEditMode()'), '|', bar.inner_text().split('\n')[0])
+    bar.get_by_role('button', name='Done editing').click(); pg.wait_for_timeout(300)
+    print('   done:', store(pg,'return s.isEditMode()'), 'bar hidden:', bar.is_hidden())
+    # 63 Back returns where you were: feed scrolled, open module, back
+    pg.evaluate("location.hash='#feed'"); pg.wait_for_timeout(900)
+    pg.mouse.wheel(0, 1400); pg.wait_for_timeout(400); y=pg.evaluate('scrollY')
+    mid=store(pg, f"return s.getSpace('{gid}').modules.find(m=>['todo','forum','announcements','calendar'].includes(m.type))?.id")
+    pg.evaluate(f"(async()=>{{const r=await import('./js/router.js'); r.openModulePage('{mid}')}})()"); pg.wait_for_timeout(600)
+    back=pg.locator('.module-page__back'); print('63 back label:', back.inner_text().strip())
+    # 58 module title in place
+    pg.locator('h1.module-page__title').click(); t=pg.locator('.module-page__title input'); t.fill('Our list'); t.press('Enter'); pg.wait_for_timeout(300)
+    print('58 module title:', pg.locator('h1.module-page__title').inner_text())
+    back=pg.locator('.module-page__back'); back.click(); pg.wait_for_timeout(700)
+    print('   returned to', pg.evaluate('location.hash'), 'scroll', y, '→', pg.evaluate('scrollY'))
+    # 58 event title/time in place
+    eid=store(pg,"const me=s.getCurrentUser(); for (const sp of s.getSpaces().filter(x=>x.kind==='group'&&x.memberIds.includes(me.id))) for (const m of sp.modules) for (const e of (m.data?.events||[])) if ((e.createdBy===me.id||e.visibility==='group') && (!e.endDate||e.endDate===e.date) && !e.allDay) return e.id; return null")
+    pg.evaluate(f"location.hash='#event-{eid}'"); pg.wait_for_timeout(700)
+    pg.locator("h1.event-page__title").click(); pg.locator(".event-page__title input").fill('Renamed event'); pg.locator('.event-page__title input').press('Enter'); pg.wait_for_timeout(300)
+    pg.locator('p.event-page__when').click(); pg.wait_for_timeout(100)
+    w=pg.locator('.event-page__when'); w.get_by_label('Starts').fill('18:30'); w.get_by_label('Ends').fill('20:00'); w.get_by_label('Ends').press('Enter'); pg.wait_for_timeout(300)
+    print('58 event:', pg.locator('h1.event-page__title').inner_text(), '|', pg.locator('.event-page__when').inner_text())
+    # 59 leave with undo (as a non-owner member group)
+    g2=store(pg,"const me=s.getCurrentUser(); return s.getSpaces().find(x=>x.kind==='group'&&x.memberIds.includes(me.id)&&!['owner'].includes(x.roles?.[me.id])&&Object.values(x.roles||{}).includes('owner'))?.id")
+    pg.evaluate(f"location.hash='#settings-{g2}'"); pg.wait_for_timeout(700)
+    pg.get_by_role('button', name='Leave group').click(); pg.wait_for_timeout(300)
+    print('59 left:', store(pg,f"return !s.getSpace('{g2}').memberIds.includes(s.getCurrentUser().id)"), '| toast:', pg.locator('.toast').last.inner_text().replace('\n',' '))
+    pg.locator('.toast').last.get_by_role('button', name='Undo').click(); pg.wait_for_timeout(500)
+    print('   undone:', store(pg,f"return s.getSpace('{g2}').memberIds.includes(s.getCurrentUser().id)"), pg.evaluate('location.hash'))
+    # delete group with undo
+    pg.evaluate(f"location.hash='#settings-{gid}'"); pg.wait_for_timeout(700)
+    isowner=store(pg,f"return s.getSpace('{gid}').roles?.[s.getCurrentUser().id]")
+    if isowner=='owner':
+        pg.get_by_role('button', name='Delete this group').click(); pg.wait_for_timeout(300)
+        print('59 deleted:', store(pg,f"return !s.getSpace('{gid}')"))
+        pg.locator('.toast').last.get_by_role('button', name='Undo').click(); pg.wait_for_timeout(500)
+        print('   restored:', store(pg,f"return !!s.getSpace('{gid}')"), pg.evaluate('location.hash'))
+    # comment delete undo / unfriend undo
+    pg.evaluate("location.hash='#feed-friends'"); pg.wait_for_timeout(700)
+    uf=pg.get_by_role('button', name='Unfriend').first
+    n0=store(pg,"return (s.getState().friendships||[]).length"); uf.click(); pg.wait_for_timeout(200)
+    pg.locator('.toast').last.get_by_role('button', name='Undo').click(); pg.wait_for_timeout(300)
+    print('59 unfriend undo:', n0, '→', store(pg,"return (s.getState().friendships||[]).length"))
+    # mobile edit bar
+    pg.set_viewport_size({'width':390,'height':800}); pg.evaluate(f"location.hash='#space-{gid}'"); pg.wait_for_timeout(600)
+    store(pg,'s.setEditMode(true)'); pg.wait_for_timeout(300); pg.screenshot(path='test-output/editbar-phone.png')
+    print('errors', errs)
+    b.close()

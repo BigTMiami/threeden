@@ -1,0 +1,72 @@
+/* ─── One chip style ─────────────────────────────────────────────────────
+ * Every small rounded pill in 3den looks the same: filter chips, tag
+ * pickers, "who sees this", choice menus ("Show: Open ▾"), "can help with",
+ * and "I've met…". Loaded after the other files so it wins.
+ *
+ *   button chips   [ Label ]      border, white; hover: accent border
+ *   on / chosen    [ Label ]      accent fill (is-on, aria-pressed="true")
+ *   read-only tags  Label         same size and shape, muted fill, no border
+ */
+
+.chip,
+.audience-chip,
+.choice-menu__button,
+.tag-picker__tag,
+.directory__help-chip,
+.met-in-person__button,
+.event-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover,
+.audience-chip:hover,
+.choice-menu__button:hover,
+.tag-picker__tag:hover:not(:disabled),
+.directory__help-chip:hover,
+.met-in-person__button:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+.chip.is-on,
+.chip[aria-pressed='true'],
+.tag-picker__tag.is-on,
+.directory__help-chip.is-on,
+.met-in-person__button.is-on,
+.feed-filters__chip.is-on {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent, #fff);
+  font-weight: normal;
+}
+
+/* "Who sees this" with no choice to make: the same chip, a dashed edge. */
+.audience-chip.is-fixed { border-style: dashed; }
+
+/* Tags you only read (an event's Music, Food & drink…): same pill, quieter. */
+.event-tag {
+  min-height: 24px;
+  padding: 0 9px;
+  border-color: transparent;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: default;
+}
+
+/* A chip that holds a person (invited guests): room for the avatar and the ×. */
+.chip:has(.avatar) { padding-left: 3px; }

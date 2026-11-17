@@ -1,0 +1,22 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
+    pg.evaluate("location.hash='#feed'"); pg.wait_for_timeout(900)
+    print('needs rows:', [t[:60] for t in pg.locator('.needs__item, .needs li').all_inner_texts()][:6])
+    print('flyering in needs:', pg.locator('.needs').filter(has_text='Flyering').count())
+    pg.evaluate("location.hash='#module-tenants-announcements'"); pg.wait_for_timeout(800)
+    v=pg.locator('#module-page-view')
+    v.locator('.compose-toggle__open:visible').first.click(); pg.wait_for_timeout(200)
+    v.locator('.announcements-page__composer input[type="text"]').first.fill('Potluck Sunday'); v.locator('.announcements-page__composer textarea').first.fill('Who is in?')
+    v.get_by_role('button', name='RSVP').click(); v.get_by_role('button', name='Sign-ups').click(); pg.wait_for_timeout(150)
+    v.locator('.asks-attacher input').first.fill('Sunday 5pm')
+    lines=v.locator('.asks-attacher__line input[type="text"], .asks-attacher__line input:not([type])')
+    print('attacher inputs:', v.locator('.asks-attacher input').count())
+    if lines.count(): lines.first.fill('Bring a main')
+    v.locator('.announcements-page__composer').get_by_role('button', name='Post', exact=True).click(); pg.wait_for_timeout(300)
+    print(pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); const posts=s.getModule('tenants-announcements').data.posts; const p=posts.find(x=>x.title==='Potluck Sunday')||posts[0]; return JSON.stringify({rsvp:p.rsvp, signups:p.signups})})()"))
+    print('errors', errs)

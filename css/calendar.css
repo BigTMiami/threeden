@@ -1,0 +1,814 @@
+/*
+ * calendar.css — the Calendar module's full page: toolbar, month, week,
+ * day and agenda views, event chips, and the side panel's editor.
+ * (The card is in modules.css; event details, RSVPs and the mini month
+ * are in events.css, since Upcoming events and event pages use them too.)
+ */
+
+/* ─── Calendar: full page (js/modules/calendar/calendar-page.js) ───────── */
+
+.calendar-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.calendar-page__nav,
+.calendar-page__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calendar-page__title {
+  margin: 0 0 0 6px;
+  font-size: 24px;
+  font-weight: normal;
+}
+
+.calendar-page__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.calendar-page__search-input {
+  width: 180px;
+  min-height: 30px;
+  border: 0;
+  box-shadow: none !important;
+}
+
+.calendar-page__search-note {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border-faint);
+  background: var(--color-warning-soft);
+  font-size: var(--font-size-small);
+}
+
+.calendar-page__layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.calendar-page__view {
+  flex: 999 1 560px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-faint);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-page__editor {
+  position: sticky;
+  top: 16px;
+  flex: 1 1 320px;
+  max-width: 400px;
+  animation: calendar-panel-in 160ms ease-out;
+}
+
+/* A colored event label, used in the month view and all-day rows. */
+.event-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--event-color) 13%, white);
+  color: color-mix(in srgb, var(--event-color) 70%, black);
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+
+.event-chip:hover,
+.event-chip.is-selected {
+  background: color-mix(in srgb, var(--event-color) 22%, white);
+}
+
+/* All-day and multi-day events: a solid band. */
+.event-chip--band {
+  background: var(--event-color);
+  color: #ffffff;
+}
+
+.event-chip--band .event-chip__time {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.event-chip--band:hover,
+.event-chip--band.is-selected {
+  background: var(--event-color);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.event-chip__time {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.event-chip__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Month view */
+.month-view {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.month-view__weekday {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border-faint);
+  color: var(--color-text-faint);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.month-view__day {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 118px;
+  padding: 6px;
+  border-right: 1px solid var(--color-border-faint);
+  border-bottom: 1px solid var(--color-border-faint);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.month-view__day:nth-child(7n) {
+  border-right: 0;
+}
+
+.month-view__day:hover {
+  background: var(--color-surface-muted);
+}
+
+.month-view__day.is-other-month {
+  background: none;
+}
+
+.month-view__day.is-other-month .month-view__date {
+  color: color-mix(in srgb, var(--color-text-faint) 65%, transparent);
+}
+
+.month-view__date {
+  align-self: flex-start;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.month-view__date:hover {
+  background: var(--color-border-faint);
+}
+
+.month-view__day.is-today .month-view__date {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: bold;
+}
+
+.month-view__events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.month-view__more {
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--color-link);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Week and day views (js/modules/calendar/calendar-views.js → renderTimeGrid) */
+.time-grid__header,
+.time-grid__all-day,
+.time-grid__body {
+  display: grid;
+}
+
+.time-grid__header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.time-grid__day-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+  border: 0;
+  border-left: 1px solid var(--color-border-faint);
+  background: none;
+  cursor: pointer;
+}
+
+.time-grid__day-label:hover {
+  background: var(--color-surface-muted);
+}
+
+.time-grid__weekday {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.time-grid__date {
+  font-family: var(--font-serif);
+  font-size: 20px;
+}
+
+.time-grid__day-label.is-today .time-grid__date {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.time-grid__all-day {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.time-grid__all-day-label {
+  padding: 4px;
+  font-size: 11px;
+  color: var(--color-text-faint);
+  text-align: right;
+}
+
+.time-grid__all-day-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 28px;
+  padding: 2px;
+  border-left: 1px solid var(--color-border-faint);
+  cursor: pointer;
+}
+
+.time-grid__scroller {
+  height: 620px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.time-grid__hour-label {
+  position: relative;
+  top: -7px;
+  padding-right: 6px;
+  font-size: 11px;
+  color: var(--color-text-faint);
+  text-align: right;
+}
+
+/* One hour = 48px (HOUR_HEIGHT_PX in calendar-views.js); a line every hour. */
+.time-grid__column {
+  position: relative;
+  border-left: 1px solid var(--color-border-faint);
+  background-image: linear-gradient(to bottom, var(--color-border-faint) 1px, transparent 1px);
+  background-size: 100% 48px;
+  cursor: pointer;
+}
+
+.time-grid__column.is-today {
+  background-color: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+}
+
+.time-grid__event {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 3px 7px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--event-color);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--event-color) 14%, white);
+  color: color-mix(in srgb, var(--event-color) 65%, black);
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+
+.time-grid__event:hover,
+.time-grid__event.is-selected {
+  background: color-mix(in srgb, var(--event-color) 26%, white);
+  z-index: 1;
+}
+
+.time-grid__event-title {
+  font-weight: bold;
+}
+
+.time-grid__event-time {
+  color: var(--color-text-muted);
+}
+
+.time-grid__now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-danger);
+  pointer-events: none;
+}
+
+.time-grid__now::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-danger);
+}
+
+/* Agenda view */
+.agenda-view {
+  padding: 4px 0;
+}
+
+.agenda-view__empty {
+  padding: 32px 16px;
+  color: var(--color-text-faint);
+  font-style: italic;
+  text-align: center;
+}
+
+.agenda-view__date {
+  padding: 16px 18px 6px;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agenda-view__date.is-today {
+  color: var(--color-accent);
+}
+
+.agenda-view__event {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  width: calc(100% - 20px);
+  margin: 2px 10px;
+  padding: 9px 12px;
+  border: 0;
+  border-left: 4px solid var(--event-color);
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.agenda-view__event:hover,
+.agenda-view__event.is-selected {
+  background: var(--color-surface-muted);
+}
+
+.agenda-view__time {
+  flex: none;
+  width: 130px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.agenda-view__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.agenda-view__title {
+  font-weight: bold;
+}
+
+.agenda-view__meta {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+/* Event editor (js/modules/calendar/calendar-editor.js) */
+.event-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border-faint);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.event-editor__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.event-editor__heading {
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-editor__title {
+  width: 100%;
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 2px solid var(--color-border-faint);
+  background: transparent;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  transition: border-color 150ms ease;
+}
+
+.event-editor__title:focus {
+  border-bottom-color: var(--color-accent);
+  outline: none;
+}
+
+.event-editor__all-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-editor__all-day input {
+  accent-color: var(--color-accent);
+}
+
+.event-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.event-editor__label {
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: var(--color-text-muted);
+}
+
+/* "Starts [date] [time]" and "Ends [date] [time]" rows */
+.event-editor__when {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-editor__when-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.event-editor__when-row .input[hidden] {
+  display: none;
+}
+
+.event-editor__colors {
+  display: flex;
+  gap: 8px;
+}
+
+.event-editor__swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.event-editor__swatch[aria-checked='true'] {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
+}
+
+.event-editor__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.event-editor__actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -18px -16px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--color-border-faint);
+  border-radius: 0 0 10px 10px;
+  background: var(--color-surface);
+}
+
+.event-editor__buttons {
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .calendar-page__editor {
+    position: static;
+    max-width: none;
+  }
+
+  .month-view__day {
+    min-height: 72px;
+  }
+
+  .event-chip__time {
+    display: none;
+  }
+
+  .agenda-view__time {
+    width: 90px;
+  }
+}
+
+/* ─── Finishing touches ───────────────────────────────────────────────── */
+
+@keyframes calendar-panel-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.calendar-page__search-input {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.calendar-page__search:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+/* The view switcher and nav buttons as soft pills */
+.calendar-page__toolbar .segmented {
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-border-faint);
+}
+
+.calendar-page__toolbar .segmented__option {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.calendar-page__toolbar .segmented__option.is-active {
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  color: var(--color-text);
+}
+
+.calendar-page__toolbar .button,
+.calendar-page__nav .icon-button {
+  border-radius: 999px;
+}
+
+.event-chip:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.month-view__day.is-today {
+  background: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+}
+
+.time-grid__event:hover,
+.time-grid__event.is-selected {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.agenda-view__event:hover,
+.agenda-view__event.is-selected {
+  background: var(--color-surface-muted);
+}
+
+/* The editor: the "Calendar entry | Event" switch spans the panel */
+.event-editor__kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-self: stretch;
+  padding: 3px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-border-faint);
+}
+
+.event-editor__kind .segmented__option {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 13px;
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+
+.event-editor__kind .segmented__option.is-active {
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+  color: var(--color-text);
+}
+
+.event-editor__kind-hint {
+  margin-top: -6px;
+}
+
+.event-editor .input {
+  border-color: var(--color-border);
+  border-radius: 6px;
+}
+
+.event-editor__swatch:hover {
+  transform: scale(1.1);
+}
+
+.event-editor__field + .event-editor__field {
+  padding-top: 2px;
+}
+
+.event-editor__visibility {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.event-editor__visibility-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 4px;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.event-editor__visibility-choice:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-weight: bold;
+}
+
+.event-editor__visibility-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.event-editor__visibility-choice:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-page__editor { animation: none; }
+}
+
+/* A "Coming up" event on the homepage card, with RSVP buttons under it. */
+.calendar-event-wrap {
+  padding-bottom: 4px;
+}
+
+.calendar-event-wrap .rsvp {
+  padding-left: 62px;
+  flex-wrap: wrap;
+}
+
+.calendar-event-wrap .rsvp__button {
+  min-height: 24px;
+  padding: 0 7px;
+  font-size: 12px;
+}
+
+/* A new month or week sliding in after a swipe (js/ui/swipe.js). */
+.is-slide-next {
+  animation: calendar-slide-next 220ms ease-out;
+}
+
+.is-slide-previous {
+  animation: calendar-slide-previous 220ms ease-out;
+}
+
+@keyframes calendar-slide-next {
+  from { opacity: 0.3; transform: translateX(36px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes calendar-slide-previous {
+  from { opacity: 0.3; transform: translateX(-36px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-slide-next,
+  .is-slide-previous {
+    animation: none;
+  }
+}
+
+.calendar-page__view,
+.calendar__grid {
+  touch-action: pan-y;
+}
+
+/* "Limit [ 12 ] people (optional)", "Area [▾] …": one line. */
+.event-editor__field--inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.event-editor__field--inline .event-editor__label {
+  min-width: 44px;
+}
+
+.event-editor .event-editor__capacity {
+  flex: none;
+  width: 80px;
+  height: auto;
+  min-height: 0;
+  padding: 4px 8px;
+}
+
+/* Editing or looking at an event (Nov 15): the panel sits beside the calendar, which shrinks to make room,
+   instead of wrapping below it. The panel scrolls on its own, so Save stays in reach. The mini-month sidebar
+   steps aside while it's open, so the calendar keeps as much room as it can. */
+@media (min-width: 761px) {
+  .calendar-page__layout.has-editor { flex-wrap: nowrap; }
+  .calendar-page__layout.has-editor .calendar-page__view { flex: 1 1 0; min-width: 0; }
+  .calendar-page__layout.has-editor .calendar-page__editor {
+    flex: 0 0 min(380px, 40%);
+    max-width: none;
+    min-width: 0;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .calendar-page__layout.has-editor .event-editor .form-row { flex-wrap: wrap; }
+}
+@media (min-width: 761px) {
+  .calendar-page__layout.has-editor .calendar-page__sidebar { display: none; }
+}
+/* In a narrow side panel, the time goes under the date rather than getting clipped. */
+@container (max-width: 360px) {
+  .event-editor__when-row { grid-template-columns: 52px minmax(0, 1fr); }
+  .event-editor__when-row .input[type="time"] { grid-column: 2; }
+}
+.calendar-page__editor { container-type: inline-size; }

@@ -1,0 +1,21 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
+    bar=pg.locator('.tab-bar')
+    print('tabs:', [t.split('\n')[-1] for t in bar.locator('.tab-bar__tab').all_inner_texts()])
+    bar.get_by_role('link', name='Blog').tap(); pg.wait_for_timeout(700)
+    print('blog tab →', pg.evaluate('location.hash'), '| lit:', bar.locator('.tab-bar__tab.is-current').inner_text().split('\n')[-1])
+    bell=pg.locator('.app-bar__bell'); print('bell visible:', bell.is_visible(), '| label:', bell.get_attribute('aria-label'))
+    bell.tap(); pg.wait_for_timeout(400)
+    print('sheet open:', pg.locator('.notifications-menu').is_visible(), '| lit tabs while open:', bar.locator('.tab-bar__tab.is-current').count())
+    pg.screenshot(path='test-output/tabs-sheet.png')
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+    print('closed:', not pg.locator('.notifications-menu').is_visible())
+    pg.evaluate("location.hash='#feed'"); pg.wait_for_timeout(600)
+    print('feed lit:', bar.locator('.tab-bar__tab.is-current').inner_text().split('\n')[-1])
+    pg.screenshot(path='test-output/tabs.png')
+    print('errors', errs)

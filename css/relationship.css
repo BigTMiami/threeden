@@ -1,0 +1,399 @@
+/*
+ * relationship.css — the Relationship map (js/modules/relationship/).
+ *
+ *   .relmap          the map box (an <svg> inside); --editable on the full page
+ *   .relmap__node    a person (circle) or organization (rounded square)
+ *   .relmap__edge    a connection: line, arrowheads, label
+ *   .relmap-panel    the side panel on the full page
+ *   .relmap-card     the homepage card
+ *
+ * Node colors come from COLORS in relationship-data.js (set as attributes);
+ * everything else is here.
+ */
+
+.relmap {
+  position: relative;
+  height: 100%;
+  min-height: 160px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, #dfe3e8 1px, transparent 1.2px) 0 0 / 22px 22px,
+    var(--color-surface);
+  outline: none;
+}
+
+.relmap--editable {
+  height: calc(100vh - 230px);
+  min-height: 460px;
+  border: 1px solid var(--color-border);
+  cursor: grab;
+}
+
+.relmap--editable:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.relmap.is-panning {
+  cursor: grabbing;
+}
+
+.relmap__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+}
+
+/* ─── Nodes ─────────────────────────────────────────────────────────────── */
+
+.relmap__node {
+  cursor: pointer;
+}
+
+.relmap--editable .relmap__node {
+  cursor: move;
+}
+
+.relmap__shape {
+  stroke-width: 2;
+}
+
+.relmap__node:hover .relmap__shape {
+  stroke-width: 3;
+}
+
+.relmap__halo {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.relmap__initials {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* Names and labels get a white outline so lines don't run through them. */
+.relmap__name,
+.relmap__description,
+.relmap__edge-label {
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.relmap__name {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.relmap__description {
+  fill: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+.relmap__node.is-faded,
+.relmap__edge.is-faded {
+  opacity: 0.22;
+}
+
+.relmap__node.is-dragging {
+  opacity: 0.85;
+}
+
+.relmap__node.is-drop-target .relmap__shape {
+  stroke: var(--color-accent);
+  stroke-width: 4;
+}
+
+.relmap__connect-handle {
+  cursor: crosshair;
+}
+
+.relmap__connect-handle circle {
+  fill: var(--color-accent);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.relmap__connect-handle path {
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.relmap__connect-line {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  pointer-events: none;
+}
+
+/* ─── Connections ───────────────────────────────────────────────────────── */
+
+.relmap__edge {
+  cursor: pointer;
+}
+
+.relmap__edge-line {
+  fill: none;
+  stroke: #8a9099;
+  stroke-width: 1.6;
+}
+
+.relmap__edge.is-dashed .relmap__edge-line {
+  stroke-dasharray: 6 4;
+}
+
+/* A wide invisible line on top, so thin lines are easy to click. */
+.relmap__edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+}
+
+.relmap__edge:hover .relmap__edge-line {
+  stroke: var(--color-text-muted);
+  stroke-width: 2.4;
+}
+
+.relmap__edge.is-selected .relmap__edge-line {
+  stroke: var(--color-accent);
+  stroke-width: 2.6;
+}
+
+.relmap__edge-label {
+  fill: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.relmap__edge.is-selected .relmap__edge-label {
+  fill: var(--color-accent-hover);
+}
+
+.relmap__arrow path {
+  fill: #8a9099;
+}
+
+.relmap__arrow.is-selected path {
+  fill: var(--color-accent);
+}
+
+/* ─── Captions ──────────────────────────────────────────────────────────── */
+
+.relmap__caption text {
+  fill: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.relmap--editable .relmap__caption {
+  cursor: move;
+}
+
+.relmap__caption.is-selected text {
+  fill: var(--color-accent-hover);
+  text-decoration: underline dotted;
+}
+
+/* ─── Full page: toolbar and side panel ─────────────────────────────────── */
+
+.relmap-toolbar__zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.relmap-toolbar__zoom .icon-button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border-strong);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.relmap-layout {
+  align-items: stretch;
+}
+
+.relmap-panel {
+  max-height: calc(100vh - 230px);
+}
+
+.relmap-panel__heading {
+  margin: 14px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.relmap-panel__list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.relmap-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-faint);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.relmap-panel__row:hover {
+  background: var(--color-page);
+}
+
+.relmap-panel__row-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.relmap-panel__row-name {
+  color: var(--color-link);
+}
+
+.relmap-panel__row-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.relmap-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid;
+  border-radius: 50%;
+}
+
+.relmap-swatch--organization {
+  border-radius: 3px;
+}
+
+.relmap-panel__colors {
+  display: flex;
+  gap: 6px;
+}
+
+.relmap-panel__color {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.relmap-panel__color.is-selected {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.relmap-panel__pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 12px;
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.relmap-panel__pair-arrow {
+  color: var(--color-text-muted);
+}
+
+.relmap-panel__check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: var(--font-size-small);
+}
+
+/* ─── Homepage card ─────────────────────────────────────────────────────── */
+
+.relmap-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.relmap-card__description {
+  margin: 0 0 6px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.relmap-card .relmap {
+  flex: 1 1 auto;
+  border: 1px solid var(--color-border-faint);
+}
+
+.relmap-linked {
+  margin-top: 10px;
+}
+
+.relmap-linked__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.relmap-linked__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-faint);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.relmap-linked__name {
+  color: var(--color-link);
+}
+
+.relmap-linked__details {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+@media (max-width: 860px) {
+  .relmap--editable {
+    height: 60vh;
+    min-height: 320px;
+  }
+
+  .relmap-panel {
+    max-height: none;
+  }
+}

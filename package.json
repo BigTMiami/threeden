@@ -1,0 +1,13 @@
+{
+  "name": "3den-prototype",
+  "private": true,
+  "type": "module",
+  "description": "3den: a no-framework HTML, CSS, and JavaScript prototype. Nothing to install to run it.",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "serve": "python3 -m http.server 8765",
+    "lint": "eslint js",
+    "typecheck": "tsc -p jsconfig.json",
+    "check": "eslint js && tsc -p jsconfig.json"
+  }
+}

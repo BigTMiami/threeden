@@ -1,0 +1,22 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
+    pg.evaluate("location.hash='#space-mutualaid'"); pg.wait_for_timeout(900)
+    w=pg.locator('.welcome-list')
+    print('shown:', w.count(), '|', w.locator('.next-step__count').inner_text())
+    print('next:', w.locator('.next-step__label').inner_text())
+    pg.screenshot(path='test-output/wl.png')
+    w.get_by_role('button', name='Go').click(); pg.wait_for_timeout(600)
+    print('went to:', pg.evaluate('location.hash')); pg.go_back(); pg.wait_for_timeout(700)
+    print('next after reading:', w.locator('.next-step__label').inner_text(), '|', w.locator('.next-step__count').inner_text())
+    w.get_by_label('Say hello').fill('I am Leo, I have a car and can drive Saturdays.'); w.get_by_role('button', name='Post').click(); pg.wait_for_timeout(300)
+    print('after hello:', pg.locator('.next-step__count').inner_text(), '|', pg.locator('.next-step__label').inner_text())
+    print('intro saved:', pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getSpaces().find(x=>x.id==='mutualaid').intros['m-leo']})()"))
+    pg.locator('.welcome-list').get_by_role('button', name='Hide getting settled in', exact=False).click(); pg.wait_for_timeout(200)
+    pg.reload(); pg.wait_for_timeout(900); print('hidden after reload:', pg.locator('.welcome-list').count())
+    pg.evaluate("location.hash='#space-tenants'"); pg.wait_for_timeout(600); print('not on old group:', pg.locator('.welcome-list').count())
+    print('errors', errs)

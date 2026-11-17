@@ -1,0 +1,50 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+import os; os.makedirs('test-output/out', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()')
+    pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
+    pg.evaluate("location.hash='#groups-explore'"); pg.wait_for_timeout(900)
+    names=lambda: [t.split('\n')[0] for t in pg.locator('.explore-groups .explore-list__name').all_inner_texts()]
+    print('where:', pg.locator('.explore-where__menu .choice-menu__button').inner_text())
+    print('suggested chips:', pg.locator('.explore-interests__chip.is-suggested').all_inner_texts())
+    print('groups near:', names(), '| more:', pg.locator('.explore-groups__more').inner_text())
+    print('first meta:', pg.locator('.explore-groups .explore-list__meta').first.inner_text() if pg.locator('.explore-groups .explore-list__meta').count() else '-')
+    print('friends lines:', pg.locator('.explore-groups .explore-list__friends').all_inner_texts()[:3])
+    print('events near:', pg.locator('.explore-events > li').count(), '| note:', pg.locator('.explore-events__note').inner_text())
+    pg.screenshot(path='test-output/explore-near.png', full_page=True)
+    # pick a neighborhood
+    pg.locator('.explore-where__menu .choice-menu__button').click(); pg.wait_for_timeout(150)
+    opts=pg.locator('.explore-where__menu [role=option]').all_inner_texts(); print('where options:', opts[:6], '…', len(opts))
+    pg.locator('.explore-where__menu [role=option]', has_text='Crown Heights').click(); pg.wait_for_timeout(400)
+    print('crown heights groups:', names(), '| more:', pg.locator('.explore-groups__more').inner_text())
+    # interests rank
+    pg.locator('.explore-interests__chip', has_text='Helping out').click(); pg.wait_for_timeout(300)
+    print('after Helping out:', names()[:3])
+    print('saved interests:', pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getCurrentUser().interests})()"))
+    pg.locator('.explore-interests__chip', has_text='Music').click(); pg.wait_for_timeout(300)
+    print('after +Music:', names()[:3])
+    more=pg.locator('.explore-groups__more button')
+    if more.count(): more.click(); pg.wait_for_timeout(200)
+    print('show all count:', len(names()))
+    pg.screenshot(path='test-output/explore-crown.png', full_page=False)
+    # search
+    pg.fill('.explore-search input', 'fridge'); pg.wait_for_timeout(500); print('search fridge:', names())
+    pg.fill('.explore-search input', ''); pg.wait_for_timeout(400)
+    # sort switch
+    print('sort:', pg.locator('.explore-sort button').all_inner_texts())
+    # group settings: On Explore
+    pg.evaluate("location.hash='#settings-porchlights'"); pg.wait_for_timeout(700)
+    sec=pg.locator('.settings-section', has_text='On Explore')
+    print('on explore:', sec.count(), '| where now:', sec.locator('select').evaluate('s=>s.options[s.selectedIndex].text'), '| chips on:', sec.locator('.chip.is-on').all_inner_texts())
+    sec.locator('select').select_option('crestline'); pg.wait_for_timeout(300)
+    pg.locator('.settings-section', has_text='On Explore').locator('.chip', has_text='Food').click(); pg.wait_for_timeout(300)
+    print('saved:', pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); const g=s.getSpace('porchlights'); return [g.area, g.interests]})()"))
+    pg.set_viewport_size({'width':400,'height':800}); pg.evaluate("location.hash='#groups'"); pg.wait_for_timeout(300); pg.evaluate("location.hash='#groups-explore'"); pg.wait_for_timeout(800)
+    print('phone overflow:', pg.evaluate('document.documentElement.scrollWidth > innerWidth'))
+    pg.screenshot(path='test-output/explore-phone.png', full_page=False)
+    print('errors', errs[:3])
+    b.close()

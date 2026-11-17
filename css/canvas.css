@@ -1,0 +1,398 @@
+/*
+ * canvas.css — the Canvas module (js/modules/canvas/): the card, and the
+ * drawing editor on its full page.
+ */
+
+/* ─── The card ──────────────────────────────────────────────────────────── */
+
+.canvas-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.canvas-card__ask {
+  margin: 0;
+  font-weight: bold;
+}
+
+.canvas-card__shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.canvas-card__shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.canvas-card__shape:hover {
+  border-color: var(--color-accent);
+}
+
+.canvas-card__shape-box {
+  width: 40px;
+  max-height: 48px;
+  border: 2px solid var(--color-accent);
+  border-radius: 2px;
+  background: var(--color-accent-soft);
+}
+
+.canvas-card__px {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.canvas-card__picture {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--radius);
+  background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  cursor: zoom-in;
+}
+
+.canvas-card__picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.canvas-card__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.canvas-card__meta {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+/* ─── The editor ────────────────────────────────────────────────────────── */
+
+.canvas-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.canvas-editor__bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.canvas-editor__tools,
+.canvas-editor__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.canvas-editor__tools {
+  gap: 2px;
+}
+
+.canvas-editor__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.canvas-editor__tool:hover {
+  background: var(--color-surface-muted);
+}
+
+.canvas-editor__tool.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.canvas-editor__divider {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--color-border);
+}
+
+.canvas-editor__color input {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+}
+
+.canvas-editor__swatches {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.canvas-editor__swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.canvas-editor__swatch.is-on {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-accent);
+}
+
+.canvas-editor__slider,
+.canvas-editor__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.canvas-editor__slider input {
+  width: 100px;
+}
+
+.canvas-editor__value {
+  min-width: 20px;
+  color: var(--color-text-muted);
+}
+
+.canvas-editor__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 8px;
+  align-items: start;
+}
+
+.canvas-editor__viewport {
+  position: relative;
+  overflow: auto;
+  max-height: 78vh;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: #8a8f96;
+}
+
+.canvas-editor__paper {
+  position: relative;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.canvas-editor__stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  background: repeating-conic-gradient(#e6e6e6 0% 25%, #fff 0% 50%) 0 0 / 20px 20px;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.canvas-editor__stack[data-tool='move'] {
+  cursor: move;
+}
+
+.canvas-editor__stack[data-tool='pick'] {
+  cursor: copy;
+}
+
+.canvas-editor__stack[data-tool='text'] {
+  cursor: text;
+}
+
+.canvas-editor__layer,
+.canvas-editor__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-editor__overlay {
+  pointer-events: none;
+}
+
+.canvas-editor__text-input {
+  position: absolute;
+  z-index: 3;
+  min-width: 120px;
+  padding: 0 2px;
+  border: 1px dashed var(--color-accent);
+  background: rgba(255, 255, 255, 0.7);
+  font: inherit;
+}
+
+.canvas-editor__side {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.canvas-editor__side-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.canvas-editor__layers {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.canvas-editor__layer-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+
+.canvas-editor__layer-row.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.canvas-editor__layer-name {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.canvas-editor__layer-pick {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.canvas-editor__layer-row.is-active .canvas-editor__layer-pick {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.canvas-editor__layer-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border-faint);
+  font-size: 13px;
+}
+
+.canvas-editor__layer-opacity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.canvas-editor__layer-opacity input {
+  flex: 1;
+}
+
+.canvas-editor__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.canvas-editor__zoom-label {
+  min-width: 44px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.canvas-editor__spacer {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .canvas-editor__main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .canvas-editor__viewport {
+    padding: 6px;
+  }
+
+  .canvas-editor__slider input {
+    width: 70px;
+  }
+
+  .canvas-editor__swatches {
+    order: 5;
+    width: 100%;
+  }
+}
+
+/* Photo editing: Adjust and Crop (canvas-editor.js). */
+.canvas-editor__tool--wide { width: auto; padding: 0 10px; gap: 4px; font: inherit; font-weight: 600; }
+.canvas-editor__hint { font-size: var(--font-size-small); color: var(--color-text-muted); }
+.canvas-adjust { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.canvas-adjust__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.canvas-adjust__title { margin-right: 4px; }
+.canvas-adjust__filters { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.canvas-adjust__chip { padding: 3px 10px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font: inherit; font-size: var(--font-size-small); cursor: pointer; }
+.canvas-adjust__chip.is-on { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 600; }
+.canvas-adjust__slider input[type=range] { width: 110px; }
+.canvas-adjust .button[aria-pressed='true'] { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.canvas-editor__stack[data-tool='crop'] { cursor: crosshair; }

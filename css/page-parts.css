@@ -1,0 +1,252 @@
+/*
+ * page-parts.css — pieces shared by the newer full-page module views
+ * (kanban, gantt, power map, announcements, vault).
+ *
+ *   .page-toolbar   a row of search, filters and buttons above the content
+ *   .page-layout    main content with an optional side panel beside it
+ *   .side-panel     the details panel for the selected item
+ *   .tint--<color>  sets --tint to one of the label colors
+ *
+ * (The to-do and calendar pages came first and have their own versions in
+ * modules.css. They could move onto these classes later.)
+ */
+
+/* ─── Label colors ──────────────────────────────────────────────────────── */
+
+/* Same colors as calendar events (EVENT_COLORS in calendar-data.js). */
+.tint--blue   { --tint: #3366cc; }
+.tint--green  { --tint: #14866d; }
+.tint--orange { --tint: #ac6600; }
+.tint--purple { --tint: #7b3fa0; }
+.tint--red    { --tint: #b32424; }
+
+/* A small square of the item's color in front of some text. */
+.tint-swatch::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--tint, transparent);
+  vertical-align: -1px;
+}
+
+/* No text selection while dragging something inside a module. */
+body.is-pointer-dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+/* ─── Toolbar ───────────────────────────────────────────────────────────── */
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.page-toolbar__spacer {
+  flex: 1 1 0;
+}
+
+.page-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 300px;
+  padding-left: 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.page-search__input {
+  min-width: 0;
+  border: 0;
+  box-shadow: none !important;
+}
+
+.page-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-control__label {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ─── Main content + side panel ─────────────────────────────────────────── */
+
+.page-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.page-layout__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.side-panel {
+  position: sticky;
+  top: 16px;
+  flex: 0 0 340px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+}
+
+.side-panel__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.side-panel__kicker {
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.side-panel__title {
+  width: calc(100% + 7px);
+  margin: 6px 0 10px -7px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--font-serif);
+  font-size: 21px;
+  line-height: 1.3;
+  resize: none;
+}
+
+.side-panel__title:hover,
+.side-panel__title:focus {
+  border-color: var(--color-border-strong);
+  outline: none;
+}
+
+.side-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.side-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.side-panel__grid .side-panel__field {
+  margin-bottom: 0;
+}
+
+.side-panel__field--wide {
+  grid-column: 1 / -1;
+}
+
+.side-panel__label {
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: var(--color-text-muted);
+}
+
+.side-panel__notes {
+  width: 100%;
+  resize: vertical;
+}
+
+.side-panel__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border-faint);
+  font-size: var(--font-size-small);
+  color: var(--color-text-faint);
+}
+
+.side-panel__hint {
+  margin: 0 0 10px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-faint);
+}
+
+@media (max-width: 860px) {
+  .page-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .side-panel {
+    position: static;
+    flex-basis: auto;
+    max-height: none;
+  }
+
+  .page-search {
+    flex: 1 1 100%;
+  }
+}
+
+/* ─── Linked items (js/ui/source-tag.js) ────────────────────────────────── */
+
+/* On a personal homepage, which group a linked item comes from. */
+.source-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 14em;
+  padding: 0 6px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  font: 11px/1.6 var(--font-sans);
+  color: var(--color-accent-hover);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+.source-tag:hover {
+  border-color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.linked-note {
+  margin: 0 0 10px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--color-accent-border);
+  background: var(--color-accent-soft);
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+/* A heading above a list of linked items, e.g. "From your groups". */
+.linked-heading {
+  margin: 12px 0 4px;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

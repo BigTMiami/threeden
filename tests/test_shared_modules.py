@@ -1,0 +1,37 @@
+from playwright.sync_api import sync_playwright
+import os; os.makedirs('test-output', exist_ok=True)
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
+    hv=pg.locator('#homepage-view')
+    pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(500)
+    pg.evaluate("location.hash='#space-team-foxes'"); pg.wait_for_timeout(700)
+    f=hv.locator('.module-frame', has_text='League schedule')
+    print('foxes tag:', f.locator('.module-frame__shared').inner_text(), '| events:', f.locator('.calendar-event').count(), '| add form:', f.get_by_role('button', name='Add').count())
+    pg.screenshot(path='test-output/t115_foxes.png')
+    pg.evaluate("location.hash='#space-league'"); pg.wait_for_timeout(600)
+    lf=hv.locator('.module-frame', has_text='League schedule')
+    print('league tag:', lf.locator('.module-frame__shared').inner_text())
+    # Add an event in the league and see it on the team
+    pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); const m=s.getModule('league-calendar'); s.updateModuleData('league-calendar', {...m.data, events:[...m.data.events, {id:'x-new',kind:'entry',title:'Field closed for reseeding',date:m.data.events[0].date,allDay:true,repeat:'none',color:'red',createdBy:'m-leo'}]})})()")
+    pg.evaluate("location.hash='#space-team-foxes'"); pg.wait_for_timeout(600)
+    print('foxes sees new:', hv.get_by_text('Field closed for reseeding').count())
+    # Share dialog from league edit mode
+    pg.evaluate("location.hash='#space-league'"); pg.wait_for_timeout(500)
+    pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); s.setEditMode(true)})()"); pg.wait_for_timeout(300)
+    hv.locator('.module-frame[data-module-id=league-calendar]').get_by_role('button', name='Share with other groups').click(); pg.wait_for_timeout(200)
+    d=pg.locator('.share-module')
+    print('dialog groups:', d.locator('.share-module__group').all_inner_texts())
+    d.locator('.share-module__row', has_text='14 Juniper').locator('input').check()
+    d.get_by_role('button', name='Save').click(); pg.wait_for_timeout(300)
+    pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); s.setEditMode(false)})()")
+    print('sharedWith:', pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getModule('league-calendar').sharedWith.map(x=>x.spaceId+':'+x.canEdit)})()"))
+    pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(600)
+    print('juniper has schedule:', hv.locator('.module-frame', has_text='League schedule').count())
+    # Thunder can edit? Leo not member; check via context
+    print('thunder ctx visitor:', pg.evaluate("(async()=>{const c=await import('./js/editor/module-context.js'); const x=c.createModuleContext('thunder-schedule'); return [x.isVisitor, x.sharedFrom.canEdit, x.getData().events.length]})()"))
+    pg.evaluate("location.hash='#module-foxes-schedule'"); pg.wait_for_timeout(600)
+    print('full page events:', pg.locator('#module-page-view .event-chip').count())
+    b.close()
+print('ERRORS', errs)

@@ -1,0 +1,121 @@
+/* sheet.css — the spreadsheet (js/modules/sheet/). */
+
+.sheet { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 0; height: 100%; }
+.sheet--page { height: auto; }
+
+/* Toolbar */
+.sheet__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+.sheet__tool { display: inline-flex; align-items: center; gap: 4px; min-width: 30px; height: 30px; padding: 0 7px; border: 0; border-radius: 6px; background: transparent; color: var(--color-text); font: inherit; font-size: 13px; cursor: pointer; }
+.sheet__tool:hover:not(:disabled) { background: var(--color-surface-muted); }
+.sheet__tool.is-on { background: var(--color-accent-soft); color: var(--color-accent); }
+.sheet__tool:disabled { opacity: 0.45; cursor: default; }
+.sheet__tool-text { font-weight: 600; }
+.sheet__tool--menu .sheet__tool-text { font-weight: 500; }
+.sheet__divider { width: 1px; height: 20px; margin: 0 3px; background: var(--color-border); }
+.sheet__format-select { height: 30px; max-width: 170px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: inherit; font: inherit; font-size: 13px; }
+.sheet__color-mark { display: inline-grid; place-items: center; width: 18px; height: 18px; font-weight: 700; font-size: 13px; border-radius: 3px; }
+.sheet__color-mark--c { border-bottom: 3px solid; line-height: 1; }
+.sheet__color-mark--f { border: 1px solid var(--color-border-strong); }
+
+/* Formula bar */
+.sheet__bar { display: flex; align-items: center; gap: 6px; }
+.sheet__where { width: 78px; height: 30px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: inherit; font: inherit; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.sheet__fx { color: var(--color-text-muted); font-style: italic; font-family: Georgia, serif; }
+.sheet__formula-wrap { position: relative; flex: 1; min-width: 0; }
+.sheet__formula { width: 100%; height: 30px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: inherit; font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; box-sizing: border-box; }
+.sheet__hint { min-height: 18px; font-size: 12px; color: var(--color-text-muted); }
+.sheet__hint code { color: var(--color-text); background: var(--color-surface-muted); padding: 1px 5px; border-radius: 4px; }
+.sheet__suggest { position: absolute; top: 32px; z-index: 30; min-width: 260px; max-width: 420px; margin: 0; padding: 4px 0; list-style: none; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); box-shadow: var(--shadow-raised); font-size: 13px; }
+.sheet__suggest li { padding: 5px 10px; cursor: pointer; }
+.sheet__suggest li span { color: var(--color-text-muted); }
+.sheet__suggest li.is-active, .sheet__suggest li:hover { background: var(--color-accent-soft); }
+
+/* Grid */
+.sheet__scroll { position: relative; flex: 1; min-height: 0; overflow: auto; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); outline: none; }
+.sheet__scroll:focus-visible { box-shadow: 0 0 0 2px var(--color-accent); }
+.sheet--page .sheet__scroll { height: calc(100vh - 330px); min-height: 320px; }
+.sheet--card .sheet__scroll { min-height: 160px; }
+.sheet__table { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; }
+.sheet__table th, .sheet__table td { height: 26px; padding: 0 6px; border-right: 1px solid var(--color-border-faint, #e7e9ee); border-bottom: 1px solid var(--color-border-faint, #e7e9ee); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+.sheet__table thead tr.sheet__letters th { position: sticky; top: 0; z-index: 3; background: var(--color-surface-muted); color: var(--color-text-muted); font-weight: 500; font-size: 12px; text-align: center; user-select: none; cursor: s-resize; }
+.sheet__table th.sheet__rownum { position: sticky; left: 0; z-index: 2; background: var(--color-surface-muted); color: var(--color-text-muted); font-weight: 400; font-size: 12px; text-align: center; user-select: none; cursor: e-resize; }
+.sheet__table thead tr.is-frozen th.sheet__rownum { z-index: 3; }
+.sheet__table tr.is-frozen td { background: var(--color-surface); border-bottom-color: var(--color-border-strong); }
+.sheet__corner { left: 0; z-index: 4 !important; cursor: pointer !important; }
+.sheet__table th.is-active { background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface-muted)); color: var(--color-accent); font-weight: 600; }
+.sheet__table td { position: relative; cursor: cell; background: var(--color-surface); }
+.sheet__table td.is-number { font-variant-numeric: tabular-nums; }
+.sheet__table td.is-error { color: var(--color-danger, #b32424); }
+.sheet__table td.is-wrap { white-space: normal; line-height: 1.15; }
+.sheet__table td.is-wrap .sheet__val { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet__table td.is-in-range { background-image: linear-gradient(color-mix(in srgb, var(--color-accent) 13%, transparent), color-mix(in srgb, var(--color-accent) 13%, transparent)); }
+.sheet__table td.is-selected { box-shadow: inset 0 0 0 2px var(--color-accent); }
+.sheet__table td.is-fill-preview { box-shadow: inset 0 0 0 1px var(--color-accent); background-image: repeating-linear-gradient(45deg, transparent 0 4px, color-mix(in srgb, var(--color-accent) 10%, transparent) 4px 8px); }
+.sheet__table td.is-editing { padding: 0; overflow: visible; z-index: 5; }
+.sheet__table td.is-invalid { box-shadow: inset 2px 0 0 #d9480f; }
+.sheet__table td.has-list { padding-right: 16px; }
+.sheet__list-caret { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--color-text-muted); }
+.sheet__cell-input { position: relative; width: 100%; min-width: 120px; height: 26px; padding: 0 6px; border: 0; outline: 2px solid var(--color-accent); background: var(--color-surface); color: inherit; font: inherit; box-sizing: border-box; }
+.sheet__resize { position: absolute; top: 0; right: -3px; z-index: 4; width: 7px; height: 100%; cursor: col-resize; }
+.sheet__resize:hover { background: color-mix(in srgb, var(--color-accent) 40%, transparent); }
+.sheet__table thead th { position: relative; }
+.sheet__fill-handle { position: absolute; z-index: 6; width: 8px; height: 8px; border: 1px solid var(--color-surface); background: var(--color-accent); cursor: crosshair; }
+.sheet__filter-btn { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; padding: 0; }
+.sheet__filter-btn.is-on { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
+.sheet__spacer td { padding: 0; border: 0; }
+
+/* Footer: sheet tabs and the sum of the selection */
+.sheet__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
+.sheet__tabs { display: flex; align-items: center; gap: 2px; overflow-x: auto; min-width: 0; }
+.sheet__tab { height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--color-text-muted); font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.sheet__tab:hover { background: var(--color-surface-muted); }
+.sheet__tab.is-active { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--color-accent); }
+.sheet__tab--add { display: grid; place-items: center; padding: 0 8px; }
+.sheet__tab-input { height: 28px; width: 120px; padding: 0 8px; border: 1px solid var(--color-accent); border-radius: 6px; font: inherit; font-size: 13px; }
+.sheet__status { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Menus, popovers, dialogs */
+.sheet__menu-layer { position: absolute; inset: 0 auto auto 0; z-index: 40; }
+.sheet__menu { position: absolute; min-width: 200px; max-height: 360px; overflow: auto; padding: 4px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); box-shadow: var(--shadow-raised); font-size: 13px; }
+.sheet__menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--color-border); }
+.sheet__menu-item { display: flex; justify-content: space-between; gap: 16px; width: 100%; padding: 6px 10px; border: 0; border-radius: 5px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sheet__menu-item:hover:not(:disabled), .sheet__menu-item:focus-visible { background: var(--color-accent-soft); outline: none; }
+.sheet__menu-item:disabled { opacity: 0.45; cursor: default; }
+.sheet__menu-item kbd { color: var(--color-text-muted); font-family: inherit; font-size: 11px; }
+.sheet__swatches { display: grid; grid-template-columns: repeat(4, 28px); gap: 6px; min-width: 0; padding: 8px; }
+.sheet__swatch { width: 24px; height: 24px; border: 1px solid var(--color-border-strong); border-radius: 5px; cursor: pointer; padding: 0; display: inline-grid; place-items: center; color: var(--color-text-muted); font-size: 12px; vertical-align: middle; }
+.sheet__swatch.is-on { box-shadow: 0 0 0 2px var(--color-accent); }
+.sheet__filter { width: 240px; display: grid; gap: 6px; padding: 8px; }
+.sheet__filter-list { max-height: 200px; overflow: auto; border: 1px solid var(--color-border); border-radius: 6px; padding: 4px; }
+.sheet__filter-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px; }
+.sheet__filter-row span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet__filter-n { color: var(--color-text-muted); font-size: 11px; }
+.sheet__dialog { position: absolute; left: 50%; top: 60px; width: min(440px, 90vw); transform: translateX(-50%); padding: 14px 16px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.sheet__dialog h3 { margin: 0 0 8px; font-size: 1rem; }
+.sheet__dialog-body { display: grid; gap: 10px; }
+.sheet__rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.sheet__rules li { display: flex; align-items: center; gap: 8px; }
+.sheet__rule-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sheet__rule-form .input { width: auto; max-width: 140px; }
+.sheet__rule-colors { display: inline-flex; gap: 4px; }
+.sheet__find { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface-muted); }
+.sheet__find .input { width: 160px; }
+.sheet__find-count { font-size: 12px; color: var(--color-text-muted); min-width: 50px; }
+.sheet__check { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+
+/* Charts */
+.sheet__charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 12px; }
+.sheet-chart { margin: 0; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+.sheet-chart__top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.sheet-chart__title { flex: 1; min-width: 120px; border: 0; border-bottom: 1px solid transparent; background: transparent; font: inherit; font-weight: 600; color: inherit; }
+.sheet-chart__title:focus { outline: none; border-bottom-color: var(--color-accent); }
+.sheet-chart__range { width: 90px; }
+.sheet-chart__svg { width: 100%; height: auto; display: block; }
+
+.sheet__more { align-self: flex-start; }
+
+@media (max-width: 640px) {
+  .sheet__tools { flex-wrap: nowrap; overflow-x: auto; }
+  .sheet--page .sheet__scroll { height: calc(100vh - 300px); }
+  .sheet__charts { grid-template-columns: 1fr; }
+}
