@@ -18,11 +18,10 @@
  * on any to-do list you can use; Message sends to one person.
  */
 
-import { canMessage, parentsOf, childrenOf } from '../state/children.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
-import { getCurrentUser, getSpaces, getCurrentSpace, getMember, getBlogOf, getPersonalSpace, changeState, getModule, getSpaceOfModule } from '../state/store.js';
+import { getCurrentUser, getSpaces, getCurrentSpace, getBlogOf, getPersonalSpace, changeState, getModule, getSpaceOfModule } from '../state/store.js';
 import { audienceFor, audienceChip } from '../ui/audience-chip.js';
 import { can } from '../state/permissions.js';
 import { goTo } from '../router.js';
@@ -32,7 +31,8 @@ import { createTask } from '../modules/todo/todo-data.js';
 import { createEvent } from '../modules/calendar/calendar-data.js';
 import { parseQuickEvent } from '../events/quick-add.js';
 import { openDirectConversation, sendMessage } from '../state/messages.js';
-import { getFriendIds } from '../state/friends.js';
+import { createPeopleSearch } from '../ui/people-search.js';
+import { messageablePeople, suggestedIds, recipientContext } from '../messages/recipients.js';
 import { formatShortDate, formatTime } from '../utils/dates.js';
 import { eventHref } from '../events/event-details.js';
 
@@ -207,23 +207,29 @@ export function openQuickCreate(kind = 'post') {
   }
 
   function drawMessage() {
-    const groupmates = getSpaces().filter((s) => s.kind === 'group' && s.memberIds.includes(me.id)).flatMap((s) => s.memberIds);
-    const family = [...parentsOf(me.id), ...childrenOf(me.id).map((c) => c.id)];
-    const people = [...new Set([...getFriendIds(me.id), ...groupmates, ...family])].filter((id) => id !== me.id && canMessage(me.id, id)).map(getMember).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
-    const to = h('select', { class: 'input input--compact', 'aria-label': 'To' }, h('option', { value: '' }, 'Choose someone'), people.map((p) => h('option', { value: p.id }, p.name)));
+    const to = createPeopleSearch({
+      people: messageablePeople(me),
+      suggestedIds: suggestedIds(me),
+      describe: (person) => recipientContext(me, person),
+      multiple: false,
+      label: 'To',
+      emptyHint: 'You can message people in your groups, and your friends.',
+    });
     const text = h('textarea', { class: 'input', rows: '3', placeholder: 'Write a message', 'aria-label': 'Message' });
     return h('form', {
       class: 'quick-create__form',
       onSubmit: (e) => {
         e.preventDefault();
-        if (!to.value) { to.focus(); showToast('Choose who it’s for.'); return; }
+        const [toId] = to.getSelected();
+        if (!toId) { to.focus(); showToast('Choose who it’s for.'); return; }
         if (!text.value.trim()) { text.focus(); return; }
-        const conversation = openDirectConversation(me.id, to.value);
+        const conversation = openDirectConversation(me.id, toId);
         sendMessage(conversation.id, me.id, text.value);
         close();
         goTo(`#messages-${conversation.id}`);
       },
-    }, text, h('div', { class: 'quick-create__foot' }, h('label', { class: 'quick-create__where' }, h('span', {}, 'To'), to), h('button', { type: 'submit', class: 'button button--primary' }, 'Send')));
+    }, h('div', { class: 'quick-create__to' }, h('span', { class: 'quick-create__to-label' }, 'To'), to.element),
+    text, h('div', { class: 'quick-create__foot' }, h('button', { type: 'submit', class: 'button button--primary' }, 'Send')));
   }
 
   overlay = h('div', { class: 'sub-viewer quick-create', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Make something new' },

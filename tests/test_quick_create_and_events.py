@@ -25,7 +25,7 @@ with sync_playwright() as p:
     print('56 task added:', store(pg, "return s.getSpaces().flatMap(x=>x.modules).some(m=>(m.data?.tasks||[]).some(t=>t.text==='Bring extension cords'))"))
     # message
     pg.evaluate("(async()=>{const q=await import('./js/editor/quick-create.js'); q.openQuickCreate()})()"); qc.get_by_role('tab', name='Message').click()
-    qc.get_by_label('To', exact=True).select_option(label='Jamal Brooks'); qc.get_by_label('Message').fill('See you Thursday'); qc.get_by_role('button', name='Send').click(); pg.wait_for_timeout(500)
+    qc.get_by_label('To', exact=True).fill('Jamal Brooks'); pg.keyboard.press('Enter'); qc.get_by_label('Message').fill('See you Thursday'); qc.get_by_role('button', name='Send').click(); pg.wait_for_timeout(500)
     print('56 message →', pg.evaluate('location.hash'))
     # 57: plan an event from tenants → host and usual time
     pg.evaluate("location.hash='#space-tenants'"); pg.wait_for_timeout(500); pg.evaluate("location.hash='#new-event'"); pg.wait_for_timeout(600)

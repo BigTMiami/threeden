@@ -126,6 +126,22 @@ textarea {
   color: #ffffff;
 }
 
+/* Links styled as buttons keep their button colors on hover; otherwise a:hover
+   turns the text link-blue, which vanishes on a blue button (and on phones a
+   tap leaves the hover on). */
+a.button:hover {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+a.button--primary:hover {
+  color: var(--color-on-accent);
+}
+
+a.button--danger:hover {
+  color: #ffffff;
+}
+
 .button--small {
   min-height: 30px;
   padding: 0 10px;

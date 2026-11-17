@@ -114,6 +114,18 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **New message: search people (Nov 17):** the To box on `#messages-new` and
+  in the + menu's Message is `createPeopleSearch()` (js/ui/people-search.js):
+  suggestions on focus (recent direct conversations, then friends), search by
+  name or @username, keyboard and tap, chips; `multiple: false` for the +
+  menu. Who's messageable, suggested, and the "Friend · Porch Lights" line
+  come from js/messages/recipients.js (groups, friends, parents/children,
+  `canMessage`). Friends you share no group with can now be messaged from
+  New message too. Also fixed `a:hover` beating `.button--primary` (blue text
+  on a blue link-button while hovered, and after a tap on phones):
+  `a.button:hover` rules in base.css. Test: `test_new_message_search.py`;
+  `test_quick_create_and_events.py` now types in the To box.
+
 - **First tutorial removed; phone menus fixed (Nov 17):** Leo asked to remove
   the whole tutorial a new account sees, to design a new one. Gone: the
   "We set this up for you · Change" note, the "Next: Add your first task"

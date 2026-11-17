@@ -805,3 +805,160 @@
 
 /* A chat shown as a homepage module: at the end of its messages, the page scrolls on (no getting stuck). */
 .module-frame .thread__messages { overscroll-behavior: auto; }
+
+/* ─── "To": search people by name or @username (js/ui/people-search.js) ───── */
+
+.people-search {
+  min-width: 0;
+}
+
+.people-search__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  cursor: text;
+}
+
+.people-search__field:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.people-search__chips {
+  display: contents;
+}
+
+.people-search__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 4px 2px 2px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  font-size: var(--font-size-body);
+}
+
+.people-search__chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.people-search__remove {
+  display: inline-flex;
+  padding: 3px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.people-search__remove:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.people-search__input {
+  flex: 1 1 160px;
+  min-width: 120px;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-large);
+  outline: none;
+}
+
+.people-search__results {
+  max-height: 320px;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  list-style: none;
+}
+
+.people-search__results[hidden] {
+  display: none;
+}
+
+.people-search__heading {
+  padding: 4px 12px 2px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.people-search__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.people-search__option.is-active,
+.people-search__option:hover {
+  background: var(--color-accent-soft);
+}
+
+.people-search__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.people-search__name {
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.people-search__detail,
+.people-search__hint {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.people-search__empty {
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+}
+
+.people-search__hint {
+  display: block;
+  white-space: normal;
+}
+
+/* In the + menu's Message: "To" beside the box. */
+.quick-create__to {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.quick-create__to-label {
+  padding-top: 9px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.quick-create__to .people-search {
+  flex: 1;
+}

@@ -18,21 +18,21 @@
  * On a phone, the list and the conversation take turns filling the screen.
  */
 
-import { canMessage, parentsOf, childrenOf } from '../state/children.js';
 import { openMessage } from '../state/e2ee.js';
 import { h, replaceChildren, debounce } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { avatar, avatarStack } from '../ui/avatar.js';
 import { showToast } from '../ui/toast.js';
-import { memberToggles } from '../ui/member-toggles.js';
+import { createPeopleSearch } from '../ui/people-search.js';
 import { timeAgo } from '../utils/dates.js';
 import { groupInitials } from '../utils/initials.js';
-import { getCurrentUser, getMember, getSpace, getVisibleSpaces, subscribe } from '../state/store.js';
+import { getCurrentUser, getMember, getSpace, subscribe } from '../state/store.js';
 import {
   getConversation, getConversationsFor, conversationTitle, conversationMemberIds, lastMessage, messagePreview, unreadCount,
   openDirectConversation, createGroupConversation, renameConversation, leaveConversation,
 } from '../state/messages.js';
 import { createThreadView } from './thread-view.js';
+import { messageablePeople, suggestedIds, recipientContext } from './recipients.js';
 import { goTo, spaceHref, blogHref } from '../router.js';
 import { usesSocial } from '../state/friends.js';
 
@@ -227,20 +227,30 @@ function renderThreadHeader(conversation, me, redraw) {
 
 // ─── New message ─────────────────────────────────────────────────────────────
 
-/** Pick one person for a direct message, or several for a group conversation. */
+/**
+ * "To": search by name or @username and pick one person for a direct
+ * message, or several for a group conversation (people-search.js).
+ */
 function renderNewConversation(me) {
-  // People you share a group with, A–Z.
-  const knownIds = new Set(getVisibleSpaces().filter((s) => s.kind === 'group').flatMap((s) => s.memberIds));
-  // Parents and their children can always write to each other (children.js).
-  for (const id of [...parentsOf(me.id), ...childrenOf(me.id).map((c) => c.id)]) knownIds.add(id);
-  knownIds.delete(me.id);
-  const people = [...knownIds].map(getMember).filter(Boolean).filter((m) => canMessage(me.id, m.id)).sort((a, b) => a.name.localeCompare(b.name)); // child accounts: see children.js
+  const people = messageablePeople(me);
   let chosen = [];
 
   const nameField = h('label', { class: 'settings-field', hidden: true },
     h('span', { class: 'settings-field__label' }, 'Name (optional)'),
     h('input', { type: 'text', class: 'input', placeholder: 'e.g. Saturday ride', 'aria-label': 'Conversation name' }));
   const error = h('p', { class: 'form-error', role: 'alert' });
+  const to = people.length ? createPeopleSearch({
+    people,
+    suggestedIds: suggestedIds(me),
+    describe: (person) => recipientContext(me, person),
+    label: 'To',
+    emptyHint: 'You can message people in your groups, and your friends.',
+    onChange: (ids) => {
+      chosen = ids;
+      nameField.hidden = chosen.length < 2;
+      error.textContent = '';
+    },
+  }) : null;
 
   const form = h('form', {
     class: 'new-conversation',
@@ -248,6 +258,7 @@ function renderNewConversation(me) {
       event.preventDefault();
       if (chosen.length === 0) {
         error.textContent = 'Choose at least one person.';
+        to?.focus();
         return;
       }
       const conversation = chosen.length === 1
@@ -259,13 +270,7 @@ function renderNewConversation(me) {
     h('h2', { class: 'thread-header__title' }, 'New message'),
     h('div', { class: 'settings-field' },
       h('span', { class: 'settings-field__label' }, 'To'),
-      people.length
-        ? memberToggles(people, [], (ids) => {
-            chosen = ids;
-            nameField.hidden = chosen.length < 2;
-            error.textContent = '';
-          }, 'People to message')
-        : h('p', { class: 'module-empty' }, 'Join a group to message its members.'),
+      to ? to.element : h('p', { class: 'module-empty' }, 'Join a group or add a friend to message them.'),
       h('span', { class: 'settings-field__hint' }, 'One person starts a direct message; two or more start a group conversation.')),
     nameField,
     error,
@@ -273,5 +278,7 @@ function renderNewConversation(me) {
       h('button', { type: 'submit', class: 'button button--primary' }, 'Start conversation'),
       h('a', { class: 'button button--quiet', href: messagesHref() }, 'Cancel')),
   );
+  // Ready to type a name (not on phones, where the keyboard would cover the page).
+  if (to && window.matchMedia('(min-width: 641px)').matches) requestAnimationFrame(() => to.focus());
   return form;
 }

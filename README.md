@@ -23,6 +23,7 @@ Checks (nothing to install if ESLint and TypeScript are on your machine): `npm r
 
 | Feature | Where |
 | --- | --- |
+| **New message: search people by name or @username** (Nov 17): the **To** box on New message (`#messages-new`) and in the + menu's Message is a search instead of a wall of name chips or a long dropdown. Focus it for **Suggested** (people you talked to lately, then friends); type a name or @username to narrow it (names that start with what you typed come first; each result shows @username and why you know them: Friend, Your child, or a shared group); arrow keys and Enter, or a tap, pick. Chosen people are chips (× or Backspace removes them); one person starts a direct message, two or more a group conversation with an optional name. The + menu's Message takes one person. Who you can message: people in your groups, your friends, and your parents or children (child accounts' limits still apply). Also fixed: the blue **New message** button (and every link styled as a primary button) lost its white text while hovered, and on phones right after a tap. `tests/test_new_message_search.py` | `js/ui/people-search.js`, `js/messages/recipients.js`, `js/messages/messages-page.js`, `js/editor/quick-create.js`, `a.button:hover` in `css/base.css` |
 | **No tutorial for new accounts, for now** (Nov 17): the first tutorial is gone so a new one can be designed. A new account lands on its starting homepage (Dashboard and vault) with no "We set this up for you · Change" note, no "Next: Add your first task" line, no suggestions, and the ordinary Dashboard (the three-week focused view with its steps and tips is gone too). Still there: the two-second welcome splash for direct sign-ups, the "Welcome to 3den" toast, "Dive into 3den?" on the first Blog visit, finishing a quick account, and a group's own welcome checklist for new members. `tests/test_no_first_tutorial.py` | `js/onboarding/onboarding-state.js`, `js/modules/dashboard/dashboard-module.js` |
 | **Phone menus stay on screen** (Nov 17): the page header's **Edit** menu opens on whichever side keeps it on screen (on phones the button is at the left, and the menu used to run off it), and the editing bar's **Layout** menu slides sideways to fit, full width on phones. Also fixed: a stray "null" under a Tasks board shown from a vault (Porch Lights' Song status) | `keepOnScreen()` in `js/editor/space-header.js`, `keepMenuOnScreen()` in `js/editor/edit-bar.js`, `js/modules/vaultfile/vaultfile-module.js` |
 | **Co-authored articles, with the vault**: an article's editor has **Written by**: the lead plus co-authors picked from the group's members (or the blog owner's friends). Co-authors see and edit the draft (even on someone else's blog), are told when added, and share the byline ("By Priya Nair and Leo L"); "Last saved by Priya, 5h ago", and if a co-author saved since you opened it: **Load theirs** or **Save mine anyway**. In a vault, a note remembers everyone who wrote in it, and **Turn into an article** makes it a draft (title → headline, text → story) that they all co-author; the note and the draft link to each other. Sample: the Tenants Union's "Union files" vault (Campaign tab) and a shared draft in The Bulletin | `js/modules/articles/`, `js/modules/articles/from-note.js`, `js/modules/vault/vault-parts.js` |
@@ -359,6 +360,7 @@ js/
 
   messages/                Messages
     messages-page.js       Conversation list, the open conversation, "New message"
+    recipients.js          Who you can start a conversation with, who to suggest, and how you know them
     thread-view.js         One conversation's messages + writing box (also used by the Chat module)
     attachments.js         The "+" menu (event, photo or video, blog) and how those show in a conversation
     safety-number.js       The encryption panel: safety number and Mark as verified
@@ -478,6 +480,7 @@ js/
     avatar.js              Member initials badge, and overlapping stacks of them
     member-picker.js       Button + floating checklist for choosing people
     member-toggles.js      Row of toggle buttons for choosing people in a form
+    people-search.js       A "To" box: search people by name or @username, pick them as chips
     pointer-tracker.js     Small drag helper for things inside a module (cards, bars, dots)
     source-tag.js          The "from 14 Juniper Lane" label on linked items
     text.js                Shows text people wrote, with links and @mentions
