@@ -4,6 +4,8 @@ A working prototype of the 3den group homepage. You can switch into edit mode, d
 
 It's plain HTML, CSS and JavaScript (ES modules). There's no framework, no build step and no dependencies.
 
+For the ideas behind it (the building blocks, design rules, how the parts fit, and open questions), see **DESIGN.md**.
+
 ## Running it
 
 Any static file server works. From this folder:
@@ -259,6 +261,7 @@ phone.html                 The app inside an iPhone frame, for looking at the ph
 manifest.json              Name, icons and "open full screen" for Add to Home Screen
 icons/                     The app icon (Home Screen, browser tab)
 README.md                  This file
+DESIGN.md                  The building blocks, design rules, structure, and open questions
 HANDOFF.md                 State of the work and what's next, for a new session
 tests/                     Playwright browser tests (tests/README.md)
 sw.js                     The service worker: phone notifications (push, taps open the page)
@@ -579,7 +582,7 @@ Module types adapt to who's in the space through `context.members`. For example,
 
 **Recent visits:** `setCurrentSpace()` records when you open each space in `state.visits`. The Groups menu and the default page use it to put your most recent group first.
 
-**Saved data:** the save is stored under a versioned key (`STORAGE_KEY` in `js/state/storage.js`). When the saved shape or the sample data changes, bump the version: saves from older versions aren't converted, they're deleted and the prototype starts fresh from the sample data.
+**Saved data:** the save is stored in IndexedDB under one steady key (`js/state/storage.js`) and kept through updates. When the saved shape or the sample data changes, bump `DATA_VERSION` in `js/state/upgrade.js`: an older save is brought up to date on load, new sample content is added around the person's own data, and their edits and deletions stay. Changes the normalizers can't absorb get a step in `MIGRATIONS`.
 
 ## Sample data
 
@@ -620,8 +623,8 @@ The idea: people mostly find 3den because someone sent them something, so the fi
 
 3den's phone layout is the same app, rearranged by `css/mobile.css` (loaded last, everything inside `@media (max-width: 640px)`):
 
-- **Tab bar** (`js/editor/tab-bar.js`, the `<nav id="tab-bar">` in index.html): Home · Blog · Groups · Messages · Alerts. Alerts toggles the bell's list (`toggleNotifications()` in notification-bell.js), which the bell announces with a `3den:notifications-toggled` event so the tab lights up.
-- **Top bar:** the links hide (the tab bar has them), the bell's button hides, and a 🔍 button (`.app-bar__search-toggle`) adds `body.is-searching` to show the search row. Going to another page folds it away.
+- **Tab bar** (`js/editor/tab-bar.js`, the `<nav id="tab-bar">` in index.html): Home · Feed · Groups · Messages · Blog. Blog took the place of Alerts; the bell's list opens from the top bar.
+- **Top bar:** the links hide (the tab bar has them), the bell stays, and a 🔍 button (`.app-bar__search-toggle`) adds `body.is-searching` to show the search row. Going to another page folds it away.
 - **Sheets:** any open top-bar menu (`.app-bar__menu.is-open .groups-menu`) becomes a sheet fixed to the bottom of the screen, with a dimmed backdrop (the wrapper's `::after`; tapping it counts as "outside" and closes the menu). The frosted blur sits on `.app-bar::before`, not the bar itself, because a blurred parent would trap the fixed sheets inside it.
 - **Safe areas:** `--safe-top` and `--safe-bottom` come from `env(safe-area-inset-*)` on a real iPhone (index.html has `viewport-fit=cover`). Inside phone.html the app is loaded with `?frame=iphone` (or `?frame=iphone-se`), which sets `html.in-phone-frame` and a pretend 20 px home indicator (none on an SE).
 - **Swiping between modules** (`js/editor/module-swiper.js`, the `<nav id="module-strip">` in index.html): in view mode with two or more modules, the grid gets `is-swiping`, which css/mobile.css turns into a horizontal scroll-snapping row with each module one screen wide and nearly the screen's height (the module's body scrolls inside). The chips sit in a bar fixed just above the tab bar (`--module-strip-height`; the page gets extra bottom padding while it shows). The script draws the chips from the grid's frames (a MutationObserver notices redraws), lights the one in view, adds the dots, and remembers the module you were on per homepage and tab. The List/Swipe choice is kept in localStorage (`3den.phone-homepage-layout`).

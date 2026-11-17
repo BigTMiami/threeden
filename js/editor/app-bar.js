@@ -29,7 +29,7 @@
  * 3den" for a guest looking at a public page).
  *
  * On phones (css/mobile.css) the links move to a bottom tab bar
- * (tab-bar.js), the bell's button hides (the tab bar's Alerts opens it),
+ * (tab-bar.js), the bell stays (the tab bar's last spot is Blog),
  * and the search box folds into a 🔍 button that opens it under the bar.
  * Menus open as sheets from the bottom of the screen.
  *

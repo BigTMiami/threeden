@@ -21,6 +21,10 @@ this note covers the state of the work, how it was built, and what's next.
   the four goals and the principles, where 3den drifts (five "needs you"
   lists, too many ways to post), the event loop, friction, adoption and
   retention, and an ordered list of 11 moves.
+- **GitHub:** https://github.com/BigTMiami/threeden (owner BigTMiami; Leo is the
+  collaborator drabconcrete). Every feature is committed and pushed to `main`.
+- **DESIGN.md:** the building blocks, design rules, how the parts fit, and open
+  questions. Update it when the structure changes.
 - **Tests:** `tests/` in the project (two sweeps and one script per recent
   feature; see tests/README.md).
 - **Saved data:** IndexedDB (database `3den`, store `state`, key `3den.homepage-prototype`, one slot for good since Nov 16), with a matching token in localStorage (`3den.saved-token`)
@@ -85,7 +89,8 @@ functions, no build step.
 - **Writing style:** Leo wants the Oxford comma, always ("Home, Blog, and
   Groups"): in replies, on-screen text, docs, and comments.
 - **Workflow per feature:** build it → test it in a real browser with Playwright →
-  update README.md and HANDOFF.md → publish to the artifact.
+  update README.md and HANDOFF.md (and DESIGN.md if the structure changed) →
+  publish to the artifact → commit and push to GitHub.
 - **Run it:** `python3 -m http.server 8765` in the project folder, open
   `http://localhost:8765/index.html`.
 - **Checks:** `npm run check` runs ESLint (`eslint.config.js`, core rules
