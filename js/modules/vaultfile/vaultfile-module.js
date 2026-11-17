@@ -25,7 +25,7 @@
  */
 
 import { accessPicker, accessNote, effectiveAccess, renderFileComments } from '../../ui/file-access.js';
-import { h } from '../../ui/dom.js';
+import { h, appendChildren } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { decorateMentions } from '../../ui/mentions.js';
@@ -62,9 +62,11 @@ export function findLinkedFile(data) {
 }
 
 function renderVaultFile(container, context, isFullPage) {
+  // Skips the parts that are null (no access row, no comments), unlike append().
+  const add = (...parts) => appendChildren(container, parts);
   const found = findLinkedFile(context.getData());
   if (!found) {
-    container.append(h('p', { class: 'module-empty' }, 'This file was moved or deleted from its vault.'));
+    add(h('p', { class: 'module-empty' }, 'This file was moved or deleted from its vault.'));
     return null;
   }
   const { vault, item, space } = found;
@@ -92,13 +94,13 @@ function renderVaultFile(container, context, isFullPage) {
     const body = h('div', { class: 'vaultfile__module' });
     const render = isFullPage ? (moduleType.renderFullPage ?? moduleType.render) : moduleType.render;
     const cleanup = render(body, itemContext);
-    container.append(body, source, accessRow, comments);
+    add(body, source, accessRow, comments);
     return cleanup;
   }
 
   if (item.kind === 'note') {
     if (itemContext.isVisitor || !itemContext.can('createInVault')) {
-      container.append(decorateMentions(h('div', { class: 'rich-text__content vaultfile__note', html: sanitizeHtml(item.html || '') })), source, accessRow, comments);
+      add(decorateMentions(h('div', { class: 'rich-text__content vaultfile__note', html: sanitizeHtml(item.html || '') })), source, accessRow, comments);
     } else {
       const editor = createRichTextEditor({
         html: item.html,
@@ -110,20 +112,20 @@ function renderVaultFile(container, context, isFullPage) {
           updateModuleData(vault.id, vaultData);
         },
       });
-      container.append(editor.toolbar, editor.content, editor.statusBar, source, accessRow, comments);
+      add(editor.toolbar, editor.content, editor.statusBar, source, accessRow, comments);
     }
     return null;
   }
 
   if (item.kind === 'link') {
-    container.append(h('a', { class: 'vaultfile__link', href: item.url, target: '_blank', rel: 'noopener noreferrer' }, icon('link', 16), ` ${item.name}`),
+    add(h('a', { class: 'vaultfile__link', href: item.url, target: '_blank', rel: 'noopener noreferrer' }, icon('link', 16), ` ${item.name}`),
       h('p', { class: 'vaultfile__url' }, item.url), source, accessRow, comments);
     return null;
   }
 
   if (item.kind === 'folder') {
     const children = vault.data.items.filter((i) => i.parentId === item.id).sort((a, b) => a.name.localeCompare(b.name));
-    container.append(children.length
+    add(children.length
       ? h('ul', { class: 'vaultfile__folder' }, children.map((child) => h('li', {}, icon(iconForItem(child), 14), ` ${child.name}`)))
       : h('p', { class: 'module-empty' }, 'This folder is empty.'), source, accessRow);
     return null;
@@ -132,7 +134,7 @@ function renderVaultFile(container, context, isFullPage) {
   // An uploaded file.
   const { file } = item;
   const isImage = file?.mimeType.startsWith('image/') && file.dataUrl;
-  container.append(
+  add(
     isImage ? h('img', { class: 'vaultfile__image', src: file.dataUrl, alt: item.name }) : null,
     h('p', { class: 'vaultfile__file' },
       icon('file', 16), ` ${item.name} · ${formatBytes(file?.size ?? 0)} `,

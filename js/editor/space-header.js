@@ -522,6 +522,24 @@ function renderFriendButtons(meId, otherId) {
   return null;
 }
 
+/**
+ * Open a menu on the side that fits: under the button's left edge or its
+ * right edge, whichever keeps it on screen (on phones Edit sits at the left).
+ */
+function keepOnScreen(list) {
+  list.style.left = '';
+  list.style.right = '';
+  const margin = 8;
+  const box = list.getBoundingClientRect();
+  if (box.left < margin) {
+    list.style.left = '0';
+    list.style.right = 'auto';
+  } else if (box.right > window.innerWidth - margin) {
+    list.style.left = 'auto';
+    list.style.right = '0';
+  }
+}
+
 /** A one-word button that opens a small menu of [label, run, danger?] choices. */
 function friendMenu(label, iconName, title, choices, { primary = false } = {}) {
   const list = h('div', { class: 'post-menu__list friend-menu__list', role: 'menu', hidden: true });
@@ -536,6 +554,7 @@ function friendMenu(label, iconName, title, choices, { primary = false } = {}) {
     list.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     if (open) {
+      keepOnScreen(list);
       document.addEventListener('pointerdown', closeIfOutside);
       document.addEventListener('keydown', onKey);
       list.querySelector('button')?.focus();

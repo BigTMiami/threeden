@@ -148,7 +148,22 @@ function layoutPicker() {
     setTimeout(() => { document.addEventListener('pointerdown', close, true); document.addEventListener('keydown', close, true); });
   }
   const wrapper = h('div', { class: 'layout-menu__wrap' }, menu, button);
+  if (layoutMenuOpen) requestAnimationFrame(() => keepMenuOnScreen(menu, wrapper));
   return wrapper;
+}
+
+/**
+ * Slide the open Layout menu sideways so all of it is on screen. It opens
+ * from the button's left edge, which on a phone can push it off either side.
+ */
+function keepMenuOnScreen(menu, wrapper) {
+  if (!menu.isConnected) return;
+  const margin = 8;
+  const anchor = wrapper.getBoundingClientRect().left;
+  const width = menu.getBoundingClientRect().width;
+  const left = Math.max(margin, Math.min(anchor, window.innerWidth - margin - width));
+  menu.style.left = `${left - anchor}px`;
+  menu.style.right = 'auto';
 }
 
 function featuredPicker() {

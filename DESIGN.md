@@ -213,8 +213,9 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
 - **Appearance:** each space's look is CSS custom properties, so every module
   follows without knowing.
 - **Onboarding:** guests can browse public pages; saving anything asks for an
-  account at that moment; a starting homepage and tips follow from how the
-  person arrived.
+  account at that moment; a starting homepage follows from how the person
+  arrived. The first tutorial (setup note, next steps, suggestions, and a
+  focused Dashboard) was removed on Nov 17; a new one is being designed.
 
 ## From prototype to a real service
 
@@ -254,6 +255,9 @@ and the simulated user test.
   how is the trade-off explained?
 - **Phones.** Swiping one module per screen works for a few modules. What
   happens on a group page with fifteen?
+- **The new tutorial.** What should a new account see first, and how much
+  should it teach? The old one led with "Add your first task," which didn't
+  fit why most people arrive.
 - **The name.** 3den, said "Eden," overlaps a registered EDEN mark for a
   social app. See "3den: name and trademark, first-pass findings."
 

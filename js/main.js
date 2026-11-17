@@ -22,8 +22,6 @@ import { FEATURES, uses, setUses } from './state/features.js';
 import { initAppBar } from './editor/app-bar.js';
 import { initTabBar } from './editor/tab-bar.js';
 import { initModuleSwiper } from './editor/module-swiper.js';
-import { initGetStarted } from './onboarding/get-started.js';
-import { markStep } from './onboarding/onboarding-state.js';
 import { needsWelcomeSplash, welcomeOnce, needsBlogWelcome, renderBlogWelcome } from './onboarding/welcome.js';
 import { needsFullAccount, renderFinishAccount } from './onboarding/finish-account.js';
 import { initSearchBox } from './editor/search-box.js';
@@ -132,7 +130,6 @@ if (phoneFrame === 'iphone' || phoneFrame === 'iphone-se') {
 initAppBar(document.getElementById('app-logo'), document.getElementById('app-nav'), document.getElementById('app-account'));
 initSearchBox(document.getElementById('app-search'));
 initTabBar(document.getElementById('tab-bar'));
-initGetStarted(document.getElementById('onboarding-slot'));
 renderLibrary(libraryContainer);
 initSpaceHeader(document.getElementById('space-header'));
 initEditBar();
@@ -381,10 +378,7 @@ function showViewForRoute() {
     applyAppearance(null);
     if (route.page === 'account') renderAccountPage(settingsView);
     else if (route.page === 'groups') renderGroupsPage(settingsView, route.tab ?? 'yours');
-    else if (route.page === 'feed') {
-      markStep(route.tab === 'friends' ? 'find' : 'feed'); // Get started steps for new accounts
-      renderFeedPage(settingsView, route.tab);
-    }
+    else if (route.page === 'feed') renderFeedPage(settingsView, route.tab);
     else if (route.page === 'new-event') renderNewEventPage(settingsView);
     else if (route.page === 'saved') renderSavedPage(settingsView);
     else if (route.page === 'week') renderWeekPage(settingsView);
@@ -436,12 +430,7 @@ function showViewForRoute() {
 
   showOnly(onHomepage ? homepageView : modulePageView);
   if (onHomepage) clearModulePage();
-  else {
-    // A new account opening their own calendar ticks "Find it on your calendar".
-    const module = getSpaceOfModule(route.moduleId)?.modules.find((m) => m.id === route.moduleId);
-    if (space.kind === 'personal' && (module?.type === 'calendar' || module?.type === 'events')) markStep('calendar');
-    renderModulePage(route.moduleId);
-  }
+  else renderModulePage(route.moduleId);
 }
 
 /**

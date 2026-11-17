@@ -34,7 +34,6 @@ import {
   addMember, declineJoinRequest, canInvite, inviteToGroup, cancelInvite, resetInviteLink, turnOffInviteLink, inviteLinkOf,
 } from '../state/groups.js';
 import { section, lockedNote } from './settings-page.js';
-import { markStep } from '../onboarding/onboarding-state.js';
 import { getDraft, setDraft } from './settings-drafts.js';
 import { openInviteQr } from './invite-qr.js';
 
@@ -226,7 +225,6 @@ function renderInviteLink(space, me, isAdmin, redraw) {
   const link = inviteLinkOf(space);
   const copy = () => {
     navigator.clipboard?.writeText(link).then(() => showToast('Invite link copied.'), () => showToast('Couldn’t copy. Select the link and copy it.'));
-    markStep('invite'); // a Get started step for people who just made a group
   };
   const block = (...children) => h('div', { class: 'invite-link-block' }, ...children);
   // At first just a button; clicking it shows the link (making one first if there isn't one yet).

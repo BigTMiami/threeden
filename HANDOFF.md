@@ -114,6 +114,23 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **First tutorial removed; phone menus fixed (Nov 17):** Leo asked to remove
+  the whole tutorial a new account sees, to design a new one. Gone: the
+  "We set this up for you · Change" note, the "Next: Add your first task"
+  line and its steps, suggestions, and the Dashboard's three-week newcomer
+  focus with its steps and tips (deleted `js/onboarding/get-started.js`,
+  `steps.js`, `suggestions.js`, `js/modules/dashboard/dashboard-focus.js`,
+  the `#onboarding-slot`, `markStep()`, and their CSS). Kept: the welcome
+  splash, the welcome toast, "Dive into 3den?", finishing a quick account,
+  starting layouts by arrival, and groups' welcome checklist and suggestions
+  (they still use `next-step.js`). **Next: design the new tutorial with Leo.**
+  Also: the Edit menu in the page header opens on whichever side fits the
+  screen (`keepOnScreen()`), the editing bar's Layout menu slides to fit
+  (`keepMenuOnScreen()`), and a stray "null" under Porch Lights' Song status
+  (vaultfile-module.js used native append with null parts) is fixed.
+  Test: `test_no_first_tutorial.py`; `test_jump_next_step.py` is now
+  `test_jump.py` (Ctrl+K only).
+
 - **Scrolling (Nov 16):** scroll-flow.js leaves the wheel to the browser
   unless something in the module under the pointer has room to scroll that
   way (a stroke it took, it keeps: STROKE_GAP_MS). Fixes the clunky feel on
@@ -490,8 +507,8 @@ Data version is 68 (`DATA_VERSION` in js/state/upgrade.js); the storage key no l
 
 Done this session: the iPhone layout (tab bar, sheets, phone.html, Add to
 Home Screen) and onboarding by arrival path (guest viewing + sign-up sheet,
-starting homepages, setup note, Get started, tips, welcome screens, group
-templates, suggestions, "Try a first visit" on the sign-in screen). See
+starting homepages, setup note, Get started, tips (those three removed
+Nov 17), welcome screens, group templates, suggestions, "Try a first visit" on the sign-in screen). See
 README.md, "Phones" and "Onboarding new people".
 
 Also done (Nov 13): quick accounts for event invitations (name + phone or
@@ -563,8 +580,8 @@ Fixed (Nov 13): phone.html's iPhone frame was squeezed out of shape in short
 or narrow windows (its slot shrank the frame before scaling). The frame now
 keeps its real size and scales as a whole, by height and width.
 
-Also done (Nov 13): the Dashboard adapts to new people
-(js/modules/dashboard/dashboard-focus.js): for three weeks it shows only
+Also done (Nov 13; removed Nov 17 with the first tutorial): the Dashboard adapted to new people
+(js/modules/dashboard/dashboard-focus.js): for three weeks it showed only
 what they came for (their event, their group, the blog or page they
 followed, their messages), with the next two Get started steps inside it
 (the separate Get started card steps aside), an "Also:" line, and a tip

@@ -23,11 +23,8 @@
  * The card shows a few of each; the full page shows them all and adds
  * Your groups. Nothing is saved: it reads straight from everything else.
  *
- * For someone new, the card shows only what they came for instead (an
- * event, a group, a person they follow, their messages), with one line for
- * anything else and now and then a tip: see dashboard-focus.js. "Show
- * everything" switches to the full dashboard (saved as { focus: 'off' }),
- * and "Back to …" switches back while the focus still applies.
+ * Everyone sees the same Dashboard, new accounts included (the old focused
+ * view for newcomers was taken out with the first tutorial, Nov 17).
  *
  * Data: {} for the usual parts, or { sections: ['needs', 'events', …] } to
  * show only some, in that order, on the card and the full page ('groups' on
@@ -55,7 +52,6 @@ import { getModule, updateModuleData } from '../../state/store.js';
 import { monthName } from '../../utils/dates.js';
 import { colorValue } from '../calendar/calendar-data.js';
 import { toggleNotifications } from '../../editor/notification-bell.js';
-import { focusFor, focusLabel, renderFocus, renderTip, renderNextSteps } from './dashboard-focus.js';
 import { availabilityChip } from '../../ui/availability-chip.js';
 
 /** How many of each list the card shows (the full page shows all). */
@@ -105,34 +101,10 @@ function renderDashboard(container, context, isFullPage) {
   };
 
   function draw() {
-    const data = context.getData() ?? {};
-    const focus = focusFor(me, data);
-    // While new, they can switch back to the focus from the full dashboard.
-    const couldFocus = !focus && data.focus === 'off' ? focusFor(me, { ...data, focus: 'on' }) : null;
-    const setFocus = (value) => { context.saveData({ ...data, focus: value }); draw(); };
-    root.classList.toggle('dashboard--focused', Boolean(focus) && !isFullPage);
-    // One thing to do at a time: the next step, or (once there are none) a tip.
-    const nextStep = renderNextSteps(me, draw);
-    const tip = nextStep ? null : renderTip(me, focus, draw);
-
-    if (focus && !isFullPage) {
-      replaceChildren(root,
-        h('div', { class: 'dashboard__focus-bar' },
-          h('button', { type: 'button', class: 'link-button dashboard__switch', onClick: () => setFocus('off') }, 'Show everything')),
-        renderFocus(focus, { me, redraw: draw, openItem }),
-        nextStep,
-        renderAlso(focus),
-        tip);
-      return;
-    }
     replaceChildren(root,
-      couldFocus && !isFullPage ? h('div', { class: 'dashboard__focus-bar' },
-        h('button', { type: 'button', class: 'link-button dashboard__switch', onClick: () => setFocus(null) }, `Back to just ${focusLabel(couldFocus)}`)) : null,
-      focus && isFullPage ? h('section', { class: 'dashboard__section dashboard__section--focus' }, renderFocus(focus, { me, redraw: draw, openItem })) : null,
       isFullPage && !context.isVisitor ? renderCustomize() : null,
       // Coming up first (left on a wide page), then For you, then Your tasks (Leo, Nov 14), unless Customize changed it.
       order().map((part) => (shows(part) ? { events: renderComingUp, needs: renderNeedsYou, tasks: renderTasks, groups: renderGroups }[part]() : null)),
-      tip,
       isFullPage ? null : h('button', { type: 'button', class: 'link-button dashboard__more', onClick: () => context.openFullPage() }, 'Open the full dashboard →'));
   }
 
@@ -161,29 +133,6 @@ function renderDashboard(container, context, isFullPage) {
           h('button', { type: 'button', class: 'icon-button icon-button--small', 'aria-label': `Move ${LABELS[part]} up`, disabled: i === 0, onClick: () => { const next = [...parts]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; save(next.filter((p) => shown.includes(p))); } }, icon('arrowUp', 13)),
           h('button', { type: 'button', class: 'icon-button icon-button--small', 'aria-label': `Move ${LABELS[part]} down`, disabled: i === parts.length - 1, onClick: () => { const next = [...parts]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; save(next.filter((p) => shown.includes(p))); } }, icon('arrowDown', 13)))))),
       h('button', { type: 'button', class: 'link-button', onClick: () => { const data = { ...(context.getData() ?? {}) }; delete data.sections; context.saveData(data); draw(); } }, 'Reset to the usual'));
-  }
-
-  /**
-   * Under a focus: one quiet line for everything else waiting, so nothing is
-   * missed but nothing competes ("Also: 1 invitation · 2 unread messages").
-   */
-  function renderAlso(focus) {
-    const needs = needsYou(me);
-    const groupsOn = uses(me, 'groups');
-    const focusSpaceId = focus.space?.id ?? focus.found?.space.id ?? null;
-    const focusEventId = focus.found?.event.id ?? null;
-    const rsvps = groupsOn ? needs.rsvps.filter(({ event, space }) => event.id !== focusEventId && space.id !== focusSpaceId) : [];
-    const invites = groupsOn ? needs.invites.filter(({ space }) => space.id !== focusSpaceId) : [];
-    const unreadMessages = uses(me, 'messages') && focus.kind !== 'messages' ? needs.unreadMessages : 0;
-    const parts = [
-      invites.length ? h('a', { href: '#groups' }, `${invites.length} group ${invites.length === 1 ? 'invitation' : 'invitations'}`) : null,
-      rsvps.length ? h('button', { type: 'button', class: 'link-button', onClick: () => context.openFullPage() }, `${rsvps.length} more ${rsvps.length === 1 ? 'event' : 'events'} to answer`) : null,
-      unreadMessages ? h('a', { href: '#messages' }, `${unreadMessages} unread ${unreadMessages === 1 ? 'message' : 'messages'}`) : null,
-      needs.unreadNotifications ? h('button', { type: 'button', class: 'link-button', 'data-toggles-notifications': 'true', onClick: toggleNotifications },
-        `${needs.unreadNotifications} ${needs.unreadNotifications === 1 ? 'notification' : 'notifications'}`) : null,
-    ].filter(Boolean);
-    if (!parts.length) return null;
-    return h('p', { class: 'dashboard__also' }, 'Also: ', parts.flatMap((part, i) => (i ? [' · ', part] : [part])));
   }
 
   // ─── For you (what needs you) ─────────────────────────────────────────────────────────────

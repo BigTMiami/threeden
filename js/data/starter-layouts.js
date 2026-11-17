@@ -32,8 +32,7 @@ export const STARTER_LAYOUTS = {
     label: 'For events',
     note: 'your event',
     description: 'Upcoming events and your calendar',
-    // The Dashboard first: while they're new it shows just their event
-    // (js/modules/dashboard/dashboard-focus.js). The calendar is where it lands.
+    // The Dashboard first (Coming up shows their event); the calendar is where it lands.
     modules: () => [
       module('dashboard', 'Dashboard', 12, 20, {}),
       module('calendar', 'My calendar', 12, 12, { events: [] }),

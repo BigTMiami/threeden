@@ -5,8 +5,8 @@
  *
  *   → Next: Answer “Street fair”   [Show me]   1 of 4   ×
  *
- * Your homepage uses it for getting started (get-started.js) and a group
- * uses it for your first weeks there (welcome-checklist.js). Finishing a
+ * A group uses it for your first weeks there (welcome-checklist.js) and for
+ * suggestions as it grows (group-suggestions.js). Finishing a
  * step moves the line on to the next one; × hides it for good.
  */
 
