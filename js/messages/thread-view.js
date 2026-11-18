@@ -36,7 +36,7 @@
 
 import { h, replaceChildren } from '../ui/dom.js';
 import { avatar } from '../ui/avatar.js';
-import { getCurrentUser, getMember, subscribe } from '../state/store.js';
+import { getCurrentUser, getMember as getAnyMember, memberIn, getSpace, subscribe } from '../state/store.js';
 import {
   QUICK_REACTIONS, getConversation, isInConversation, sendMessage, editMessage, deleteMessage, restoreMessage, toggleReaction, markRead,
   DISAPPEAR_OPTIONS, disappearLabel, setDisappearing, timeLeftLabel, togglePin, pinnedMessages, threadReplies, messagePreview,
@@ -59,6 +59,9 @@ const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const STICK_TO_BOTTOM_PX = 80;
 
 export function createThreadView(conversationId, { compact = false, placeholder = 'Write a message' } = {}) {
+  // In a group's chat, people show by the name they go by there (store.memberIn).
+  const chatSpace = () => { const c = getConversation(conversationId); return c?.spaceId ? getSpace(c.spaceId) : null; };
+  const getMember = (memberId) => (chatSpace() ? memberIn(chatSpace(), memberId) : getAnyMember(memberId));
   const me = getCurrentUser();
   let editingMessageId = null;
   let isOnScreen = false; // kept up to date by the IntersectionObserver below

@@ -85,7 +85,7 @@ function renderMemberList(space, me, members, canAddRemove, redraw, onDraftChang
 
   function draw() {
     const words = view.query.trim().toLowerCase();
-    const found = words ? members.filter((m) => `${m.name} @${m.username}`.toLowerCase().includes(words)) : members;
+    const found = words ? members.filter((m) => `${m.name} ${m.realName ?? ''} @${m.username}`.toLowerCase().includes(words)) : members;
     const pages = Math.max(1, Math.ceil(found.length / MEMBERS_PER_PAGE));
     view.page = Math.min(view.page, pages - 1);
     const start = view.page * MEMBERS_PER_PAGE;
@@ -306,7 +306,8 @@ function renderMemberRow(space, me, member, canAddRemove, redraw, onDraftChange)
     h('span', { class: 'members-list__text' },
       h('strong', {}, member.name),
       h('span', { class: 'members-list__meta' },
-        `@${member.username}${isMe ? ' · you' : ''}`,
+        // An alias (store.memberIn): their own name beside it.
+        `${member.realName ? `${member.realName} · ` : ''}@${member.username}${isMe ? ' · you' : ''}`,
         isRemoved ? ' · will be removed when you save' : role !== savedRole ? ` · will become ${roleLabel(role).toLowerCase()} when you save` : '')),
     roleControl,
     removeControl,

@@ -217,6 +217,9 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
 - **Events and calendars:** RSVPs, waitlists, co-hosts, series, reminders,
   regulars, "You're free" or "Clashes with…" checked against connected
   calendars, and a calendar feed for other apps.
+- **Names in groups:** a group can let members go by an alias there
+  (store.memberIn); profiles and everything outside the group keep their
+  own names.
 - **Sharing and publishing:** "Who sees this" on every composer, public tabs,
   documents published as articles, and follows for groups you can't join.
   Every vault file and folder has one sharing tile with three parts: who can

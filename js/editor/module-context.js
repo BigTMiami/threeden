@@ -8,7 +8,7 @@
  */
 
 import {
-  getCurrentUser, getMember, getModule, getSpaceOfModule, getSpaceMembers, updateModuleData,
+  getCurrentUser, memberIn, getModule, getSpaceOfModule, getSpaceMembers, updateModuleData,
 } from '../state/store.js';
 import { openModulePage } from '../router.js';
 import { can, roleOf } from '../state/permissions.js';
@@ -53,7 +53,8 @@ export function createModuleContext(moduleId) {
     // Only the people in this module's space: in a personal homepage, just you.
     members: getSpaceMembers(space),
     currentUser: getCurrentUser(),
-    getMember,
+    // A member by the name they go by here (their alias in a group that allows them).
+    getMember: (memberId) => memberIn(space, memberId),
     // What the current user may do here, e.g. context.can('postAnnouncements').
     // See js/state/permissions.js. Always true on your own homepage.
     can: (permissionId) => can(space, getCurrentUser()?.id, permissionId),

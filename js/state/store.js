@@ -476,9 +476,49 @@ export function getMember(memberId) {
   return state.members.find((member) => member.id === memberId) ?? null;
 }
 
-/** The members of a space, in the order they're listed. */
+/** The members of a space, in the order they're listed, by the names they go by there (aliases, below). */
 export function getSpaceMembers(space) {
-  return space.memberIds.map(getMember).filter(Boolean);
+  return space.memberIds.map((id) => memberIn(space, id)).filter(Boolean);
+}
+
+// ─── Aliases: the name you go by in a group (Nov 18) ────────────────────────
+//
+// A group's admins can let members go by another name there
+// (space.allowAliases); each member sets their own (space.aliases[memberId]).
+// Inside the group (its modules, chat, Up next, widgets, member list) people
+// show by that name. It's a nickname, not a disguise: their profile, and
+// everything outside the group, still has their own name.
+
+/** The name a member goes by in a space, or '' (aliases off, or none set). */
+export function aliasIn(space, memberId) {
+  if (!space?.allowAliases) return '';
+  return (space.aliases?.[memberId] ?? '').trim();
+}
+
+/** A member as they show in a space: their alias as `name`, their own as `realName`. */
+export function memberIn(space, memberId) {
+  const member = getMember(memberId);
+  const alias = member ? aliasIn(space, memberId) : '';
+  return alias ? { ...member, name: alias, realName: member.name } : member;
+}
+
+/** Let members of a group go by another name there, or not (admins). */
+export function setAllowAliases(spaceId, allow) {
+  changeState((state) => {
+    const space = state.spaces.find((s) => s.id === spaceId);
+    if (space) space.allowAliases = Boolean(allow);
+  }, 'space', 'layout');
+}
+
+/** Set the name you go by in a group ('' for your own). */
+export function setAlias(spaceId, memberId, alias) {
+  changeState((state) => {
+    const space = state.spaces.find((s) => s.id === spaceId);
+    if (!space) return;
+    const clean = String(alias ?? '').trim().slice(0, 40);
+    space.aliases = { ...(space.aliases ?? {}) };
+    if (clean) space.aliases[memberId] = clean; else delete space.aliases[memberId];
+  }, 'space', 'layout', 'messages');
 }
 
 // ─── Subscribing ─────────────────────────────────────────────────────────────

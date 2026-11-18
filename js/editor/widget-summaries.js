@@ -17,7 +17,7 @@
  * show their description. Nothing here changes data.
  */
 
-import { getMember, getModule } from '../state/store.js';
+import { getMember as getAnyMember, getModule, memberIn } from '../state/store.js';
 import { needsYou, myUpcoming, groupUpdates } from '../modules/dashboard/dashboard-data.js';
 import { getModuleType } from '../modules/registry.js';
 import { getConversation, unreadCount, lastMessage, messagePreview } from '../state/messages.js';
@@ -30,6 +30,9 @@ import { addDays, todayKey, timeAgo } from '../utils/dates.js';
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const plain = (text = '') => String(text).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+/** The space being summarized, so people show by the names they go by there (aliases). */
+let here = null;
+const getMember = (id) => (here ? memberIn(here, id) : getAnyMember(id));
 const firstName = (id) => getMember(id)?.name?.split(' ')[0] ?? 'Someone';
 const dateBlock = (key) => { const d = new Date(`${key}T12:00:00`); return { month: MONTHS[d.getMonth()], day: String(d.getDate()), weekday: DAYS[d.getDay()] }; };
 
@@ -150,6 +153,7 @@ SUMMARIES.carousel = SUMMARIES.generalfeed;
 SUMMARIES.document = SUMMARIES.note;
 
 export function widgetSummary(module, space, me) {
+  here = space;
   const summarize = SUMMARIES[module.type];
   try {
     if (summarize) return { lines: [], ...summarize(module, space, me) };
