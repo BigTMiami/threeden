@@ -1,31 +1,33 @@
 // @ts-check
 /**
- * document-sharing.js — the small "Sharing" button on an open document in a
- * vault (a note, an article, or a module file like a spreadsheet), and the
- * panel it opens: who can open and edit it, where it's shared, and whether
- * it's published.
+ * document-sharing.js — the "Sharing" tile on an open vault file or folder
+ * (a note, an article, a module file like a spreadsheet, a photo or video,
+ * any upload, or a folder), and the panel it opens. Each of its three rows
+ * opens to change it (Nov 17):
  *
- *   [👥 4 members can edit · Draft ▾]      (🔒 Only you, on your homepage's vault)
- *   ┌ Sharing and publishing ───────────────────────────────┐
- *   │ WHO CAN OPEN IT                                         │
- *   │ In Union files, in Juniper Tenants Union (4 members).   │
- *   │ Members can [edit ▾]   (you and admins can always edit) │
- *   │ SHARED IN                                               │
- *   │ 📣 Post in Juniper Tenants Union · Shared   [Can view ▾] │
- *   │ ▣ On the page Juniper Tenants Union · Home  [Can edit ▾] │
- *   │ PUBLISHED                                               │
- *   │ 📰 Draft in The Bulletin · Priya and you   Open ↗       │
- *   │    or: Published Nov 14 · 214 views · 131 readers       │
- *   └─────────────────────────────────────────────────────────┘
+ *   [👥 4 members can edit · Shared in 1 place · Published ▾]
+ *   ┌ Sharing and publishing ─────────────────────────────── × ┐
+ *   │ ▸ Who can open it    4 members can edit                   │
+ *   │ ▾ Shared in          1 page                               │
+ *   │     ▣ On the page Juniper Tenants Union · Home [Can edit ▾]│
+ *   │       Take it off the page                                │
+ *   │ ▸ Published          In 2 places                          │
+ *   │     📣 Post in Leo’s blog · Posts · Nov 14   [Can view ▾]  │
+ *   │     📰 Draft in The Bulletin               Open the draft  │
+ *   │     [Publish]   (or [Post] for photos, videos, and files)  │
+ *   └───────────────────────────────────────────────────────────┘
  *
  * Who can open it follows the vault: your homepage's vault is yours alone;
- * a group's vault is its members'. In a group, the document's maker (and
+ * a group's vault is its members'. In a group, the file's maker (and
  * admins, who can moderate) set what the other members can do with it:
- * edit (the default), comment, or only view (item.memberAccess). Shares
- * (posts and pages, js/ui/file-access.js) each have their own "Can view /
- * comment / edit", changed here by whoever shared it.
+ * edit (the default), comment, or only view (item.memberAccess).
  *
- *   documentShareButton({ vaultModuleId, itemId, toArticle })  → element
+ * Shared in: the pages showing it (File from vault). Published: the posts
+ * it's in and the article it became. Each share has its own "Can view /
+ * comment / edit", changed here by whoever shared it. Publish (or Post)
+ * opens publish-dialog.js: where to, then the post.
+ *
+ *   documentShareButton({ vaultModuleId, itemId })  → element
  *   documentAccess(vaultModuleId, item, me)  → 'edit' | 'comment' | 'view' | 'none'
  *   findShares(vaultModuleId, itemId)        → [{ kind: 'post' | 'page', … }]
  *   publicationOf(item)                      → { status, article, module } | null
@@ -34,15 +36,24 @@
 import { h, replaceChildren } from './dom.js';
 import { icon } from './icons.js';
 import { accessPicker, accessLabel, documentAccess } from './file-access.js';
+import { createPeopleSearch } from './people-search.js';
+import { avatar } from './avatar.js';
+import { messageablePeople, recipientContext } from '../messages/recipients.js';
+import { notify } from '../state/notifications.js';
 
 export { documentAccess };
-import { getState, getModule, getSpaceOfModule, getCurrentUser, getMember, updateModuleData, changeState } from '../state/store.js';
+import { getState, getSpace, getModule, getSpaceOfModule, getCurrentUser, getMember, updateModuleData, changeState, restoreModule } from '../state/store.js';
+import { openPublishDialog, publishVerb } from './publish-dialog.js';
+import { showToast } from './toast.js';
+import { openModal } from './modal.js';
 import { can } from '../state/permissions.js';
 import { requestModuleFocus } from '../editor/module-context.js';
 import { openModulePage } from '../router.js';
 import { normalizeArticle, viewsLabel, authorsOf, isAuthorOf } from '../modules/articles/articles-data.js';
 
-const FEEDS = new Set(['photofeed', 'textfeed', 'generalfeed']);
+const FEEDS = new Set(['textfeed', 'generalfeed', 'carousel']);
+/** Which row of the panel is open: 'who' | 'shared' | 'published' | null (kept while it redraws; closed each time it opens). */
+let openRow = null;
 const MEMBER_ACCESS = [
   { id: 'edit', label: 'edit' },
   { id: 'comment', label: 'comment' },
@@ -96,11 +107,21 @@ function setShareAccess(share, access) {
 
 const shortDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-/**
- * The button, and the panel under it.
- * `toArticle` (optional): { targets, onTurn(targetModuleId) } to offer "Turn into an article" when it isn't one yet.
- */
-export function documentShareButton({ vaultModuleId, itemId, toArticle = null }) {
+/** Take a File from vault module off its page (any page, not just the one open); Undo puts it back. */
+function takeOffPage(share) {
+  let removed = null;
+  changeState((state) => {
+    const space = state.spaces.find((x) => x.id === share.space.id);
+    const index = space?.modules.findIndex((m) => m.id === share.module.id) ?? -1;
+    if (index === -1) return;
+    const [module] = space.modules.splice(index, 1);
+    removed = { module, index, spaceId: space.id };
+  }, 'layout');
+  return removed;
+}
+
+/** The button, and the panel under it. */
+export function documentShareButton({ vaultModuleId, itemId }) {
   const me = getCurrentUser();
   const space = getSpaceOfModule(vaultModuleId);
   const itemNow = () => getModule(vaultModuleId)?.data?.items?.find((i) => i.id === itemId);
@@ -112,119 +133,202 @@ export function documentShareButton({ vaultModuleId, itemId, toArticle = null })
   }, icon(space?.kind === 'group' ? 'people' : 'lock', 13), label, icon('chevronDown', 12));
   const root = h('div', { class: 'doc-share' }, button, panel);
 
-  /** "Only you", "4 members can edit", plus "· Shared in 2 places" and the publication status. */
+  const memberAccessLabel = (item) => MEMBER_ACCESS.find((a) => a.id === (item.memberAccess ?? 'edit'))?.label ?? 'edit';
+  const whoSummary = (item) => (space?.kind === 'group' ? `${space.memberIds.length} members can ${memberAccessLabel(item)}` : 'Only you');
+  const pagesOf = () => findShares(vaultModuleId, itemId).filter((s) => s.kind === 'page');
+  const postsOf = () => findShares(vaultModuleId, itemId).filter((s) => s.kind === 'post');
+  const publishedSummary = (item) => {
+    const pub = publicationOf(item);
+    const posts = postsOf().length + (pub ? 1 : 0);
+    if (pub?.status === 'published' || posts) return posts ? `In ${posts} ${posts === 1 ? 'place' : 'places'}` : 'Published';
+    if (pub) return { draft: 'Article draft', scheduled: 'Scheduled' }[pub.status] ?? 'Not published';
+    return 'Not published';
+  };
+
+  /** "Only you", "4 members can edit", plus where it's shared and published. */
   function summary() {
     const item = itemNow();
     if (!item) return '';
-    const shares = findShares(vaultModuleId, itemId);
-    const pub = publicationOf(item);
-    const who = space?.kind === 'group'
-      ? `${space.memberIds.length} members can ${MEMBER_ACCESS.find((a) => a.id === (item.memberAccess ?? 'edit'))?.label ?? 'edit'}`
-      : 'Only you';
-    const where = shares.length ? `Shared in ${shares.length} ${shares.length === 1 ? 'place' : 'places'}` : null;
-    const status = pub ? { draft: 'Draft', scheduled: 'Scheduled', published: 'Published' }[pub.status] : item.article ? 'Not published' : null;
-    return [who, where, status].filter(Boolean).join(' · ');
+    const pages = pagesOf().length;
+    const published = publishedSummary(item);
+    return [whoSummary(item), pages ? `Shared in ${pages} ${pages === 1 ? 'place' : 'places'}` : null, published === 'Not published' ? null : published].filter(Boolean).join(' · ');
   }
 
   function drawLabel() {
     label.textContent = ` ${summary()} `;
     const pub = publicationOf(itemNow());
-    button.classList.toggle('is-published', pub?.status === 'published');
+    button.classList.toggle('is-published', pub?.status === 'published' || postsOf().length > 0);
   }
 
-  function section(title, ...children) {
-    return h('section', { class: 'doc-share__section' }, h('h3', { class: 'doc-share__heading' }, title), ...children);
+  /** One row: a button with its title and summary that opens its editor under it. */
+  function row(id, title, summaryText, editor) {
+    const isOpen = openRow === id;
+    return h('section', { class: `doc-share__section${isOpen ? ' is-open' : ''}` },
+      h('button', {
+        type: 'button', class: 'doc-share__row-toggle', 'aria-expanded': String(isOpen),
+        onClick: () => { openRow = isOpen ? null : id; drawPanel(); },
+      }, icon(isOpen ? 'chevronDown' : 'chevronRight', 13), h('span', { class: 'doc-share__heading' }, title), h('span', { class: 'doc-share__row-summary' }, summaryText)),
+      isOpen ? h('div', { class: 'doc-share__editor' }, editor()) : null);
+  }
+
+  function whoEditor(item) {
+    if (space?.kind !== 'group') {
+      return [
+        h('p', { class: 'doc-share__line' }, icon('lock', 12), ` In ${getModule(vaultModuleId)?.title ?? 'your vault'} on your homepage: only you${(item.sharedWith ?? []).length ? ' and the people below' : ''} can open it.`),
+        sharingEditor(item),
+      ];
+    }
+    const mayChange = canSetAccess(space, item, me);
+    const maker = getMember(item.createdBy);
+    return [
+      h('p', { class: 'doc-share__line' }, `In ${getModule(vaultModuleId)?.title ?? 'the vault'}, in ${space.name}: its ${space.memberIds.length} members can open it. Members can:`),
+      h('div', { class: 'doc-share__choices', role: 'radiogroup', 'aria-label': 'What members can do' }, MEMBER_ACCESS.map((a) => h('label', { class: 'doc-share__choice' },
+        h('input', {
+          type: 'radio', name: `member-access-${itemId}`, value: a.id, checked: a.id === (item.memberAccess ?? 'edit'), disabled: !mayChange,
+          onChange: () => {
+            changeState(() => { const saved = getModule(vaultModuleId)?.data.items.find((i) => i.id === itemId); if (saved) saved.memberAccess = a.id === 'edit' ? undefined : a.id; });
+            drawPanel(); drawLabel();
+          },
+        }), ` ${a.label[0].toUpperCase()}${a.label.slice(1)}`))),
+      h('p', { class: 'doc-share__hint' }, `${maker ? `${maker.id === me?.id ? 'You' : maker.name.split(' ')[0]} (who made it) and admins` : 'Admins'} can always edit.${mayChange ? '' : ' Only they can change this.'}`),
+      sharingEditor(item),
+    ];
+  }
+
+  /**
+   * Shared with people and groups (item.sharedWith): each shows it in their
+   * own vault, under "Shared with you" (or "Shared with this group").
+   */
+  function sharingEditor(item) {
+    const entries = item.sharedWith ?? [];
+    const mayShare = documentAccess(vaultModuleId, item, me) === 'edit';
+    const nameOf = (entry) => (entry.kind === 'member' ? getMember(entry.id)?.name : getSpace(entry.id)?.name) ?? 'Someone';
+    const save = (next) => {
+      changeState(() => { const saved = getModule(vaultModuleId)?.data.items.find((i) => i.id === itemId); if (saved) saved.sharedWith = next.length ? next : undefined; });
+      drawPanel(); drawLabel();
+    };
+    const list = entries.length ? h('ul', { class: 'doc-share__list doc-share__people' }, entries.map((entry, i) => h('li', { class: 'doc-share__row' },
+      entry.kind === 'member' ? avatar(getMember(entry.id), 20) : icon('people', 16),
+      h('span', { class: 'doc-share__where' }, nameOf(entry), entry.kind === 'space' ? h('span', { class: 'doc-share__hint' }, ' · everyone in the group') : null),
+      mayShare ? accessPicker(entry.access, (value) => save(entries.map((e, j) => (j === i ? { ...e, access: value } : e))), { label: `What ${nameOf(entry)} can do` })
+        : h('span', { class: 'file-access__badge' }, accessLabel(entry.access)),
+      mayShare ? h('button', { type: 'button', class: 'link-button link-button--danger', onClick: () => save(entries.filter((_, j) => j !== i)) }, 'Remove') : null))) : null;
+    if (!mayShare) return [h('h4', { class: 'doc-share__subheading' }, 'Also shared with'), list ?? h('p', { class: 'doc-share__hint' }, 'No one else.')];
+
+    // Add: people (searched by name) and groups, with what they can do.
+    const already = new Set(entries.map((e) => `${e.kind}:${e.id}`));
+    const people = messageablePeople(me).filter((p) => !already.has(`member:${p.id}`));
+    let chosen = [];
+    const to = createPeopleSearch({ people, describe: (p) => recipientContext(me, p), label: 'Share with', placeholder: 'Add people by name or @username', onChange: (ids) => { chosen = ids; } });
+    const groups = getState().spaces.filter((x) => x.kind === 'group' && x.memberIds.includes(me.id) && x.id !== space?.id && !already.has(`space:${x.id}`));
+    const groupSelect = groups.length ? h('select', { class: 'input input--compact', 'aria-label': 'Share with a group' },
+      h('option', { value: '' }, 'Or a group…'), groups.map((g) => h('option', { value: g.id }, g.name))) : null;
+    let access = 'view';
+    const share = () => {
+      const groupId = groupSelect?.value || null;
+      if (!chosen.length && !groupId) { to.focus(); return; }
+      const at = Date.now();
+      const added = [...chosen.map((id) => ({ kind: 'member', id, access, by: me.id, at })), ...(groupId ? [{ kind: 'space', id: groupId, access, by: me.id, at }] : [])];
+      save([...entries, ...added]);
+      for (const entry of added) {
+        const recipients = entry.kind === 'member' ? [entry.id] : getSpace(entry.id)?.memberIds ?? [];
+        notify({ recipientIds: recipients, actorId: me.id, kind: 'share', text: `${me.name} shared “${item.name}” with ${entry.kind === 'member' ? 'you' : getSpace(entry.id)?.name}. It’s in ${entry.kind === 'member' ? 'your' : 'the group’s'} vault.`, href: entry.kind === 'member' ? '#space-me' : `#space-${entry.id}` });
+      }
+      showToast(`Shared “${item.name}”. It’s in their vault now.`);
+    };
+    return [
+      h('h4', { class: 'doc-share__subheading' }, 'Also shared with'),
+      list ?? h('p', { class: 'doc-share__hint' }, 'No one else yet. People and groups you share it with find it in their vault.'),
+      h('div', { class: 'doc-share__add' },
+        to.element,
+        h('div', { class: 'doc-share__add-row' },
+          groupSelect,
+          accessPicker(access, (value) => { access = value; }, { label: 'What they can do' }),
+          h('button', { type: 'button', class: 'button button--small button--primary', onClick: share }, 'Share'))),
+    ];
+  }
+
+  function sharedEditor() {
+    const pages = pagesOf();
+    if (!pages.length) return h('p', { class: 'doc-share__hint' }, 'Not on any page yet. While editing a page, add File from vault and choose it.');
+    return h('ul', { class: 'doc-share__list' }, pages.map((share) => {
+      const mine = can(share.space, me?.id, 'editHomepage');
+      return h('li', { class: 'doc-share__row' },
+        icon('dashboard', 14),
+        h('span', { class: 'doc-share__where' }, `On the page: ${share.space.name} · ${share.module.title}`),
+        mine ? accessPicker(share.access, (value) => { setShareAccess(share, value); drawPanel(); }, { label: 'What people who see the page can do' })
+          : h('span', { class: 'file-access__badge' }, accessLabel(share.access)),
+        mine ? h('button', {
+          type: 'button', class: 'link-button link-button--danger',
+          onClick: () => {
+            const removed = takeOffPage(share);
+            drawPanel(); drawLabel();
+            showToast(`Took it off ${share.space.name}.`, removed ? { actionLabel: 'Undo', onAction: () => { restoreModule(removed); drawPanel(); drawLabel(); } } : {});
+          },
+        }, 'Take it off the page') : null);
+    }));
+  }
+
+  function publishedEditor(item) {
+    const pub = publicationOf(item);
+    const posts = postsOf();
+    const rows = posts.map((share) => {
+      const mine = share.post.authorId === me?.id;
+      return h('li', { class: 'doc-share__row' },
+        icon('announcements', 14),
+        h('span', { class: 'doc-share__where' }, `Post in ${share.space.name} · ${share.module.title}${share.post.createdAt ? ` · ${shortDate(share.post.createdAt)}` : ''}`),
+        mine ? accessPicker(share.access, (value) => { setShareAccess(share, value); drawPanel(); }, { label: 'What people who see the post can do' })
+          : h('span', { class: 'file-access__badge' }, accessLabel(share.access)),
+        h('button', { type: 'button', class: 'link-button', onClick: () => { close(); requestModuleFocus(share.module.id, share.post.id); openModulePage(share.module.id); } }, 'Open ↗'));
+    });
+    let article = null;
+    if (pub) {
+      const { article: a, module } = pub;
+      const authors = authorsOf(a).map((id) => (id === me?.id ? 'you' : getMember(id)?.name.split(' ')[0] ?? 'someone'));
+      article = h('li', { class: `doc-share__row doc-share__pub doc-share__pub--${a.status}` },
+        icon('newspaper', 14),
+        h('span', { class: 'doc-share__where' },
+          a.status === 'published'
+            ? [h('strong', {}, 'Published'), ` ${shortDate(a.publishedAt)} in ${module.title}`, isAuthorOf(a, me?.id) || can(getSpaceOfModule(module.id), me?.id, 'moderate')
+              ? h('span', { class: 'doc-share__views' }, ` · ${viewsLabel(a.views)} · ${(a.readers ?? 0).toLocaleString('en-US')} readers`) : null]
+            : a.status === 'scheduled'
+              ? [h('strong', {}, 'Scheduled'), ` in ${module.title}, for ${shortDate(a.publishAt)}`]
+              : [h('strong', {}, 'Draft'), ` in ${module.title}, by ${authors.join(' and ')}`]),
+        h('button', {
+          type: 'button', class: 'link-button',
+          onClick: () => { close(); requestModuleFocus(module.id, isAuthorOf(a, me?.id) && a.status !== 'published' ? `edit:${a.id}` : a.id); openModulePage(module.id); },
+        }, a.status === 'published' ? 'Read it ↗' : 'Open the draft ↗'));
+    }
+    const verb = publishVerb([item]);
+    return [
+      posts.length || article ? h('ul', { class: 'doc-share__list' }, article, rows) : h('p', { class: 'doc-share__hint' }, 'Not published yet.'),
+      h('div', { class: 'doc-share__publish' },
+        h('button', { type: 'button', class: 'button button--primary button--small', onClick: () => { close(); openPublishDialog({ entries: [{ vaultModuleId, item: itemNow() ?? item }] }); } },
+          icon(verb === 'Publish' ? 'newspaper' : 'announcements', 14), ` ${verb}`),
+        h('span', { class: 'doc-share__hint' }, verb === 'Publish' ? 'To your blog or a group, as a post with a preview (a note can also become an article).' : 'To your blog or a group, as a post with a preview.')),
+    ];
   }
 
   function drawPanel() {
     const item = itemNow();
     if (!item) { replaceChildren(panel); return; }
-    const shares = findShares(vaultModuleId, itemId);
-    const pub = publicationOf(item);
-    const mayChange = canSetAccess(space, item, me);
-    const vault = getModule(vaultModuleId);
-    const maker = getMember(item.createdBy);
-
-    // Who can open it
-    const who = space?.kind === 'group'
-      ? [
-        h('p', { class: 'doc-share__line' }, `In ${vault?.title ?? 'the vault'}, in ${space.name}: its ${space.memberIds.length} members can open it.`),
-        h('p', { class: 'doc-share__line' }, 'Members can ',
-          mayChange
-            ? h('select', {
-              class: 'input input--compact doc-share__member-access', 'aria-label': 'What members can do',
-              onChange: (event) => {
-                const value = event.target.value;
-                changeState(() => { const saved = getModule(vaultModuleId)?.data.items.find((i) => i.id === itemId); if (saved) saved.memberAccess = value === 'edit' ? undefined : value; });
-                drawPanel(); drawLabel();
-              },
-            }, MEMBER_ACCESS.map((a) => h('option', { value: a.id, selected: a.id === (item.memberAccess ?? 'edit') }, a.label)))
-            : h('strong', {}, MEMBER_ACCESS.find((a) => a.id === (item.memberAccess ?? 'edit'))?.label ?? 'edit'),
-          '.'),
-        h('p', { class: 'doc-share__hint' }, `${maker ? `${maker.id === me?.id ? 'You' : maker.name.split(' ')[0]} (who made it) and admins` : 'Admins'} can always edit.`),
-      ]
-      : [h('p', { class: 'doc-share__line' }, icon('lock', 12), ` In ${vault?.title ?? 'your vault'} on your homepage: only you can open it, unless you share it.`)];
-
-    // Shared in
-    const shareRows = shares.length
-      ? h('ul', { class: 'doc-share__list' }, shares.map((share) => {
-        const mine = share.kind === 'post' ? share.post.authorId === me?.id : can(share.space, me?.id, 'editHomepage');
-        const where = share.kind === 'post'
-          ? `Post in ${share.space.name} · ${share.module.title}${share.post.createdAt ? ` · ${shortDate(share.post.createdAt)}` : ''}`
-          : `On the page: ${share.space.name} · ${share.module.title}`;
-        return h('li', { class: 'doc-share__row' },
-          icon(share.kind === 'post' ? 'announcements' : 'dashboard', 14),
-          h('span', { class: 'doc-share__where' }, where),
-          mine ? accessPicker(share.access, (value) => { setShareAccess(share, value); drawPanel(); }, { label: `What people who see the ${share.kind} can do` })
-            : h('span', { class: 'file-access__badge' }, accessLabel(share.access)));
-      }))
-      : h('p', { class: 'doc-share__hint' }, 'Not shared anywhere yet. Add it to a post with “From your vault”, or drag it onto a page while editing.');
-
-    // Published
-    let published;
-    if (pub) {
-      const { article, module } = pub;
-      const authors = authorsOf(article).map((id) => (id === me?.id ? 'you' : getMember(id)?.name.split(' ')[0] ?? 'someone'));
-      const openIt = h('button', {
-        type: 'button', class: 'link-button',
-        onClick: () => { close(); requestModuleFocus(module.id, isAuthorOf(article, me?.id) && article.status !== 'published' ? `edit:${article.id}` : article.id); openModulePage(module.id); },
-      }, article.status === 'published' ? 'Read it ↗' : 'Open the draft ↗');
-      published = h('div', { class: `doc-share__pub doc-share__pub--${article.status}` },
-        icon('newspaper', 14),
-        h('span', { class: 'doc-share__where' },
-          article.status === 'published'
-            ? [h('strong', {}, 'Published'), ` ${shortDate(article.publishedAt)} in ${module.title}`, isAuthorOf(article, me?.id) || can(getSpaceOfModule(module.id), me?.id, 'moderate')
-              ? h('span', { class: 'doc-share__views' }, ` · ${viewsLabel(article.views)} · ${(article.readers ?? 0).toLocaleString('en-US')} readers`) : null]
-            : article.status === 'scheduled'
-              ? [h('strong', {}, 'Scheduled'), ` in ${module.title}, for ${shortDate(article.publishAt)}`]
-              : [h('strong', {}, 'Draft'), ` in ${module.title}, by ${authors.join(' and ')}`]),
-        openIt);
-    } else if (toArticle?.targets?.length) {
-      const pick = toArticle.targets.length > 1 ? h('select', { class: 'input input--compact', 'aria-label': 'Where the article goes' }, toArticle.targets.map((t) => h('option', { value: t.moduleId }, t.label))) : null;
-      published = h('div', { class: 'doc-share__pub' },
-        icon('newspaper', 14),
-        h('span', { class: 'doc-share__where' }, h('strong', {}, 'Not published.'), item.article ? ' Publish it to Articles as a draft first.' : ' It can become an article.'),
-        pick,
-        h('button', { type: 'button', class: 'button button--small', onClick: () => { close(); toArticle.onTurn(pick ? pick.value : toArticle.targets[0].moduleId); } }, item.article ? 'Publish to Articles' : 'Turn into an article'));
-    } else {
-      published = h('p', { class: 'doc-share__hint' }, shares.some((s) => s.kind === 'post') ? 'Posted, not published as an article.' : 'Not published. To publish it, add Articles to this group or your blog.');
-    }
-
+    const pages = pagesOf().length;
     replaceChildren(panel,
       h('div', { class: 'doc-share__top' }, h('strong', {}, 'Sharing and publishing'),
         h('button', { type: 'button', class: 'icon-button icon-button--small', 'aria-label': 'Close', onClick: close }, icon('close', 14))),
-      section('Who can open it', who),
-      section('Shared in', shareRows),
-      section('Published', published));
+      row('who', 'Who can open it', whoSummary(item), () => whoEditor(item)),
+      row('shared', 'Shared in', pages ? `${pages} ${pages === 1 ? 'page' : 'pages'}` : 'Nowhere yet', sharedEditor),
+      row('published', 'Published', publishedSummary(item), () => publishedEditor(item)));
   }
 
   function onOutside(event) {
-    if (!root.contains(event.target)) close();
+    if (!root.contains(event.target) && !event.target.closest?.('.toast')) close();
   }
   function onKey(event) {
     if (event.key === 'Escape') { event.stopPropagation(); close(); button.focus(); }
   }
   function open() {
+    openRow = null;
     drawPanel();
     panel.hidden = false;
     button.setAttribute('aria-expanded', 'true');
@@ -241,4 +345,54 @@ export function documentShareButton({ vaultModuleId, itemId, toArticle = null })
 
   drawLabel();
   return root;
+}
+
+/**
+ * Share several vault files at once (selected in the vault) with people or
+ * groups: each gets them in their own vault, under "Shared with you".
+ */
+export function openShareMany({ vaultModuleId, itemIds, onDone = () => {} }) {
+  const me = getCurrentUser();
+  const vaultSpace = getSpaceOfModule(vaultModuleId);
+  const items = () => (getModule(vaultModuleId)?.data.items ?? []).filter((i) => itemIds.includes(i.id));
+  let chosen = [];
+  let access = 'view';
+  const to = createPeopleSearch({ people: messageablePeople(me), describe: (p) => recipientContext(me, p), label: 'Share with', placeholder: 'Add people by name or @username', onChange: (ids) => { chosen = ids; } });
+  const groups = getState().spaces.filter((x) => x.kind === 'group' && x.memberIds.includes(me.id) && x.id !== vaultSpace?.id);
+  const groupSelect = groups.length ? h('select', { class: 'input input--compact', 'aria-label': 'Share with a group' },
+    h('option', { value: '' }, 'Or a group…'), groups.map((g) => h('option', { value: g.id }, g.name))) : null;
+  const count = itemIds.length;
+  const content = h('div', { class: 'share-many' },
+    h('div', { class: 'publish-dialog__header' }, h('h2', { class: 'publish-dialog__title' }, `Share ${count} ${count === 1 ? 'file' : 'files'}`),
+      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: () => modal.close() }, icon('close', 18))),
+    h('p', { class: 'publish-dialog__hint' }, 'They’ll find them in their own vault, under “Shared with you” (a group: “Shared with this group”).'),
+    to.element,
+    h('div', { class: 'doc-share__add-row' },
+      groupSelect,
+      accessPicker(access, (value) => { access = value; }, { label: 'What they can do' }),
+      h('button', {
+        type: 'button', class: 'button button--primary button--small',
+        onClick: () => {
+          const groupId = groupSelect?.value || null;
+          if (!chosen.length && !groupId) { to.focus(); return; }
+          const at = Date.now();
+          const added = [...chosen.map((id) => ({ kind: 'member', id, access, by: me.id, at })), ...(groupId ? [{ kind: 'space', id: groupId, access, by: me.id, at }] : [])];
+          changeState(() => {
+            for (const item of items()) {
+              const kept = (item.sharedWith ?? []).filter((e) => !added.some((a) => a.kind === e.kind && a.id === e.id));
+              item.sharedWith = [...kept, ...added];
+            }
+          });
+          for (const entry of added) {
+            const recipients = entry.kind === 'member' ? [entry.id] : getSpace(entry.id)?.memberIds ?? [];
+            notify({ recipientIds: recipients, actorId: me.id, kind: 'share', text: `${me.name} shared ${count} ${count === 1 ? 'file' : 'files'} with ${entry.kind === 'member' ? 'you' : getSpace(entry.id)?.name}. They’re in ${entry.kind === 'member' ? 'your' : 'the group’s'} vault.`, href: entry.kind === 'member' ? '#space-me' : `#space-${entry.id}` });
+          }
+          modal.close();
+          showToast(`Shared ${count} ${count === 1 ? 'file' : 'files'}.`);
+          onDone();
+        },
+      }, 'Share')));
+  const modal = openModal(content, { label: 'Share files', className: 'publish-dialog-modal' });
+  requestAnimationFrame(() => to.focus());
+  return modal;
 }

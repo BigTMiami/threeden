@@ -25,7 +25,7 @@ export function tagsIn(text) {
   return [...new Set([...String(text ?? '').matchAll(TAG_PATTERN)].map((m) => m[2].toLowerCase()))];
 }
 
-const FEED_TYPES = ['photofeed', 'textfeed', 'generalfeed'];
+const FEED_TYPES = ['textfeed', 'generalfeed', 'carousel'];
 
 /** Everything with tags that `me` can see: public blogs, and the groups they're in. */
 function taggable(me) {

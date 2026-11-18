@@ -39,7 +39,7 @@ export function createBand() {
     modules: [
       // ─── Home (public) ───────────────────────────────────────────────────
       {
-        id: 'band-photos', type: 'photofeed', title: 'Photos', span: 8, rows: 12,
+        id: 'band-photos', type: 'generalfeed', title: 'Photos', span: 8, rows: 12,
         data: {
           events: [],
           posts: [

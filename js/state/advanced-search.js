@@ -60,7 +60,7 @@ const KIND_OF_MODULE = {
   todo: 'task', kanban: 'task', gantt: 'task', grocery: 'task', bills: 'task',
   note: 'note', wiki: 'note', links: 'note',
   vault: 'file', files: 'file',
-  photofeed: 'photo', gallery: 'photo', carousel: 'photo', photos: 'photo',
+  gallery: 'photo', carousel: 'photo', photos: 'photo',
 };
 const TEXT_FIELDS = ['title', 'name', 'text', 'label', 'caption', 'body', 'description', 'notes', 'location', 'question'];
 const AUTHOR_FIELDS = ['authorId', 'createdBy', 'by', 'uploadedBy', 'addedBy', 'postedBy'];

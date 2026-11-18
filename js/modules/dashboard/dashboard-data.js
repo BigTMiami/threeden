@@ -29,7 +29,7 @@ import { todayKey, addDays } from '../../utils/dates.js';
 
 /** How far ahead "coming up" looks. */
 const LOOKAHEAD_DAYS = 30;
-const FEED_TYPES = ['photofeed', 'textfeed', 'generalfeed'];
+const FEED_TYPES = ['textfeed', 'generalfeed', 'carousel'];
 
 /** Each event in a space once, on the day it starts, from today on: [{ event, date, moduleId, space }]. */
 export function upcomingEventsIn(space) {

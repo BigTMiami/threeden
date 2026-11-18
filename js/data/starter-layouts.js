@@ -147,7 +147,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'business', label: 'Business', featured: true, description: 'A shop, a bar, a studio: photos and upcoming events for customers (make that tab public)',
     modules: () => [
-      module('photofeed', 'Photos', 8, 9, { posts: [], events: [] }),
+      module('generalfeed', 'Photos', 8, 9, { posts: [], events: [] }),
       module('events', 'Upcoming events', 4, 9, { events: [], ownEvents: true }),
     ],
   },
@@ -155,7 +155,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'club', label: 'Band, club, or team', description: 'A photo feed and upcoming events (you could make that tab public)',
     modules: () => [
-      module('photofeed', 'Photos', 8, 9, { posts: [], events: [] }),
+      module('generalfeed', 'Photos', 8, 9, { posts: [], events: [] }),
       module('events', 'Upcoming events', 4, 9, { events: [], ownEvents: true }),
     ],
   },

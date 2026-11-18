@@ -49,7 +49,7 @@ export const LAYOUTS = [
 export const layoutById = (id) => LAYOUTS.find((l) => l.id === id) ?? LAYOUTS[0];
 
 /** Module types that make a good featured module, best first. */
-export const FEATURE_FIRST = ['generalfeed', 'forum', 'textfeed', 'photofeed', 'articles', 'announcements', 'chat', 'events', 'calendar'];
+export const FEATURE_FIRST = ['generalfeed', 'forum', 'textfeed', 'articles', 'announcements', 'chat', 'events', 'calendar'];
 
 /** The module to feature when none is chosen (or the chosen one is gone). */
 export function defaultFeatured(modules) {

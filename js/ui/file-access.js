@@ -24,7 +24,7 @@
 import { h, replaceChildren, makeId } from './dom.js';
 import { icon } from './icons.js';
 import { avatar } from './avatar.js';
-import { getModule, getMember, getCurrentUser, updateModuleData, getSpaceOfModule } from '../state/store.js';
+import { getModule, getMember, getCurrentUser, updateModuleData, getSpaceOfModule, getState } from '../state/store.js';
 import { notify } from '../state/notifications.js';
 import { can } from '../state/permissions.js';
 import { timeAgo } from '../utils/dates.js';
@@ -39,10 +39,46 @@ export const ACCESS_LEVELS = [
 export function documentAccess(vaultModuleId, item, me) {
   const space = getSpaceOfModule(vaultModuleId);
   if (!space || !me || !item) return 'none';
-  if (space.kind !== 'group') return space.memberIds[0] === me.id ? 'edit' : 'none';
-  if (!space.memberIds.includes(me.id)) return 'none';
+  if (space.kind !== 'group') return space.memberIds[0] === me.id ? 'edit' : sharedAccessFor(item, me) ?? 'none';
+  if (!space.memberIds.includes(me.id)) return sharedAccessFor(item, me) ?? 'none';
   if (item.createdBy === me.id || can(space, me.id, 'moderate')) return 'edit';
   return item.memberAccess ?? 'edit';
+}
+
+// ─── Shared with people and groups (item.sharedWith, Nov 17) ────────────────
+//
+//   item.sharedWith = [{ kind: 'member' | 'space', id, access: 'view' | 'comment' | 'edit', by, at }]
+//
+// Sharing a vault file or folder with someone (or a group) puts it in their
+// vault under "Shared with you" (a group's: "Shared with this group"), live
+// from the original, with that access. A shared folder shares what's in it.
+
+const RANK = { view: 1, comment: 2, edit: 3 };
+
+/** The best access `me` has through item.sharedWith (directly or through a group), or null. */
+export function sharedAccessFor(item, me) {
+  if (!item || !me) return null;
+  let best = null;
+  for (const entry of item.sharedWith ?? []) {
+    const reaches = entry.kind === 'member' ? entry.id === me.id : getState().spaces.find((x) => x.id === entry.id)?.memberIds.includes(me.id);
+    if (reaches && (!best || RANK[entry.access] > RANK[best])) best = entry.access;
+  }
+  return best;
+}
+
+/** Files shared with this person (`{ memberId }`) or this group (`{ spaceId }`): [{ vault, item, entry }]. */
+export function sharedWith({ memberId = null, spaceId = null }) {
+  const found = [];
+  for (const space of getState().spaces) {
+    for (const vault of space.modules ?? []) {
+      if (vault.type !== 'vault') continue;
+      for (const item of vault.data?.items ?? []) {
+        const entry = (item.sharedWith ?? []).find((e) => (memberId && e.kind === 'member' && e.id === memberId) || (spaceId && e.kind === 'space' && e.id === spaceId));
+        if (entry && !item.removed) found.push({ vault, item, entry });
+      }
+    }
+  }
+  return found.sort((a, b) => (b.entry.at ?? 0) - (a.entry.at ?? 0));
 }
 
 export const accessLabel = (id) => (ACCESS_LEVELS.find((a) => a.id === id) ?? ACCESS_LEVELS[0]).label;

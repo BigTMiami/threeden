@@ -8,7 +8,7 @@
  *   │ the event, the poll                 │
  *   └─────────────────────────────────────┘
  *   [photo ×] [photo ×] [video ×]          ← what you've added, to remove or edit
- *   📄 Pedalboard plans    [Can view ▾]  Remove
+ *   ↑↓ 📄 Pedalboard plans  [Can view ▾]  Remove  Preview   ← ↑↓ reorder; the first is the preview
  *   🎟 Porch jam session                 Remove
  *   (the poll's fields, when there's a poll)
  *   [ What's happening?                ]   ← two lines to start; grows with what you
@@ -107,6 +107,28 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
   }
 
   let started = false; // the first draw isn't a change
+  /**
+   * ↑ ↓ to change the order of what's attached. With no photos added the
+   * usual way, the first one is the post's preview (its tile in a grid, the
+   * slide in a Carousel), so it says so.
+   */
+  function withOrder(row, index) {
+    const move = (step) => {
+      const list = draft.attachments;
+      const to = index + step;
+      if (to < 0 || to >= list.length) return;
+      [list[index], list[to]] = [list[to], list[index]];
+      drawDraft();
+    };
+    const count = draft.attachments.length;
+    row.classList.add('feed-composer__ordered');
+    row.prepend(h('span', { class: 'feed-composer__order' },
+      count > 1 ? h('button', { type: 'button', class: 'icon-button icon-button--small', 'aria-label': 'Move up', disabled: index === 0, onClick: () => move(-1) }, icon('chevronUp', 14)) : null,
+      count > 1 ? h('button', { type: 'button', class: 'icon-button icon-button--small', 'aria-label': 'Move down', disabled: index === count - 1, onClick: () => move(1) }, icon('chevronDown', 14)) : null));
+    if (index === 0 && !draft.media.length && count > 0) row.append(h('span', { class: 'feed-composer__first' }, 'Preview'));
+    return row;
+  }
+
   function drawDraft() {
     if (started) onChange?.(snapshot());
     started = true;
@@ -120,20 +142,20 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
         item.kind === 'video' ? h('video', { src: item.src, muted: true }) : h('img', { src: item.src, alt: '' }),
         item.kind === 'video' ? null : photoEditButton(() => item.src, (edited) => { Object.assign(item, edited); drawDraft(); }),
         h('button', { type: 'button', class: 'feed-composer__remove', 'aria-label': 'Remove', onClick: () => { draft.media = draft.media.filter((m) => m !== item); drawDraft(); } }, icon('close', 12)))),
-      draft.attachments.length ? h('ul', { class: 'sub-items feed-composer__attachment' }, draft.attachments.map((attachment) => {
+      draft.attachments.length ? h('ul', { class: 'sub-items feed-composer__attachment' }, draft.attachments.map((attachment, index) => {
         const remove = () => { draft.attachments = draft.attachments.filter((a) => a !== attachment); drawDraft(); };
         if (attachment.kind === 'file') {
           // What people who see the post can do with it (js/ui/file-access.js).
           const row = renderSubmittedItem(attachment.item, { onRemove: remove });
           if (attachment.item.from) row.append(accessPicker(attachment.access ?? 'view', (value) => { attachment.access = value; drawPreview(); }));
-          return row;
+          return withOrder(row, index);
         }
-        return h('li', { class: 'sub-item' },
+        return withOrder(h('li', { class: 'sub-item' },
           h('span', { class: 'sub-item__icon' }, icon(attachment.kind === 'event' ? 'ticket' : 'link', 16)),
           h('span', { class: 'sub-item__text' },
             h('span', { class: 'sub-item__name' }, attachment.kind === 'event' ? attachment.title : attachment.name),
             h('span', { class: 'sub-item__meta' }, attachment.kind === 'event' ? (draft.media.length ? 'Connected event: shows under the pictures, with RSVP' : 'Event invitation: people can RSVP from the post') : attachment.url)),
-          h('button', { type: 'button', class: 'link-button link-button--danger', onClick: remove }, 'Remove'));
+          h('button', { type: 'button', class: 'link-button link-button--danger', onClick: remove }, 'Remove')), index);
       })) : null);
     drawPreview();
   }

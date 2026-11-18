@@ -125,8 +125,8 @@ jumps anywhere.
 | **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
 | **Getting things done** | Tasks (list and board views), List, Budget, Gantt chart, Survey | group, personal |
 | **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
-| **Publishing** | Articles, General feed, Photo & video feed, Text feed | blog and group |
-| **A blog's front page** | About, Photo gallery, Photo carousel | blog |
+| **Publishing** | Articles, General feed, Text feed (Carousel: blog only) | blog and group |
+| **A blog's front page** | About, Photo gallery, Carousel | blog |
 | **Organizing** | Relationship map | group, personal |
 
 "Coming soon" entries in the library (`js/modules/coming-soon.js`) mark
@@ -208,6 +208,12 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
   calendars, and a calendar feed for other apps.
 - **Sharing and publishing:** "Who sees this" on every composer, public tabs,
   documents published as articles, and follows for groups you can't join.
+  Every vault file and folder has one sharing tile with three parts: who can
+  open it (group members' access, plus people and groups it's shared with
+  directly, which then see it under "Shared with you" in their own vault),
+  where it's shared (pages), and where it's published (posts and articles).
+  Publishing a file always makes a post with a preview tile, so it gets likes
+  and comments like any other post.
 - **Safety:** reports, a moderation queue, blocking and muting, and accounts
   for children.
 - **Appearance:** each space's look is CSS custom properties, so every module

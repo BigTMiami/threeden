@@ -61,7 +61,7 @@ export function summarize(post) {
   const text = post.text.replace(/\s+/g, ' ').trim();
   const media = post.media ?? [];
   const attachments = post.attachments ?? [];
-  const base = { text, count: media.length };
+  const base = { text, count: media.length || attachments.filter((a) => a.kind === 'file').length };
   const firstImage = media.find((m) => m.kind === 'image');
   if (media.length) {
     const video = media[0].kind === 'video' ? media[0] : null;
@@ -83,6 +83,14 @@ export function summarize(post) {
     if (item.kind === 'file' && item.mimeType?.startsWith('image/') && item.dataUrl) {
       return { ...base, kind: 'photo', label: 'Picture', iconName: 'image', image: item.dataUrl, title: item.name };
     }
+    if (item.kind === 'file' && item.mimeType?.startsWith('video/') && item.dataUrl) {
+      return { ...base, kind: 'video', label: 'Video', iconName: 'image', video: item.dataUrl, title: item.name };
+    }
+    // A published folder: its cover photo (if one was chosen) and how many files.
+    if (item.kind === 'folder') {
+      const n = (item.children ?? []).length;
+      return { ...base, kind: 'file', label: 'Folder', iconName: 'folder', image: item.cover ?? null, title: item.name, snippet: `${n} ${n === 1 ? 'file' : 'files'}` };
+    }
     let snippet = '';
     if (item.kind === 'note') snippet = plain(item.html);
     else if (item.kind === 'file' && item.dataUrl && /^text\/|json|csv/.test(item.mimeType ?? '')) {
@@ -102,8 +110,8 @@ export function summarize(post) {
   return { ...base, kind: 'text', label: 'Post', iconName: 'note' };
 }
 
-/** The picture part of a tile or row: the same box for every kind of post. */
-function visual(summary, { big = false } = {}) {
+/** The picture part of a tile or row: the same box for every kind of post (also a Carousel's slide). */
+export function visual(summary, { big = false } = {}) {
   if (summary.image) return h('img', { class: 'feed-layout__img', src: summary.image, alt: '', loading: 'lazy' });
   if (summary.video) return h('video', { class: 'feed-layout__img', src: summary.video, muted: true, preload: 'metadata' });
   if (summary.kind === 'event') {

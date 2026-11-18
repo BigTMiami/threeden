@@ -2,7 +2,7 @@
  * blog.css — the blog modules (js/modules/blog/) and the lightbox.
  *
  *   .gallery     Photo gallery: a grid of square thumbnails
- *   .carousel    Photo carousel: one photo, arrows, dots, caption below
+ *   .carousel    Carousel: one post at a time, arrows, dots, caption below (feed-carousel.js)
  *   .blog-doc    Document: a title, a byline and the writing
  *   .lightbox    a photo shown large over the page (js/ui/lightbox.js)
  */
@@ -62,7 +62,7 @@
   color: var(--color-text-muted);
 }
 
-/* ─── Photo carousel ────────────────────────────────────────────────────── */
+/* ─── Carousel ────────────────────────────────────────────────────── */
 
 .carousel {
   outline: none;
@@ -163,57 +163,58 @@
   }
 }
 
-/* Full page: the show, then managing slides. */
-.carousel-page__show {
-  max-width: 900px;
-  margin: 0 auto 20px;
+/* A Carousel's slide: the post's big preview, the same box a General feed's grid tile has (feed-carousel.js). */
+.feed-carousel__slide {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--color-surface-muted);
+  cursor: pointer;
 }
 
-.carousel-page__manage {
-  max-width: 900px;
-  margin: 0 auto;
+.feed-carousel__slide > img,
+.feed-carousel__slide > video,
+.feed-carousel__slide > .feed-layout__visual {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.carousel-page__heading {
-  margin: 0 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-serif);
-  font-size: 20px;
-  font-weight: normal;
+.feed-carousel__caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.carousel-page__settings {
+.feed-carousel__counts {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.feed-carousel__settings {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 10px;
+  gap: 8px 20px;
+  margin: 12px 0;
+  font-size: var(--font-size-small);
 }
 
-.carousel-page__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.carousel-page__row {
-  display: flex;
+.feed-carousel__setting {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border-faint);
+  gap: 6px;
 }
 
-.carousel-page__row .input {
-  flex: 1 1 auto;
-}
-
-.carousel-page__thumb {
-  width: 96px;
-  height: 54px;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
+.feed-carousel__list-heading {
+  margin: 16px 0 6px;
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
 }
 
 /* ─── Document ──────────────────────────────────────────────────────────── */

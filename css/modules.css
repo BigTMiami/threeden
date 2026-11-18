@@ -4739,3 +4739,36 @@ ul.pres-slide__body { margin: 0; padding-left: 1.2em; color: var(--color-text); 
 .task-people__waiting { margin: 0; font-size: 12px; color: var(--color-text-muted); }
 .task-people__assign { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .task-people__assign-open { align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; }
+
+/* An open file in a vault: its name, and the Sharing tile beside it. */
+.vault-file__header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.vault-file__header .vault-file__name { margin: 0; }
+
+/* ─── Vault page: photo tiles, the folder's Sharing tile, Shared with you, Select (vault-page.js) ── */
+.vault-page__path { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.vault-page__path .vault-page__heading { margin-bottom: 0; }
+.vault-page__hint { margin: 0 0 10px; color: var(--color-text-muted); font-size: var(--font-size-small); }
+.vault-page__shared-link { display: flex; align-items: center; gap: 8px; width: 100%; margin: 8px 0; padding: 8px 10px; border: 1px solid var(--color-border-faint); border-radius: var(--radius); background: var(--color-surface-muted); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.vault-page__shared-link:hover { border-color: var(--color-accent-border); background: var(--color-accent-soft); }
+.vault-page__shared-count { margin-left: auto; padding: 0 8px; border-radius: 999px; background: var(--color-surface); color: var(--color-text-muted); font-size: var(--font-size-small); }
+.vault-tree__shared { margin-top: 8px; border-top: 1px solid var(--color-border-faint); padding-top: 8px; }
+.vault-page__select.is-active { border-color: var(--color-accent); color: var(--color-accent); }
+
+.vault-media { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 8px 0 14px; padding: 0; list-style: none; }
+.vault-media__tile { position: relative; }
+.vault-media__open { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden; border: 1px solid var(--color-border-faint); border-radius: var(--radius); background: var(--color-surface-muted); cursor: pointer; }
+.vault-media__open img, .vault-media__open video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vault-media__badge { position: absolute; top: 6px; right: 6px; padding: 1px 6px; border-radius: 999px; background: rgb(0 0 0 / 0.55); color: #fff; font-size: 11px; }
+.vault-media__name { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 8px 6px; background: linear-gradient(transparent, rgb(0 0 0 / 0.6)); color: #fff; font-size: var(--font-size-small); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity 0.15s; }
+.vault-media__open:hover .vault-media__name, .vault-media__open:focus-visible .vault-media__name { opacity: 1; }
+.vault-media__tile.is-selected .vault-media__open, .vault-tile.is-selected { outline: 3px solid var(--color-accent); outline-offset: 1px; }
+.vault-media__tile .vault-select__check, .vault-tile .vault-select__check { position: absolute; top: 8px; left: 8px; width: 18px; height: 18px; z-index: 1; }
+.vault-tile { position: relative; }
+.vault-tile__thumb { display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius); background: var(--color-surface-muted); }
+.vault-tile__thumb img, .vault-tile__thumb video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vault-table__name .vault-select__check { margin-right: 6px; }
+
+.vault-select { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 8px 0; padding: 8px 10px; border: 1px solid var(--color-accent-border); border-radius: var(--radius); background: var(--color-accent-soft); }
+.vault-select__all { display: inline-flex; align-items: center; gap: 6px; font-weight: bold; }
+.vault-select__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.vault-select__move { flex-basis: 100%; }

@@ -17,7 +17,7 @@ with sync_playwright() as p:
         post.locator('.event-strip').get_by_role('button').first.click(); pg.wait_for_timeout(500)
         print(' rsvp:', pg.evaluate("(async()=>{const e=await import('./js/state/events.js'); return e.findEvent('band-ev-2').event.rsvps['m-leo']})()"), '| strip still there:', pg.locator('article:has(.event-strip)').count())
         pg.evaluate("location.hash='#space-porchlights'"); pg.wait_for_timeout(800)
-        pg.locator('.feed-module__new-post:visible').first.click(); pg.wait_for_timeout(300); comp=pg.locator('.feed-composer').first; comp.get_by_role('button', name='Connect an event').click(); pg.wait_for_timeout(300)
+        pg.locator('.feed-module__new-post:visible').first.click(); pg.wait_for_timeout(300); comp=pg.locator('.feed-composer').first; comp.get_by_role('button', name='Event', exact=True).click(); pg.wait_for_timeout(300)
         print(' events offered first:', comp.locator('.sub-attach__vault-item').first.inner_text().replace('\n',' '))
         pg.screenshot(path=f'test-output/c_group_{vw}.png')
     print('errors', errs)

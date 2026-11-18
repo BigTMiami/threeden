@@ -144,12 +144,42 @@ functions, no build step.
   Templates (page-templates.js, starter-layouts.js) still create Document
   modules directly. Test: `test_file_from_vault.py`; four older tests
   updated (vault + New order, library, many lists).
-  **Queued from Leo (Nov 17):** (1) vault sharing tile for documents and
-  folders with editable who-can-open / shared in / published, a Publish
-  button (Post for photos and videos) opening a "where to publish" overlay
-  (blog feeds first, then groups, expandable), photo and video tiles in
-  vaults, selecting several vault files at once (still to do); (2) the
-  header editing controls (done, see below).
+  Leo's Nov 17 vault batch and header controls are both done (see below).
+
+- **Vault sharing, publishing, and selecting (Nov 18):**
+  - The Photo & video feed is gone; MIGRATIONS v70 turns photofeed modules
+    into General feeds and old carousel slides into posts (DATA_VERSION 70).
+    "Photo carousel" is now **Carousel** (feed-modules.js `carouselModule`,
+    variant 'carousel', blog only): it holds General-feed posts (`postKind`
+    'general') and shows them with `createPostSlideshow` (feed-carousel.js).
+    js/modules/blog/carousel-module.js was deleted. Carousel posts count as
+    feed posts everywhere FEED_TYPES lists feeds (Feed, Up next, Dashboard,
+    tags, search).
+  - Every attachment previews as a card (`summarize()` and
+    `renderFilePreview`, which now handles folders, videos, and a plain
+    fallback). The composer's attachment rows have ↑ ↓; the first is the
+    preview when the post has no photos.
+  - js/ui/document-sharing.js: `documentShareButton({vaultModuleId,itemId})`
+    on every vault item and folder; three rows, each with an editor.
+    Direct shares are `item.sharedWith = [{kind:'member'|'space', id, access,
+    by, at}]`; `sharedAccessFor()` / `sharedWith()` in file-access.js, and
+    `documentAccess` falls back to them. `openShareMany` shares several.
+  - js/ui/publish-dialog.js: `publishVerb(items)` (Publish for notes,
+    folders, sheet/presentation/relationship-map files; Post otherwise) and
+    `openPublishDialog({entries})`: places (blog feeds, then groups folded,
+    only where `postToFeeds`), a cover step for folders, then the composer.
+    The Text feed isn't offered (words only).
+  - vault-page.js: photo/video tiles (`.vault-media`), Select with a bar
+    (Move, Share, Download, Make a copy, Post/Publish, Delete with Undo), and
+    a "Shared with you" / "Shared with this group" entry in the tree.
+    Downloads: notes as .html, module files as .json.
+  - Decisions made without asking: a personal vault stays "Only you" plus
+    direct shares; "Shared in" means pages, "Published" means posts and
+    articles; Carousel is blog-only; the vault card view is unchanged;
+    templates still create Document modules.
+  - Test: `test_vault_publish_share.py`; `test_feed_post_nav_move.py`,
+    `test_calm_follows.py`, and `test_photo_carousel_and_event_strip.py`
+    updated.
 
 - **New message: search people (Nov 17):** the To box on `#messages-new` and
   in the + menu's Message is `createPeopleSearch()` (js/ui/people-search.js):

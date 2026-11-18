@@ -33,7 +33,6 @@ import { getModuleType } from '../registry.js';
 import { renderPoll } from '../../ui/poll-view.js';
 import { notifyMentions } from '../../state/notifications.js';
 import { renderAttachment } from '../../messages/attachments.js';
-import { renderSubmittedItem } from '../submissions/submission-items.js';
 import { blogHref } from '../../router.js';
 import { renderFilePreview } from './file-preview.js';
 import { postKey, postTitle } from './feed-data.js';
@@ -276,23 +275,18 @@ export function renderEventStrip(eventId, onChange) {
  */
 function renderAttachments(attachments, redraw) {
   if (!attachments.length) return null;
+  // Every file and link gets a preview card (file-preview.js), whatever it is.
   const previews = [];
-  const rows = [];
   for (const a of attachments) {
-    if (a.kind === 'link') rows.push({ id: a.url, kind: 'link', name: a.name, url: a.url });
+    if (a.kind === 'link') { previews.push(renderFilePreview({ id: a.url, kind: 'link', name: a.name || a.url, url: a.url })); continue; }
     if (a.kind !== 'file') continue;
     // Shared to comment on or edit: the file as it is now (js/ui/file-access.js).
-    const live = a.access && a.access !== 'view' ? renderLiveFile(a) : null;
-    if (live) { previews.push(live); continue; }
-    const preview = renderFilePreview(a.item);
-    if (preview) previews.push(preview);
-    else rows.push(a.item);
+    previews.push((a.access && a.access !== 'view' ? renderLiveFile(a) : null) ?? renderFilePreview(a.item));
   }
   const events = attachments.filter((a) => a.kind === 'event');
-  if (!previews.length && !rows.length && !events.length) return null;
+  if (!previews.length && !events.length) return null;
   return h('div', { class: 'feed-post__attachments' },
     previews,
-    rows.length ? h('ul', { class: 'sub-items feed-post__files' }, rows.map((item) => renderSubmittedItem(item))) : null,
     events.map((a) => h('div', { class: 'feed-post__event' }, renderAttachment({ kind: 'event', eventId: a.eventId }, { me: getCurrentUser(), onChange: redraw }))));
 }
 

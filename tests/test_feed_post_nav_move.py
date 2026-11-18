@@ -46,7 +46,7 @@ with sync_playwright() as p:
 
     # ── Dragging between feeds ──
     st(pg, "location.hash='#space-blog-m-leo'; return 1"); pg.wait_for_timeout(900)
-    st(pg, "s.addModule('photofeed', undefined, {title:'Photos', span:6, rows:14}); s.addModule('textfeed', undefined, {title:'Notes', span:6, rows:14}); return 1"); pg.wait_for_timeout(900)
+    st(pg, "s.addModule('generalfeed', undefined, {title:'Photos', span:6, rows:14}); s.addModule('textfeed', undefined, {title:'Notes', span:6, rows:14}); return 1"); pg.wait_for_timeout(900)
     pg.set_viewport_size({'width':1300,'height':3400}); pg.wait_for_timeout(500)
     grid=pg.locator('#homepage-view')
     frame=lambda title: grid.locator('.module-frame').filter(has=pg.locator('.module-frame__title', has_text=title)).first
@@ -66,15 +66,15 @@ with sync_playwright() as p:
     after=(count('leo-feed'), count(pid)); print('after dragging a photo post to Photos:', after, '| toast:', pg.locator('.toast').last.inner_text() if pg.locator('.toast').count() else '-')
     if after!=(before[0]-1, before[1]+1): errs.append('photo post did not move')
     pg.screenshot(path='test-output/feed-drag-moved.png')
-    # the event post onto Photos: refused, says why
+    # the event post onto Notes (a Text feed): refused, says why
     ev=posts.locator('.feed-tile', has_text='Free bike repair').first
-    drag(ev, photos, drop=False)
-    label=photos.get_attribute('data-drop-label'); print('event post over Photos:', label, '| no-drop class:', 'is-post-drop-no' in (photos.get_attribute('class') or ''))
+    drag(ev, notes, drop=False)
+    label=notes.get_attribute('data-drop-label'); print('event post over Notes:', label, '| no-drop class:', 'is-post-drop-no' in (notes.get_attribute('class') or ''))
     pg.screenshot(path='test-output/feed-drag-refused.png')
     pg.mouse.up(); pg.wait_for_timeout(400)
     print('no viewer opened after a drag:', pg.locator('.photo-viewer').count()==0)
-    if count(pid)!=after[1]: errs.append('event post should not go into a photo feed')
-    if not label or 'picture' not in label: errs.append('no reason shown')
+    if count(nid)!=0: errs.append('event post should not go into a text feed')
+    if not label or 'words only' not in label: errs.append('no reason shown')
     # "Move to" in the menu: open the moved post in Photos and move it back
     photos.locator('.feed-tile, .feed-row, .feed-module__square').first.click(); pg.wait_for_timeout(400)
     pg.locator('.photo-viewer__side .post-menu__button').first.click(); pg.wait_for_timeout(200)

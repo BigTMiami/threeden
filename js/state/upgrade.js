@@ -25,7 +25,7 @@
  */
 
 /** Bump this when the sample data or the saved shape changes (it used to be the storage key's version). */
-export const DATA_VERSION = 69;
+export const DATA_VERSION = 70;
 
 /**
  * Steps for saves from before a version, oldest first.
@@ -43,6 +43,29 @@ const MIGRATIONS = [
           if (module.type === 'vault' && Array.isArray(module.data?.items)) module.data.items = module.data.items.filter((i) => !isCanvasFile(i));
         }
         if (Array.isArray(space.removedModules)) space.removedModules = space.removedModules.filter((r) => r.type !== 'canvas' && r.module?.type !== 'canvas');
+      }
+    },
+  },
+  {
+    version: 70,
+    note: 'Photo & video feeds become General feeds (in a grid); Photo carousels become Carousels of posts',
+    run: (state) => {
+      const convert = (module, ownerId) => {
+        if (module?.type === 'photofeed') module.type = 'generalfeed';
+        if (module?.type === 'carousel' && Array.isArray(module.data?.slides)) {
+          const { slides, autoplay = true, seconds = 5 } = module.data;
+          module.data = {
+            posts: slides.map((slide, i) => ({
+              id: `${module.id}-slide-${i}`, authorId: ownerId, createdAt: slide.addedAt ?? Date.now() - i, editedAt: null,
+              text: slide.caption ?? '', media: slide.src ? [{ id: `${module.id}-photo-${i}`, kind: 'image', src: slide.src, caption: '' }] : [], attachments: [],
+            })),
+            events: [], autoplay, seconds,
+          };
+        }
+      };
+      for (const space of state.spaces ?? []) {
+        for (const module of space.modules ?? []) convert(module, space.memberIds?.[0] ?? null);
+        for (const removed of space.removedModules ?? []) convert(removed.module, space.memberIds?.[0] ?? null);
       }
     },
   },

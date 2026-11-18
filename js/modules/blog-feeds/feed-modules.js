@@ -1,18 +1,22 @@
 /**
- * feed-modules.js — the three feed modules for personal blogs. They're
+ * feed-modules.js — the feed modules for blogs (and groups). They're
  * listed first in a blog's module library, under "Feeds": what you post
  * in them shows up in your friends' Feeds (js/feed/), with likes,
  * comments and "Send".
  *
- *   Photo & video feed   a grid of squares, newest first (like a photo
- *                        app's profile); every post has photos or a video,
- *                        with a caption. Tapping a square opens the post
- *                        over the page (photo-viewer.js)
  *   Text feed            short posts, up to 500 characters (like X)
- *   General feed         anything: text with pictures, a file from your
- *                        vault, or an invitation to an event, shown as a
- *                        list or a grid where every post gets the same size
- *                        (feed-layouts.js; the owner picks under "Layout")
+ *   General feed         anything: text with pictures or a video, any file
+ *                        from your vault, or an invitation to an event,
+ *                        shown as a list or a grid where every post gets
+ *                        the same size (feed-layouts.js; the owner picks
+ *                        under "Layout"). Tapping one opens the post over
+ *                        the page (photo-viewer.js)
+ *   Carousel (blogs)     the same posts as a General feed, one at a time,
+ *                        moving on by itself (feed-carousel.js)
+ *
+ * The Photo & video feed was folded into the General feed on Nov 17 (old
+ * ones became General feeds in a grid: js/state/upgrade.js), and the Photo
+ * carousel became Carousel, holding posts instead of bare photos.
  *
  * On your own blog a "New post" button sits on the module's title line
  * (left of the expand arrows) and opens the composer in a pop-up over the
@@ -51,17 +55,17 @@ import { draftsFor, saveDraft, deleteDraft, restoreDraft, hasContent } from '../
 import { renderFeedPost } from './feed-post.js';
 import { openPhotoPost } from './photo-viewer.js';
 import { displayOf, renderLayout, renderLayoutControls } from './feed-layouts.js';
+import { createPostSlideshow, renderCarouselSettings } from './feed-carousel.js';
 import { otherFeeds, fitsFeed, movePost, makePostDraggable, makeFeedDropTarget } from './feed-move.js';
 
 const CARD_POSTS = 3;
-const CARD_PHOTOS = 9;
 const CARD_LIST_ROWS = 4;
 const EVENT_LENGTH_MINUTES = 120;
 const DRAFT_SAVE_MS = 700;
 /** @type {Map<string, { draftId: string | null }>} which feeds have the composer open, across redraws */
 const composeState = new Map();
 
-function feedModule({ type, variant, label, description, icon, defaultSpan, defaultRows }) {
+function feedModule({ type, variant, label, description, icon, defaultSpan, defaultRows, spaceKinds = ['blog', 'group'], initialData = {} }) {
   return {
     type,
     label,
@@ -70,30 +74,33 @@ function feedModule({ type, variant, label, description, icon, defaultSpan, defa
     defaultSpan,
     defaultRows,
     available: true,
-    spaceKinds: ['blog', 'group'],
+    spaceKinds,
     isFeed: true, // listed first, under "Feeds", in a blog's library
-    createInitialData: () => ({ posts: [], events: [] }),
+    createInitialData: () => ({ posts: [], events: [], ...initialData }),
     render: (container, context) => renderFeed(container, context, variant, false),
     renderFullPage: (container, context) => renderFeed(container, context, variant, true),
   };
 }
 
-export const photoFeedModule = feedModule({
-  type: 'photofeed', variant: 'photo', label: 'Photo & video feed', icon: 'image', defaultSpan: 8, defaultRows: 16,
-  description: 'Share pictures and short videos, with a caption. Shows in your friends’ (or members’) Feeds.',
-});
 export const textFeedModule = feedModule({
   type: 'textfeed', variant: 'text', label: 'Text feed', icon: 'chat', defaultSpan: 6, defaultRows: 16,
   description: 'Short posts, just words. Shows in your friends’ (or members’) Feeds.',
 });
 export const generalFeedModule = feedModule({
   type: 'generalfeed', variant: 'general', label: 'General feed', icon: 'announcements', defaultSpan: 8, defaultRows: 16,
-  description: 'Anything: words with pictures, a file from your vault, an event invitation.',
+  description: 'Anything: words, photos and videos, any file from your vault, an event invitation.',
+});
+export const carouselModule = feedModule({
+  type: 'carousel', variant: 'carousel', label: 'Carousel', icon: 'slides', defaultSpan: 8, defaultRows: 14, spaceKinds: ['blog'],
+  initialData: { autoplay: true, seconds: 5 },
+  description: 'The same posts as a General feed, shown one at a time like a slideshow.',
 });
 
-export const FEED_MODULES = [photoFeedModule, textFeedModule, generalFeedModule];
+export const FEED_MODULES = [textFeedModule, generalFeedModule, carouselModule];
 
 function renderFeed(container, context, variant, isFullPage) {
+  // A Carousel holds the same posts as a General feed.
+  const postKind = variant === 'carousel' ? 'general' : variant;
   const space = getSpace(context.spaceId);
   const inGroup = space?.kind === 'group';
   const me = context.currentUser;
@@ -207,31 +214,12 @@ function renderFeed(container, context, variant, isFullPage) {
 
   function draw() {
     const posts = sortedPosts(context.getData()).filter((p) => canSeePost(p, space, me?.id));
-    // General and photo feeds: a grid of tiles (or a list), one per post.
-    if (variant === 'general' || variant === 'photo') { drawGeneral(posts); return; }
+    // A Carousel: one post at a time (and on its full page, the posts as a list to manage).
+    if (variant === 'carousel') { drawCarousel(posts); return; }
+    // A General feed: a grid of tiles (or a list), one per post.
+    if (variant === 'general') { drawGeneral(posts); return; }
     if (posts.length === 0) {
       replaceChildren(list, emptyState({ icon: 'note', title: 'No posts yet', text: isOwner ? 'Tap New post to write your first.' : null }));
-      return;
-    }
-
-    // A photo feed is a grid of squares, newest first; tap one to open the post.
-    if (variant === 'photo') {
-      const shownPosts = isFullPage ? posts : posts.slice(0, CARD_PHOTOS);
-      replaceChildren(list,
-        isFullPage ? h('p', { class: 'feed-module__count-line' }, `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`) : null,
-        h('div', { class: 'feed-module__grid' }, shownPosts.map((p, index) => {
-          const cover = p.media[0];
-          return draggable(h('button', {
-            type: 'button',
-            class: 'feed-module__square',
-            'aria-label': p.text ? `Open post: ${p.text.slice(0, 60)}` : 'Open post',
-            onClick: () => openViewer(posts, index),
-          },
-            cover?.kind === 'video' ? h('video', { src: cover.src, muted: true, preload: 'metadata' }) : cover ? h('img', { src: cover.src, alt: '', loading: 'lazy' }) : null,
-            p.media.length > 1 ? h('span', { class: 'feed-module__count' }, String(p.media.length)) : null,
-            cover?.kind === 'video' ? h('span', { class: 'feed-module__count' }, '▶') : null), p);
-        })),
-        !isFullPage && posts.length > CARD_PHOTOS ? h('button', { type: 'button', class: 'link-button', onClick: () => context.openFullPage() }, `See all ${posts.length} posts`) : null);
       return;
     }
 
@@ -240,6 +228,26 @@ function renderFeed(container, context, variant, isFullPage) {
       shown.map((p) => draggable(postView(normalizePost(p), { startOpen: p.id === focusId }), p)),
       !isFullPage && posts.length > CARD_POSTS ? h('button', { type: 'button', class: 'link-button feed-module__all', onClick: () => context.openFullPage() }, `See all ${posts.length} posts`) : null);
   }
+
+  /** A Carousel: the slideshow; the owner's full page adds its settings and the posts as a list. */
+  function drawCarousel(posts) {
+    stopSlideshow?.();
+    if (posts.length === 0) {
+      replaceChildren(list, h('p', { class: 'module-empty' }, isOwner ? 'Nothing here yet. Tap New post to add the first slide.' : 'No posts yet.'));
+      return;
+    }
+    const show = createPostSlideshow({ posts: posts.map(normalizePost), settings: context.getData(), onOpen: (index) => openViewer(posts, index) });
+    stopSlideshow = show.stop;
+    replaceChildren(list,
+      show.element,
+      isFullPage && isOwner ? renderCarouselSettings(context.getData(), (changes) => {
+        context.saveData({ ...normalizeFeed(structuredClone(context.getData())), ...changes });
+        draw();
+      }) : null,
+      isFullPage ? h('h3', { class: 'feed-carousel__list-heading' }, `${posts.length} ${posts.length === 1 ? 'slide' : 'slides'}`) : null,
+      isFullPage ? renderLayout({ posts: posts.map(normalizePost), display: { ...displayOf({}), layout: 'list' }, onOpen: (index) => openViewer(posts, index), decorate: draggable }) : null);
+  }
+  let stopSlideshow = null;
 
   /**
    * A General feed: every post in the same list row or grid tile, whatever
@@ -314,7 +322,7 @@ function renderFeed(container, context, variant, isFullPage) {
       composing.draftId = saveDraft(me, { id: composing.draftId, moduleId: context.moduleId, ...fields });
     }, DRAFT_SAVE_MS);
     const composer = renderComposer({
-      variant, spaceId: context.spaceId, audience: audienceFor(space, space?.modules.find((m) => m.id === context.moduleId)),
+      variant: postKind, spaceId: context.spaceId, audience: audienceFor(space, space?.modules.find((m) => m.id === context.moduleId)),
       initial: existing,
       onPost: (fields) => {
         post(fields);
@@ -363,7 +371,7 @@ function renderFeed(container, context, variant, isFullPage) {
   drawCompose();
   draw();
   // Posts dragged here from another feed on the page (feed-move.js).
-  if (isOwner) makeFeedDropTarget(container, { spaceId: context.spaceId, moduleId: context.moduleId, variant, frameOf: () => container.closest('.module-frame') ?? container });
+  if (isOwner) makeFeedDropTarget(container, { spaceId: context.spaceId, moduleId: context.moduleId, variant: postKind, frameOf: () => container.closest('.module-frame') ?? container });
   // The frame's header may only be in place once this card is (later on a busy page): try a few times.
   if (!placeNewPostButton()) {
     let tries = 0;
@@ -372,8 +380,8 @@ function renderFeed(container, context, variant, isFullPage) {
   } else requestAnimationFrame(placeNewPostButton);
 
   // Opened at a post (from the Feed, a notification or a message): open it
-  // (photo feeds) or scroll to it.
-  if (focusId && (variant === 'photo' || variant === 'general')) {
+  // (General feeds and Carousels) or scroll to it.
+  if (focusId && (variant === 'general' || variant === 'carousel')) {
     const posts = sortedPosts(context.getData()).filter((p) => canSeePost(p, space, me?.id));
     const index = posts.findIndex((p) => p.id === focusId);
     if (index !== -1) requestAnimationFrame(() => openViewer(posts, index));

@@ -109,7 +109,7 @@ export const BLOG_TEMPLATES = [
   {
     id: 'photographer', label: 'Photographer', who: 'A photo grid first, a gallery, and a line about you',
     modules: () => [
-      module('photofeed', 'Photos', 8, 18, { posts: [], events: [] }),
+      module('generalfeed', 'Photos', 8, 18, { posts: [], events: [] }),
       module('note', 'About me', 4, 9, { title: '', html: '<p></p>', updatedAt: null }),
       module('gallery', 'Portfolio', 12, 14),
     ],
@@ -134,7 +134,7 @@ export const BLOG_TEMPLATES = [
     id: 'creator', label: 'Creator', who: 'Photos and posts side by side',
     modules: () => [
       module('generalfeed', 'Posts', 7, 16, { posts: [], events: [] }),
-      module('photofeed', 'Photos', 5, 16, { posts: [], events: [] }),
+      module('generalfeed', 'Photos', 5, 16, { posts: [], events: [] }),
       module('note', 'About me', 12, 8, { title: '', html: '<p></p>', updatedAt: null }),
     ],
   },

@@ -89,9 +89,8 @@ import { eventsModule } from './events/events-module.js';
 import { submissionsModule } from './submissions/submissions-module.js';
 import { aboutModule } from './blog/about-module.js';
 import { galleryModule } from './blog/gallery-module.js';
-import { carouselModule } from './blog/carousel-module.js';
 import { articlesModule } from './articles/articles-module.js';
-import { photoFeedModule, textFeedModule, generalFeedModule } from './blog-feeds/feed-modules.js';
+import { textFeedModule, generalFeedModule, carouselModule } from './blog-feeds/feed-modules.js';
 import { dashboardModule } from './dashboard/dashboard-module.js';
 import { recentGroupsModule, recentsModule } from './recents/recents-modules.js';
 import { vaultFileModule } from './vaultfile/vaultfile-module.js';
@@ -127,7 +126,6 @@ export const MODULE_TYPES = [
   // Blog modules (spaceKinds: ['blog']). The feeds come first; the
   // library lists them under "Feeds" (isFeed: true).
   generalFeedModule,
-  photoFeedModule,
   textFeedModule,
   aboutModule,
   galleryModule,

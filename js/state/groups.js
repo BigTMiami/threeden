@@ -20,7 +20,7 @@ import { isChild, isParentOf, askToJoin } from './children.js';
 
 /** Make a group with you as its owner, and a few modules to start with (from a template). Returns it. */
 /** Module types that face outward: on a two-tab group, they start on the Public tab. */
-const PUBLIC_FACING = ['photofeed', 'generalfeed', 'textfeed', 'articles', 'events'];
+const PUBLIC_FACING = ['generalfeed', 'textfeed', 'articles', 'events', 'carousel'];
 
 export function createGroup({ name, description = '', visibility = 'private', joining = 'invite', template = 'other', groupType = '' }) {
   const { currentUserId } = getState();

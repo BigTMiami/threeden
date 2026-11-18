@@ -25,7 +25,7 @@ import {
 } from '../state/instagram.js';
 import { blogHref } from '../router.js';
 
-const FEED_TYPES = new Set(['photofeed', 'generalfeed']);
+const FEED_TYPES = new Set(['generalfeed']);
 
 /** Photo and general feeds on your blog, to import into. */
 function feedChoices(me) {
@@ -37,7 +37,7 @@ function feedChoices(me) {
 function addInstagramFeed(me) {
   const blog = getBlogOf(me.id);
   if (!blog) return null;
-  const module = { id: makeId('mod'), type: 'photofeed', title: 'From Instagram', span: 8, rows: 16, data: { posts: [], events: [] } };
+  const module = { id: makeId('mod'), type: 'generalfeed', title: 'From Instagram', span: 8, rows: 16, data: { posts: [], events: [] } };
   changeState((state) => { state.spaces.find((s) => s.id === blog.id).modules.push(module); }, 'layout');
   return module.id;
 }

@@ -13,7 +13,7 @@ with sync_playwright() as p:
     gid=st(pg, """const grp=g.createGroup({name:'The Lantern', template:'business', visibility:'public', joining:'admins'});
       const placeId=s.getMember('m-leo').location?.placeId ?? null;
       s.changeState(st=>{ const sp=st.spaces.find(x=>x.id===grp.id); sp.memberIds=['m-jamal']; sp.roles={'m-jamal':'owner'}; sp.area=placeId;
-        const feed=sp.modules.find(m=>m.type==='photofeed'); feed.data.posts=[0,1,2,3,4,5].map(i=>({...fd.createPost({authorId:'m-jamal', text:'Happy hour special #'+i}), createdAt: Date.now()-i*60e3}));
+        const feed=sp.modules.find(m=>m.type==='generalfeed'); feed.data.posts=[0,1,2,3,4,5].map(i=>({...fd.createPost({authorId:'m-jamal', text:'Happy hour special #'+i}), createdAt: Date.now()-i*60e3}));
         const ann=sp.modules.find(m=>m.type==='announcements'); }, 'space');
       return grp.id""")
     pg.evaluate("location.hash='#groups-explore'"); pg.wait_for_timeout(800)

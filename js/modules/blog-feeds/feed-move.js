@@ -31,7 +31,7 @@ import { icon } from '../../ui/icons.js';
 import { trackPointer } from '../../ui/pointer-tracker.js';
 import { VARIANTS } from './feed-data.js';
 
-const FEED_VARIANT = { photofeed: 'photo', textfeed: 'text', generalfeed: 'general' };
+const FEED_VARIANT = { textfeed: 'text', generalfeed: 'general', carousel: 'general' };
 
 /** What's being dragged right now. */
 /** @type {{ spaceId: string, moduleId: string, postId: string, post: any } | null} */

@@ -176,13 +176,13 @@ export function renderOpenItem(item, options) {
 }
 
 function renderOpenItemView(item, { items, folderName, onBack, context, actions }) {
-  // Notes, articles, and module files get the Sharing button: who can open and edit it, where it's shared, and whether it's published.
+  // Every file gets the Sharing button (Nov 17): who can open it, where it's shared, and where it's published.
   const me = context.currentUser;
   const access = context.isVisitor ? 'edit' : documentAccess(context.moduleId, item, me);
   const targets = context.isVisitor ? [] : articleTargets(getSpace(context.spaceId), me);
   const onTurn = (targetModuleId) => turnNoteIntoArticle(context.getData().items.find((i) => i.id === item.id) ?? item, { vaultModuleId: context.moduleId, targetModuleId, me });
   const shareButton = context.isVisitor || !me || me.isGuest ? null
-    : documentShareButton({ vaultModuleId: context.moduleId, itemId: item.id, toArticle: item.kind === 'note' && !item.articleDraft && access === 'edit' ? { targets, onTurn } : null });
+    : documentShareButton({ vaultModuleId: context.moduleId, itemId: item.id });
   if (item.kind === 'module') {
     return renderModuleFileView(item, {
       vaultModuleId: context.moduleId,
@@ -232,5 +232,5 @@ function renderOpenItemView(item, { items, folderName, onBack, context, actions 
       actions.saveItem(item.id, { file });
     }
   } : null;
-  return renderFileView(item, { folderName, onBack, items, onEditPhoto });
+  return renderFileView(item, { folderName, onBack, items, onEditPhoto, shareButton });
 }

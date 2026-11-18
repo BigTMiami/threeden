@@ -99,7 +99,7 @@ export function createDemoBlogs() {
         data: { headline: 'Songs, porches, and the occasional banjo.', text: 'I host the Tuesday open mic at the Backroom. Bring a song you finished this week, even a rough one. #openmic', askMeAbout: ['songwriting', 'open mics', 'banjo'], links: [] },
       },
       {
-        id: 'jamal-photos', type: 'photofeed', title: 'Photos', span: 8, rows: 18,
+        id: 'jamal-photos', type: 'generalfeed', title: 'Photos', span: 8, rows: 18,
         data: {
           events: [],
           posts: [
@@ -133,7 +133,7 @@ export function createDemoBlogs() {
     appearance: { font: 'friendly', accent: '#14866d', background: 'mint', cover: {}, cards: 'bordered', corners: 'rounded' },
     modules: [
       {
-        id: 'grace-photos', type: 'photofeed', title: 'Saturdays', span: 12, rows: 18,
+        id: 'grace-photos', type: 'generalfeed', title: 'Saturdays', span: 12, rows: 18,
         data: {
           events: [],
           posts: [

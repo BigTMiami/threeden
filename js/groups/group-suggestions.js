@@ -55,7 +55,7 @@ export const GROUP_SUGGESTIONS = [
   },
   {
     id: 'photos', type: 'gallery', title: 'Photos', label: 'Add Photos',
-    when: (s) => !has(s, 'gallery', 'photofeed', 'carousel') && Boolean(pastEventWithPeople(s)),
+    when: (s) => !has(s, 'gallery', 'carousel') && Boolean(pastEventWithPeople(s)),
     text: (s) => `Add Photos so people can share pictures from “${pastEventWithPeople(s)?.title}”?`,
   },
 ];

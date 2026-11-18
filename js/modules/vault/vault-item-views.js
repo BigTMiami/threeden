@@ -112,8 +112,9 @@ function renderToArticle({ targets, draft, writers, onTurn, onOpenDraft }, isArt
  * @param {function} options.onBack
  * @param {object[]} options.items        all vault items (for the description)
  * @param {function} [options.onEditPhoto] (edited, {asCopy}) → saves; only passed when this person may edit the photo
+ * @param {Element}  [options.shareButton]  the Sharing button (js/ui/document-sharing.js), beside the name
  */
-export function renderFileView(item, { folderName, onBack, items, onEditPhoto = null }) {
+export function renderFileView(item, { folderName, onBack, items, onEditPhoto = null, shareButton = null }) {
   const isPhoto = item.file?.dataUrl && item.file.mimeType?.startsWith('image/') && item.file.mimeType !== 'image/svg+xml';
   let asCopy = false;
   const editBar = onEditPhoto && isPhoto
@@ -131,7 +132,7 @@ export function renderFileView(item, { folderName, onBack, items, onEditPhoto = 
     : null;
   return h('div', { class: 'vault-file' },
     backLink(folderName, onBack),
-    h('h3', { class: 'vault-file__name' }, item.name),
+    h('div', { class: 'vault-file__header' }, h('h3', { class: 'vault-file__name' }, item.name), shareButton),
     editBar,
     h('p', { class: 'vault-file__meta' }, describeItem(item, items)),
     renderPreview(item),

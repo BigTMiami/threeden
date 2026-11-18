@@ -27,7 +27,11 @@
  *   text, Markdown, JSON  the text
  *   CSV / TSV             a table (the first 40 rows; the rest on "Open")
  *   pictures              the picture, at its own shape
+ *   videos                the video, with its controls
  *   PDFs                  the PDF, in the browser's own viewer
+ *   folders               its cover photo (if one was chosen) and its files
+ *   anything else         a card with its icon, name, and size (Nov 17:
+ *                         every attachment gets a preview, never a bare row)
  */
 
 import { h } from '../../ui/dom.js';
@@ -44,11 +48,13 @@ const TABLE_ROWS = 40;
 /** What kind of preview an attached item gets, or null for none. */
 export function previewKind(item) {
   if (item.kind === 'note') return 'note';
+  if (item.kind === 'folder') return 'folder';
   if (item.kind === 'module') return getModuleTypeSafe(item.moduleType) ? 'module' : null;
   if (item.kind !== 'file' || !item.dataUrl) return null;
   const type = (item.mimeType ?? '').toLowerCase();
   const name = (item.name ?? '').toLowerCase();
   if (type.startsWith('image/')) return 'image';
+  if (type.startsWith('video/')) return 'video';
   if (type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
   if (type === 'text/csv' || type === 'text/tab-separated-values' || /\.(csv|tsv)$/.test(name)) return 'table';
   if (type.startsWith('text/') || type === 'application/json' || /\.(txt|md|json)$/.test(name)) return 'text';
@@ -65,20 +71,25 @@ function labelFor(item, kind) {
   if (kind === 'pdf') return `PDF · ${formatBytes(item.size)}`;
   if (kind === 'table') return `Spreadsheet · ${formatBytes(item.size)}`;
   if (kind === 'image') return `Picture · ${formatBytes(item.size)}`;
+  if (kind === 'video') return `Video · ${formatBytes(item.size)}`;
+  if (kind === 'folder') return `Folder · ${(item.children ?? []).length} ${(item.children ?? []).length === 1 ? 'file' : 'files'}`;
+  if (kind === 'plain') return item.kind === 'link' ? 'Link' : item.size ? `File · ${formatBytes(item.size)}` : 'File';
   return `Text · ${formatBytes(item.size)}`;
 }
 
 function iconFor(item, kind) {
   if (kind === 'note') return item.article ? 'newspaper' : 'note';
   if (kind === 'module') return getModuleTypeSafe(item.moduleType)?.icon ?? 'file';
-  if (kind === 'image') return 'image';
+  if (kind === 'image' || kind === 'video') return 'image';
   if (kind === 'table') return 'table';
+  if (kind === 'folder') return 'folder';
+  if (kind === 'plain' && item.kind === 'link') return 'link';
   return 'file';
 }
 
 export function renderFilePreview(item) {
-  const kind = previewKind(item);
-  if (!kind) return null;
+  // Anything without a preview of its own still gets a card (kind 'plain').
+  const kind = previewKind(item) ?? 'plain';
 
   let body;
   try {
@@ -89,7 +100,7 @@ export function renderFilePreview(item) {
 
   // Pictures and PDFs show whole (a PDF scrolls inside its own viewer);
   // everything else is clipped until "Keep reading".
-  const clips = kind !== 'image' && kind !== 'pdf';
+  const clips = !['image', 'pdf', 'video', 'folder', 'plain'].includes(kind);
   const page = h('div', { class: `file-preview__page file-preview__page--${kind}${clips ? ' is-clipped' : ''}` }, body);
   // Words are read, tables and boards are looked over.
   const moreLabel = kind === 'note' || kind === 'text' ? 'Keep reading ↓' : 'Show all ↓';
@@ -125,7 +136,8 @@ export function renderFilePreview(item) {
     h('div', { class: 'file-preview__bottom' },
       more,
       h('span', { class: 'file-preview__spacer' }),
-      item.kind === 'file' ? h('a', { class: 'link-button file-preview__download', href: item.dataUrl, download: item.name }, 'Download') : null,
+      item.kind === 'file' && item.dataUrl ? h('a', { class: 'link-button file-preview__download', href: item.dataUrl, download: item.name }, 'Download') : null,
+      item.kind === 'link' ? h('a', { class: 'link-button', href: item.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit ↗') : null,
       h('button', { type: 'button', class: 'link-button file-preview__open', onClick: () => openItemViewer(item) }, 'Open ↗')));
   return card;
 }
@@ -137,7 +149,7 @@ export function renderFilePreview(item) {
  */
 export function renderMiniPreview(item) {
   const kind = previewKind(item);
-  if (!kind || kind === 'pdf' || kind === 'image') return null;
+  if (!kind || ['pdf', 'image', 'video', 'folder'].includes(kind)) return null;
   try {
     return h('div', { class: `file-mini file-mini--${kind}`, 'aria-hidden': 'true', inert: '' }, renderBody(item, kind));
   } catch {
@@ -166,6 +178,22 @@ function renderBody(item, kind) {
   }
   if (kind === 'image') {
     return h('img', { class: 'file-preview__image', src: item.dataUrl, alt: item.name, loading: 'lazy' });
+  }
+  if (kind === 'video') {
+    return h('video', { class: 'file-preview__image', src: item.dataUrl, controls: true, preload: 'metadata' });
+  }
+  if (kind === 'folder') {
+    const children = item.children ?? [];
+    return h('div', { class: 'file-preview__folder' },
+      item.cover ? h('img', { class: 'file-preview__cover', src: item.cover, alt: '' }) : null,
+      children.length
+        ? h('ul', { class: 'file-preview__folder-list' }, children.map((child) => h('li', {},
+          h('button', { type: 'button', class: 'link-button', onClick: () => openItemViewer(child) }, icon(iconFor(child, previewKind(child) ?? 'plain'), 14), ` ${child.name}`))))
+        : h('p', { class: 'file-preview__note-line' }, 'This folder was empty.'));
+  }
+  if (kind === 'plain') {
+    return h('div', { class: 'file-preview__plain' }, icon(iconFor(item, kind), 40),
+      h('span', {}, item.kind === 'link' ? item.url : item.dataUrl ? 'No preview for this kind of file. Download it to open it.' : 'This file was too big to keep in the prototype, so it has no preview.'));
   }
   if (kind === 'pdf') {
     // Browsers won't show a data: PDF in a frame, so hand it over as a blob.

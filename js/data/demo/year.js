@@ -373,7 +373,7 @@ export function createYearDemo() {
     }
 
     // ── Photos (clubs) ──
-    const photos = modules.find((m) => m.type === 'photofeed');
+    const photos = modules.find((m) => m.type === 'generalfeed' && m.title === 'Photos');
     if (photos) {
       photos.data.posts = Array.from({ length: 3 }, (_, k) => {
         const id = `${spaceId}-ph${k}`;
@@ -521,7 +521,7 @@ export function createYearDemo() {
       space.joinRequests = strangers.slice(0, 2).map((id, i) => ({ memberId: id, at: ago(0, 4 + i * 20) }));
       strangers.slice(0, 2).forEach((id, i) => notify(id, 'approval', `${fullName(id)} asked to join ${space.name}`, space.id, null, null, `#settings-${space.id}`, 4 + i * 20));
       if (special) notify(someone(1), 'event', `${fullName(someone(1))} and ${Object.keys(special.rsvps).length - 2} others are going to “${special.title}”`, space.id, calendar.id, special.id, `#event-${special.id}`, 7);
-      const photos = space.modules.find((m) => m.type === 'photofeed');
+      const photos = space.modules.find((m) => m.type === 'generalfeed' && m.title === 'Photos');
       if (photos?.data.posts[0]) notify(someone(2), 'like', `${fullName(someone(2))} liked a photo in ${space.name}`, space.id, photos.id, photos.data.posts[0].id, `#module-${photos.id}`, 26, true);
     } else if (kind === 'organizing') {
       if (special) notify(space.memberIds[0], 'event', `New event in ${space.name}: “${special.title}”`, space.id, calendar.id, special.id, `#event-${special.id}`, 11);

@@ -36,7 +36,7 @@ import { messageablePeople, suggestedIds, recipientContext } from '../messages/r
 import { formatShortDate, formatTime } from '../utils/dates.js';
 import { eventHref } from '../events/event-details.js';
 
-const FEEDS = ['photofeed', 'textfeed', 'generalfeed'];
+const FEEDS = ['textfeed', 'generalfeed', 'carousel'];
 const LAST_KEY = '3den.quick-create';
 const KINDS = [['post', 'Post'], ['event', 'Event'], ['task', 'Task'], ['message', 'Message']];
 

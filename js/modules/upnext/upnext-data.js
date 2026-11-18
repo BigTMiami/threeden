@@ -26,7 +26,7 @@ export const STREAM_KINDS = [
   { id: 'event', label: 'Events' },
 ];
 
-const FEED_TYPES = ['photofeed', 'textfeed', 'generalfeed'];
+const FEED_TYPES = ['textfeed', 'generalfeed', 'carousel'];
 const EXCERPT = 160;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -68,7 +68,7 @@ export function streamOf(space, me) {
     } else if (FEED_TYPES.includes(module.type)) {
       for (const post of sortedPosts(data)) {
         if (!canSeePost(post, space, me.id)) continue;
-        items.push({ kind: 'post', kindLabel: module.title, icon: module.type === 'photofeed' ? 'image' : 'chat', id: `p-${post.id}`, moduleId: module.id, itemId: post.id, authorId: post.authorId, timestamp: post.createdAt, title: postTitle(post), excerpt: post.text && plain(post.text) !== postTitle(post) ? cut(post.text) : '' });
+        items.push({ kind: 'post', kindLabel: module.title, icon: post.media?.length ? 'image' : 'chat', id: `p-${post.id}`, moduleId: module.id, itemId: post.id, authorId: post.authorId, timestamp: post.createdAt, title: postTitle(post), excerpt: post.text && plain(post.text) !== postTitle(post) ? cut(post.text) : '' });
       }
     } else if (module.type === 'articles') {
       for (const article of (data.articles ?? []).map(normalizeArticle)) {

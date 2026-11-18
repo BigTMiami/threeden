@@ -33,7 +33,7 @@ import { createPost, normalizeFeed } from '../modules/blog-feeds/feed-data.js';
 import { formatShortDate, todayKey, addDays } from '../utils/dates.js';
 import { notify } from '../state/notifications.js';
 
-const FEEDS = ['photofeed', 'generalfeed'];
+const FEEDS = ['generalfeed'];
 
 /** Feeds this person can post a recap in: the event's group's, then their own blog's. */
 export function recapTargets({ space }, me) {

@@ -44,7 +44,7 @@ export function collectFeedItems(memberIds) {
   return items;
 }
 
-const FEED_TYPES = ['photofeed', 'textfeed', 'generalfeed'];
+const FEED_TYPES = ['textfeed', 'generalfeed', 'carousel'];
 
 function itemsFromModule(module, blog, authorId) {
   const base = { authorId, blog, module };
@@ -57,7 +57,7 @@ function itemsFromModule(module, blog, authorId) {
       id: `feedpost-${post.id}`,
       kind: 'feedpost',
       // Pictures-only posts count as photos for "Show me" in feed settings.
-      kindGroup: module.type === 'photofeed' || (post.media.length && !post.text) ? 'photos' : 'posts',
+      kindGroup: post.media.length && !post.text ? 'photos' : 'posts',
       timestamp: post.createdAt,
       post,
     }));
