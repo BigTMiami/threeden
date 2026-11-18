@@ -153,14 +153,8 @@ functions, no build step.
   `joinedAt[me]` is on or after Nov 18 2026 and unanswered. Test:
   `test_blog_in_groups.py`.
 
-- **Aliases (Nov 18, late night):** Leo asked for "an option for aliases in
-  groups"; I asked whether he meant a per-member name or other names for the
-  group, got no answer, and built the per-member name. `space.allowAliases`
-  + `space.aliases[memberId]`; `memberIn(space, id)` returns the member with
-  `name` = alias and `realName`. `getSpaceMembers` applies it, the module
-  context's `getMember` does, and so do thread-view (group chats), Up next,
-  and widget summaries. Not applied (on purpose, for now): the global Feed,
-  notifications, profiles, and avatar initials. Test: `test_group_aliases.py`.
+- **Aliases removed (Nov 18, morning):** Leo decided aliases were a bad idea;
+  the alias commit was reverted (no `memberIn`, `aliasIn`, Names section).
 
 - **Phone editing, sweep fixes (Nov 18, late night):**
   - Leo: widgets-then-modules is the only phone layout for groups and

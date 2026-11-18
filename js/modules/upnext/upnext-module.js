@@ -25,7 +25,7 @@ import { icon } from '../../ui/icons.js';
 import { avatar } from '../../ui/avatar.js';
 import { showToast } from '../../ui/toast.js';
 import { timeAgo, weekdayName } from '../../utils/dates.js';
-import { getSpace, memberIn, getVisitBefore } from '../../state/store.js';
+import { getSpace, getMember, getVisitBefore } from '../../state/store.js';
 import { updateEvent } from '../../state/events.js';
 import { requestModuleFocus } from '../../editor/module-context.js';
 import { openModulePage } from '../../router.js';
@@ -62,7 +62,7 @@ function render(container, context, { full = false } = {}) {
       }, k.label))) : null,
     since ? h('p', { class: 'upnext__since' }, since) : null,
     list.length
-      ? h('ul', { class: 'upnext__stream' }, list.map((item) => renderItem(item, space)))
+      ? h('ul', { class: 'upnext__stream' }, list.map((item) => renderItem(item)))
       : h('p', { class: 'module-empty' }, all.length ? 'Nothing of this kind yet.' : 'Nothing posted yet. Say hello, or plan the first event.'),
     h('div', { class: 'upnext__foot' },
       !full && shown.length > CARD_ITEMS ? h('button', { type: 'button', class: 'link-button', onClick: () => context.openFullPage() }, `Show all ${shown.length}`) : h('span', {}),
@@ -95,8 +95,8 @@ function renderNext(space, me, context, redraw) {
         availabilityChip(event, { date }))));
 }
 
-function renderItem(item, space) {
-  const author = item.authorId ? memberIn(space, item.authorId) : null; // by the name they go by here
+function renderItem(item) {
+  const author = item.authorId ? getMember(item.authorId) : null;
   const open = (e) => {
     e.preventDefault();
     if (item.href) { window.location.hash = item.href; return; }

@@ -27,7 +27,7 @@ import { VISIBILITY_OPTIONS, JOINING_OPTIONS, visibilityOf, joiningOf } from '..
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
-import { getCurrentUser, getSpace, getSpaceMembers, aliasIn, setAlias, setAllowAliases } from '../state/store.js';
+import { getCurrentUser, getSpace, getSpaceMembers } from '../state/store.js';
 import {
   ROLES, PERMISSIONS, roleOf, can, requiredRole, canManageRoles, isOwner,
 } from '../state/permissions.js';
@@ -344,7 +344,6 @@ function renderGeneralTab(space, me, onDraftChange) {
   return [
     section({ personal: 'Your homepage', blog: 'Your blog' }[space.kind] ?? 'About this group', null, form),
     isPersonal || isBlog ? null : renderOnExplore(space, canEdit),
-    isPersonal || isBlog ? null : renderNames(space, me, canEdit),
     isPersonal || isBlog ? null : renderBlogSetting(space, me), // show or hide your blog from members (blog-choice.js)
     isPersonal || isBlog ? null : renderDangerZone(space, me),
   ];
@@ -355,44 +354,6 @@ function renderGeneralTab(space, me, onDraftChange) {
  * people nearby who are into them find it (js/state/explore.js). Saves
  * right away; a guess fills in until someone picks.
  */
-/**
- * Names: whether members can go by another name in this group (admins),
- * and the name you go by here (everyone, when it's on). Saves at once.
- * Aliases show inside the group; profiles keep people's own names (store.memberIn).
- */
-function renderNames(space, me, canEdit) {
-  const root = h('div', {});
-  const draw = () => {
-    const fresh = getSpace(space.id) ?? space;
-    const on = Boolean(fresh.allowAliases);
-    const mine = aliasIn(fresh, me.id);
-    const input = h('input', { type: 'text', class: 'input', maxlength: '40', value: mine, placeholder: me.name, 'aria-label': `Your name in ${fresh.name}` });
-    const save = () => {
-      const value = input.value.trim();
-      if (value === mine) return;
-      setAlias(fresh.id, me.id, value);
-      showToast(value ? `In ${fresh.name} you’re “${value}” now.` : `In ${fresh.name} you go by your own name again.`);
-      draw();
-    };
-    replaceChildren(root, section('Names', on ? 'People show by the name they go by here inside the group. Their profile, and everything outside the group, keeps their own name.' : null,
-      h('label', { class: 'checkbox-row' },
-        h('input', {
-          type: 'checkbox', checked: on, disabled: !canEdit,
-          onChange: (event) => { setAllowAliases(fresh.id, event.target.checked); showToast(event.target.checked ? 'Members can go by another name here now.' : 'Everyone shows by their own name here again.'); draw(); },
-        }),
-        ' Members can go by another name in this group (an alias)'),
-      canEdit ? null : h('p', { class: 'settings-field__hint' }, on ? 'An admin turned this on.' : 'Only admins can turn this on.'),
-      on ? h('form', { class: 'settings-field names__mine', onSubmit: (event) => { event.preventDefault(); save(); } },
-        h('span', { class: 'settings-field__label' }, `Your name in ${fresh.name}`),
-        h('span', { class: 'form-row' }, input,
-          h('button', { type: 'submit', class: 'button button--primary button--small' }, 'Save'),
-          mine ? h('button', { type: 'button', class: 'link-button', onClick: () => { input.value = ''; save(); } }, 'Use my own name') : null),
-        h('span', { class: 'settings-field__hint' }, mine ? `Others here see “${mine}”. Your own name is ${me.name}.` : `Leave it empty to go by ${me.name}.`)) : null));
-  };
-  draw();
-  return root;
-}
-
 function renderOnExplore(space, canEdit) {
   const root = h('div', {});
   const draw = () => {
