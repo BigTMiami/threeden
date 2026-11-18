@@ -624,15 +624,20 @@ a.feed-attach__title:hover {
 
 .needs {
   margin: 0 0 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
 }
-.needs__title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 1rem; }
+.needs__title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.95rem; }
+/* After an answer: what was done, and Undo, at the top of the box (feed-needs.js). */
+.needs__undo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 6px; padding: 6px 10px; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-border-faint); font-size: 13px; color: var(--color-text-muted); }
+.needs__undo-button { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-weight: 600; }
+.needs--done { padding: 6px 8px; }
+.needs--done .needs__undo { margin: 0; }
 .needs__count { padding: 0 8px; border-radius: 999px; background: var(--color-accent); color: var(--color-on-accent, #fff); font-size: 12px; line-height: 20px; }
 .needs__list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.needs__row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 4px 8px; padding: 10px 0; border-top: 1px solid var(--color-border-faint); }
+.needs__row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 4px 8px; padding: 8px 0; border-top: 1px solid var(--color-border-faint); }
 .needs__row:first-child { border-top: 0; padding-top: 2px; }
 .needs__icon { padding-top: 2px; color: var(--color-accent); }
 .needs__text { min-width: 0; font-size: var(--font-size-small); line-height: 1.45; }

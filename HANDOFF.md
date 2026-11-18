@@ -146,6 +146,20 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
+- **Chat on the page, From groups undo (Nov 18, night):**
+  - Phones: the chat module is swiped to like any module (the
+    `.module-strip__chat` button, `has-phone-chat`, and its CSS are gone);
+    its chip carries the unread badge (`chatUnread`). The chat widget opens
+    the swipe view too.
+  - feed-needs.js: answered RSVPs leave `collectAsks`; every answer calls
+    `answered(text, undo, redraw)`, which keeps `lastAnswer` for the Undo
+    line (`undoLine`, 30 s); undo restores a snapshot of the event
+    (`restoreEvent`) or module data. `keepOrder` freezes the order shown
+    this visit so the next item moves up. Default limit is 2.
+  - Tests: `test_from_groups_undo.py`; `test_phone_chat_button.py`
+    rewritten; `test_dashboard.py` and `test_feed_grid.py` tap a widget at
+    phone width.
+
 - **Phone widgets and Edit mobile (Nov 18, night):**
   - Leo's call: on phones a group opens on widgets (layout C on the
     "mobile module layouts" canvas), tapping one opens the swipe view (A).

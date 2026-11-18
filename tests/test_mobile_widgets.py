@@ -8,7 +8,7 @@ Phone:
    view); the Widgets button comes back; so does the phone's back gesture.
 3. Back from a module's own page keeps the swipe view; leaving the group and
    coming back starts on the widgets again.
-4. A chat's widget opens the chat full screen. Your homepage opens on
+4. A chat's widget opens the chat on the page, in the swipe view. Your homepage opens on
    widgets too; a blog doesn't.
 Computer:
 5. Edit → Edit mobile (groups and your homepage) shows the widgets in a phone frame
@@ -90,7 +90,7 @@ with sync_playwright() as p:
 
     # 4
     phone.locator('.mwidget', has_text='House chat').first.click(); phone.wait_for_timeout(700)
-    check(phone.evaluate('location.hash').startswith('#messages-'), f'phone: the chat widget opens the chat ({phone.evaluate("location.hash")})')
+    check(phone.evaluate('location.hash') == '#space-juniper' and phone.locator('.module-strip__chip.is-current').inner_text().strip() == 'House chat', 'phone: the chat widget opens the chat on the page')
     pid = st(phone, "return s.getPersonalSpace().id")
     phone.evaluate(f"location.hash='#space-{pid}'"); phone.wait_for_timeout(900)
     check(phone.locator('#mobile-widgets').is_visible() and phone.locator('#mobile-widgets .mwidget').count() >= 3, 'phone: your homepage opens on widgets too')

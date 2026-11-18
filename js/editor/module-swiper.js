@@ -17,11 +17,9 @@
  * Only on screens 640 px wide or less, only in view mode (editing keeps the
  * stack, for dragging and resizing), and only with two or more modules.
  *
- * A page with a Chat module doesn't show it as a swipe-through module on a
- * phone: a Chat button sits at the start of the chips instead, always in
- * reach, with how many messages you haven't read, and opens the chat full
- * screen in Messages. (On a computer the chat stays a module on the page,
- * where it's easier to keep an eye on than in Messages.)
+ * A Chat module is a module like any other here (Nov 18: it used to be a
+ * button that left for Messages): its chip shows how many messages you
+ * haven't read, and the chat opens right on the page.
  * In a group or on your homepage, phones open on widgets first (mobile-widgets.js): tapping one
  * opens this view at that module, and a Widgets button at the start of the
  * chips goes back (there's no List there).
@@ -35,7 +33,6 @@ import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { getCurrentSpace, getCurrentTabId, getCurrentUser, getModule, isEditMode, subscribe } from '../state/store.js';
 import { getConversation, unreadCount } from '../state/messages.js';
-import { goTo as navigate } from '../router.js';
 import { getModuleType } from '../modules/registry.js';
 
 const PHONE = window.matchMedia('(max-width: 640px)');
@@ -95,10 +92,8 @@ function setPrefersList(isList) {
   update();
 }
 
-/** The modules you swipe through: on a phone, a chat is a button instead (chatFrames). */
-const frames = () => [...grid.querySelectorAll(':scope > .module-frame')].filter((f) => !(phoneChat() && f.dataset.moduleType === 'chat'));
-const chatFrames = () => [...grid.querySelectorAll(':scope > .module-frame[data-module-type="chat"]')];
-const phoneChat = () => PHONE.matches && !isEditMode();
+/** The modules you swipe through. */
+const frames = () => [...grid.querySelectorAll(':scope > .module-frame')];
 const positionKey = () => `${getCurrentSpace()?.id}:${getCurrentTabId()}`;
 
 /** A group or your homepage on a phone: widgets first (mobile-widgets.js), then this swipe view; no list. */
@@ -106,33 +101,32 @@ const groupPhone = () => PHONE.matches && ['group', 'personal'].includes(getCurr
 
 function update() {
   const modules = frames();
-  const chats = phoneChat() ? chatFrames() : [];
-  grid.classList.toggle('has-phone-chat', chats.length > 0);
   const inGroup = groupPhone();
   const canSwipe = PHONE.matches && !isEditMode() && (modules.length > 1 || (inGroup && modules.length > 0));
   const swiping = canSwipe && (inGroup || !prefersList());
   grid.classList.toggle('is-swiping', swiping);
   if (!swiping) grid.style.removeProperty('--swipe-height');
   if (!swiping) grid.parentElement.querySelector('.module-dots')?.remove();
-  strip.hidden = !canSwipe && !chats.length;
+  strip.hidden = !canSwipe;
   if (strip.hidden) { replaceChildren(strip); return; }
-  if (!canSwipe) { replaceChildren(strip, chats.map(chatButton)); return; }
 
   const current = Math.min(positions[positionKey()] ?? 0, modules.length - 1);
   replaceChildren(strip,
     // In a group: back to the widgets, first, where a thumb finds it.
     inGroup ? h('button', { type: 'button', class: 'module-strip__widgets', 'aria-label': 'Back to widgets', title: 'Widgets', onClick: () => window.dispatchEvent(new CustomEvent('3den:widgets')) }, icon('dashboard', 16)) : null,
-    chats.map(chatButton),
     h('div', { class: 'module-strip__chips', role: swiping ? 'tablist' : null, 'aria-label': 'Modules on this page' },
       modules.map((frame, index) => {
         const type = frame.dataset.moduleType;
+        const unread = type === 'chat' ? chatUnread(frame) : 0;
         return h('button', {
           type: 'button',
           class: `module-strip__chip${swiping && index === current ? ' is-current' : ''}`,
           role: swiping ? 'tab' : null,
           'aria-selected': swiping ? String(index === current) : null,
+          'aria-label': unread ? `${frame.getAttribute('aria-label')}: ${unread} unread` : null,
           onClick: () => goTo(index),
-        }, icon(getModuleType(type).icon, 14), ` ${frame.getAttribute('aria-label')}`);
+        }, icon(getModuleType(type).icon, 14), ` ${frame.getAttribute('aria-label')}`,
+        unread ? h('span', { class: 'module-strip__badge' }, unread > 9 ? '9+' : String(unread)) : null);
       })),
     inGroup ? null : h('button', {
       type: 'button',
@@ -152,17 +146,12 @@ function update() {
   }
 }
 
-/** "💬 Chat 3": opens the page's chat full screen (Messages), or the module's own page if it hasn't started yet. */
-function chatButton(frame) {
+/** How many messages in a page's chat you haven't read (shown on its chip). */
+function chatUnread(frame) {
   const module = getModule(frame.dataset.moduleId);
   const conversation = module?.data?.conversationId ? getConversation(module.data.conversationId) : null;
   const me = getCurrentUser();
-  const unread = conversation && me ? unreadCount(conversation, me.id) : 0;
-  return h('button', {
-    type: 'button', class: 'module-strip__chat',
-    'aria-label': unread ? `${module?.title ?? 'Chat'}: ${unread} unread` : module?.title ?? 'Chat',
-    onClick: () => navigate(conversation ? `#messages-${conversation.id}` : `#module-${frame.dataset.moduleId}`),
-  }, icon('chat', 15), ' Chat', unread ? h('span', { class: 'module-strip__badge' }, unread > 9 ? '9+' : String(unread)) : null);
+  return conversation && me ? unreadCount(conversation, me.id) : 0;
 }
 
 /** Open the swipe view at a module (a widget was tapped, mobile-widgets.js). */

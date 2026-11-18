@@ -13,8 +13,8 @@
  *   └──────────────┴───────────────┘
  *
  * Tapping a widget opens the swipe view (module-swiper.js) at that module;
- * its Widgets button, or the phone's back gesture, comes back here. A chat's
- * widget opens the chat full screen, as its button in the swipe view does.
+ * its Widgets button, or the phone's back gesture, comes back here. A chat
+ * opens there too, as a module on the page.
  * Entering a group, or another of its tabs, starts here; coming back from
  * a module's own page returns to the swipe view.
  *
@@ -33,8 +33,6 @@ import { icon } from '../ui/icons.js';
 import { avatar } from '../ui/avatar.js';
 import { getCurrentSpace, getCurrentTabId, getCurrentUser, getMember, getVisibleModules, isEditMode, subscribe, phoneOrdered, naturalPhoneOrder, widgetSize } from '../state/store.js';
 import { getModuleType } from '../modules/registry.js';
-import { getConversation } from '../state/messages.js';
-import { goTo as navigate } from '../router.js';
 import { widgetSummary } from './widget-summaries.js';
 import { showModuleAt } from './module-swiper.js';
 
@@ -108,13 +106,8 @@ export function widgetModules() {
   return phoneOrdered(naturalPhoneOrder(getVisibleModules()));
 }
 
-/** Open a widget: a chat full screen; anything else in the swipe view, at that module. */
+/** Open a widget: the swipe view, at that module (a chat too: it stays on the page). */
 function open(module) {
-  if (module.type === 'chat') {
-    const conversation = module.data?.conversationId ? getConversation(module.data.conversationId) : null;
-    navigate(conversation ? `#messages-${conversation.id}` : `#module-${module.id}`);
-    return;
-  }
   view = 'swipe';
   try { history.pushState({ ...(history.state ?? {}), phoneSwipe: viewKey }, ''); } catch { /* some frames refuse: Back still works from the button */ }
   update();

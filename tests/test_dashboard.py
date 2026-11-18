@@ -7,6 +7,7 @@ with sync_playwright() as p:
         pg=b.new_page(viewport={'width':vw,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
         pg.evaluate("location.hash='#space-me'"); pg.wait_for_timeout(800)
+        if vw <= 640: pg.locator('.mwidget', has_text='Dashboard').first.click(); pg.wait_for_timeout(700)  # phones open on widgets (Nov 18)
         d=pg.locator('.dashboard').first
         print(vw,'titles:', d.locator('.dashboard__title').all_inner_texts(), '| friends?', d.get_by_text('From friends').count())
         print(' events:', d.locator('.dashboard__row--event').count(), d.locator('.dashboard__role').all_inner_texts())

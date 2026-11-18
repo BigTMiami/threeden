@@ -9,6 +9,9 @@ with sync_playwright() as p:
         pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(500)
         for where in ['#space-tenants', '#blog-leo', '#blog-jamal']:
             pg.evaluate(f"location.hash='{where}'"); pg.wait_for_timeout(700)
+            if vw <= 640 and where.startswith('#space-'):  # groups open on widgets on phones (Nov 18): open the feed's
+                title = pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getVisibleModules().find(m=>/feed$/.test(m.type))?.title})()")
+                if title: pg.locator('.mwidget', has_text=title).first.click(); pg.wait_for_timeout(700)
             for fm in hv.locator('.feed-module').all():
                 print(vw, where, 'tiles:', fm.locator('.feed-tile').count(), 'rows:', fm.locator('.feed-row').count(), 'docs:', fm.locator('.feed-layout__visual--doc').count(), [c.split(' ')[1] for c in fm.locator('.feed-tile').evaluate_all('ts=>ts.map(t=>t.className)')])
             f=hv.locator('.feed-module').first

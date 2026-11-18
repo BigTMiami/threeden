@@ -11,7 +11,7 @@
  *   📣 Porch Lights · Set list for the fair                      [Reply…________] [Send]
  *
  *   collectAsks(me)        → [{ kind, key, space, …, timestamp }], most urgent first
- *   renderNeedsYou(me, redraw, { limit })
+ *   renderNeedsYou(me, redraw, { limit = 2 })
  *
  * Asks come straight from the groups' modules (nothing extra is saved):
  *   rsvp          upcoming group events you can see and haven't answered (needsYou in dashboard-data.js)
@@ -21,6 +21,10 @@
  *   postask       announcements asking who's coming or who'll bring what (js/ui/asks.js)
  *   announcement  announcements from the last week you haven't seen: reply in place
  * Dismissing one ("Not for me") hides it for you: member.dismissedAsks.
+ *
+ * Answering one (Nov 18) clears it from the box at once, and the next one
+ * moves up; a small "Undo" line at the top puts the answer back (the module
+ * or event as it was before), for UNDO_MS. The box shows two at a time.
  */
 
 import { h, replaceChildren } from '../ui/dom.js';
@@ -32,7 +36,7 @@ import { normalizeTask, dueLabel } from '../modules/todo/todo-data.js';
 import { normalizePost as normalizeAnnouncement, hasSeen, createComment } from '../modules/announcements/announcements-data.js';
 import { isClosed, myVote, castVote } from '../utils/polls.js';
 import { applyRsvp, normalizeEvent, rsvpOf } from '../modules/calendar/calendar-data.js';
-import { updateEvent } from '../state/events.js';
+import { updateEvent, findEvent } from '../state/events.js';
 import { rsvpButtons } from '../events/rsvp.js';
 import { eventHref } from '../events/event-details.js';
 import { formatShortDate, formatTime, todayKey, addDays } from '../utils/dates.js';
@@ -42,6 +46,27 @@ import { renderAsks } from '../ui/asks.js';
 import { availabilityChip } from '../ui/availability-chip.js';
 
 const DAY = 24 * 60 * 60 * 1000;
+const UNDO_MS = 30 * 1000;
+
+/** The last answer given here: { text, undo, at }, for the Undo line. */
+let lastAnswer = null;
+
+/** Remember an answer so it can be undone, then redraw (the ask is gone). */
+function answered(text, undo, redraw) {
+  lastAnswer = { text, undo, at: Date.now() };
+  redraw();
+}
+
+/** Put an event back as it was (an RSVP or sign-up undone). */
+function restoreEvent(eventId, snapshot) {
+  updateEvent(eventId, (saved) => {
+    for (const key of Object.keys(saved)) delete saved[key];
+    Object.assign(saved, structuredClone(snapshot));
+  });
+}
+
+const eventSnapshot = (eventId) => structuredClone(findEvent(eventId)?.event ?? null);
+const moduleSnapshot = (moduleId) => structuredClone(getModule(moduleId)?.data ?? {});
 
 const dismissed = (me) => new Set(getMember(me.id)?.dismissedAsks ?? []);
 
@@ -61,6 +86,7 @@ export function collectAsks(me) {
   // Events waiting for an answer.
   for (const { event, date, space } of needsYou(me).rsvps) {
     if (date > addDays(today, 21)) continue; // three weeks out is soon enough to ask
+    if (rsvpOf(event, me.id)) continue; // answered: it leaves the box (Undo brings it back)
     asks.push({ kind: 'rsvp', key: `rsvp:${event.id}`, space, event, date, urgency: date });
   }
 
@@ -129,7 +155,13 @@ function askRow(ask, me, redraw) {
   const where = h('a', { class: 'needs__where', href: spaceHref(ask.space.id) }, ask.space.name);
   const notForMe = h('button', {
     type: 'button', class: 'icon-button needs__dismiss', title: 'Not for me: hide this from your Feed', 'aria-label': 'Not for me',
-    onClick: () => { dismissAsk(me.id, ask.key); redraw(); },
+    onClick: () => {
+      dismissAsk(me.id, ask.key);
+      answered('Hidden from your Feed.', () => changeState((state) => {
+        const member = state.members.find((m) => m.id === me.id);
+        member.dismissedAsks = (member.dismissedAsks ?? []).filter((k) => k !== ask.key);
+      }, 'account'), redraw);
+    },
   }, icon('close', 14));
   const row = (iconName, text, actions) => h('li', { class: `needs__row needs__row--${ask.kind}` },
     h('span', { class: 'needs__icon', 'aria-hidden': 'true' }, icon(iconName, 16)),
@@ -140,9 +172,10 @@ function askRow(ask, me, redraw) {
   if (ask.kind === 'rsvp') {
     return row('ticket', [where, ' · ', h('a', { href: eventHref(ask.event.id) }, ask.event.title), h('span', { class: 'needs__meta' }, ` · ${formatShortDate(ask.date)}${ask.event.time ? `, ${formatTime(ask.event.time)}` : ''}`), ' ', availabilityChip(ask.event, { date: ask.date })],
       rsvpButtons(ask.event, me.id, (answer) => {
+        const before = eventSnapshot(ask.event.id);
         updateEvent(ask.event.id, (saved) => applyRsvp(saved, me.id, answer));
-        showToast(answer === 'going' ? `You’re going to “${ask.event.title}”.` : answer === 'maybe' ? 'Marked as maybe.' : 'Thanks for letting them know.');
-        redraw();
+        answered(answer === 'going' ? `You’re going to “${ask.event.title}”.` : answer === 'maybe' ? `Maybe for “${ask.event.title}”.` : `Can’t go to “${ask.event.title}”.`,
+          () => restoreEvent(ask.event.id, before), redraw);
       }, { compact: true }));
   }
   if (ask.kind === 'poll') {
@@ -151,12 +184,12 @@ function askRow(ask, me, redraw) {
       poll.options.slice(0, 5).map((option) => h('button', {
         type: 'button', class: 'chip needs__choice',
         onClick: () => {
+          const before = moduleSnapshot(ask.module.id);
           changeModule(ask.module.id, (data) => {
             const post = data.posts.find((p) => p.id === ask.post.id);
             post.poll = castVote(post.poll, me.id, [option.id]);
           });
-          showToast(`Voted “${option.text || formatShortDate(option.when?.date ?? '')}”.`);
-          redraw();
+          answered(`Voted “${option.text || formatShortDate(option.when?.date ?? '')}”.`, () => updateModuleData(ask.module.id, before), redraw);
         },
       }, option.text || (option.when ? formatShortDate(option.when.date) : '?'))));
   }
@@ -166,13 +199,13 @@ function askRow(ask, me, redraw) {
       h('button', {
         type: 'button', class: 'button button--small button--primary',
         onClick: () => {
+          const before = moduleSnapshot(ask.module.id);
           changeModule(ask.module.id, (data) => {
             const task = data.tasks.find((t) => t.id === ask.task.id);
             task.assigneeIds = [me.id];
             delete task.assigneeId;
           });
-          showToast(`It’s yours: “${ask.task.text}”. It’s on your homepage’s task list.`);
-          redraw();
+          answered(`It’s yours: “${ask.task.text}”.`, () => updateModuleData(ask.module.id, before), redraw);
         },
       }, icon('hand2', 14), ' I’ll do it'));
   }
@@ -181,11 +214,11 @@ function askRow(ask, me, redraw) {
       ask.slots.slice(0, 3).map((slot) => h('button', {
         type: 'button', class: 'chip needs__choice', title: `${(slot.memberIds ?? []).length} of ${slot.spots} taken`,
         onClick: () => {
+          const before = eventSnapshot(ask.event.id);
           updateEvent(ask.event.id, (e) => {
             e.signups = e.signups.map((s) => (s.id === slot.id ? { ...s, memberIds: [...(s.memberIds ?? []), me.id] } : s));
           });
-          showToast(`You signed up for “${slot.label}”.`);
-          redraw();
+          answered(`You signed up for “${slot.label}”.`, () => restoreEvent(ask.event.id, before), redraw);
         },
       }, `${slot.label} (${slot.spots - (slot.memberIds ?? []).length} left)`)));
   }
@@ -194,7 +227,11 @@ function askRow(ask, me, redraw) {
     return row('hand2', [where, ' · ', h('strong', {}, ask.post.title), when ? h('span', { class: 'needs__meta' }, ` · ${when}`) : null],
       renderAsks({
         getPost: () => getModule(ask.module.id).data.posts.find((p) => p.id === ask.post.id),
-        savePost: (fn) => changeModule(ask.module.id, (data) => fn(data.posts.find((p) => p.id === ask.post.id))),
+        savePost: (fn) => {
+          const before = moduleSnapshot(ask.module.id);
+          changeModule(ask.module.id, (data) => fn(data.posts.find((p) => p.id === ask.post.id)));
+          answered(`Answered “${ask.post.title}”.`, () => updateModuleData(ask.module.id, before), redraw);
+        },
         me,
         compact: true, // one row of buttons; sign-ups open with a tap
       }));
@@ -203,14 +240,15 @@ function askRow(ask, me, redraw) {
   const field = h('input', { type: 'text', class: 'input input--compact needs__reply', placeholder: 'Reply…', 'aria-label': `Reply to “${ask.post.title}”` });
   const send = () => {
     const body = field.value.trim();
+    const before = moduleSnapshot(ask.module.id);
     changeModule(ask.module.id, (data) => {
       const post = data.posts.find((p) => p.id === ask.post.id);
       post.seenBy = [...new Set([...(post.seenBy ?? []), me.id])];
       if (body) post.comments = [...(post.comments ?? []), createComment(me.id, body)];
     });
     if (body) notify({ recipientIds: [ask.post.authorId], actorId: me.id, kind: 'reply', text: `${me.name} replied to “${ask.post.title}”`, moduleId: ask.module.id, itemId: ask.post.id });
-    showToast(body ? 'Reply sent.' : 'Marked as read.');
-    redraw();
+    // Undo puts the post back unread (a reply already sent can be deleted on the post).
+    answered(body ? 'Reply sent.' : 'Marked as read.', () => updateModuleData(ask.module.id, before), redraw);
   };
   return h('li', { class: 'needs__row needs__row--announcement' },
     h('span', { class: 'needs__icon', 'aria-hidden': 'true' }, icon('announcements', 16)),
@@ -222,10 +260,32 @@ function askRow(ask, me, redraw) {
       h('button', { type: 'button', class: 'link-button needs__dismiss', onClick: () => { field.value = ''; send(); } }, 'Mark read')));
 }
 
+/** "You're going to “Harbor cleanup”. Undo" at the top of the box, for a little while. */
+function undoLine(redraw) {
+  if (!lastAnswer || Date.now() - lastAnswer.at > UNDO_MS) { lastAnswer = null; return null; }
+  const { text, undo } = lastAnswer;
+  return h('p', { class: 'needs__undo', role: 'status' },
+    h('span', {}, text),
+    h('button', { type: 'button', class: 'link-button needs__undo-button', onClick: () => { lastAnswer = null; undo(); showToast('Undone.'); redraw(); } }, icon('undo', 13), ' Undo'));
+}
+
+/** The order the box first showed, so an answer moves the next one up instead of reshuffling (per person, this visit). */
+const shownOrder = new Map();
+
+function keepOrder(me, asks) {
+  const known = shownOrder.get(me.id) ?? [];
+  const rank = new Map(known.map((key, i) => [key, i]));
+  const kept = asks.filter((a) => rank.has(a.key)).sort((a, b) => rank.get(a.key) - rank.get(b.key));
+  const fresh = asks.filter((a) => !rank.has(a.key));
+  shownOrder.set(me.id, [...known, ...fresh.map((a) => a.key)]);
+  return [...kept, ...fresh];
+}
+
 /** The "From groups" box, or null when nothing does. */
-export function renderNeedsYou(me = getCurrentUser(), redraw, { limit = 3 } = {}) {
-  const asks = collectAsks(me);
-  if (!asks.length) return null;
+export function renderNeedsYou(me = getCurrentUser(), redraw, { limit = 2 } = {}) {
+  const asks = keepOrder(me, collectAsks(me));
+  const undo = undoLine(redraw);
+  if (!asks.length) return undo ? h('section', { class: 'needs needs--done', 'aria-label': 'From groups' }, undo) : null;
   let showAll = false;
   const list = h('ul', { class: 'needs__list' });
   const more = h('div', {});
@@ -236,5 +296,5 @@ export function renderNeedsYou(me = getCurrentUser(), redraw, { limit = 3 } = {}
   draw();
   return h('section', { class: 'needs', 'aria-label': 'From groups' },
     h('h2', { class: 'needs__title' }, 'From groups', h('span', { class: 'needs__count' }, String(asks.length))),
-    list, more);
+    undo, list, more);
 }

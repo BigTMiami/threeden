@@ -139,8 +139,7 @@ function draw() {
       h('p', {}, `On a phone, ${space.kind === 'personal' ? 'your homepage' : space.name} opens on these widgets. Tapping one opens its module, and people swipe between modules in this same order.`),
       h('ul', { class: 'mobile-editor__tips' },
         h('li', {}, 'Drag a widget by ', icon('grip', 13), ' to move it, or use ‹ ›.'),
-        h('li', {}, 'Small takes half the width; Wide takes all of it.'),
-        h('li', {}, 'A chat’s widget opens the chat full screen.')),
+        h('li', {}, 'Small takes half the width; Wide takes all of it.')),
       h('div', { class: 'form-row' },
         hasPhoneOrder() ? h('button', { type: 'button', class: 'button', onClick: () => { resetPhoneOrder(); showToast('Phones follow the page’s own order again.'); } }, icon('reset', 14), ' Reset phone layout') : null,
         h('button', { type: 'button', class: 'button button--quiet', onClick: () => setMobileEditing(false) }, 'Back to the page'))));
