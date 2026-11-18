@@ -36,11 +36,11 @@ import { showToast } from '../ui/toast.js';
 import { offerPushOnce, turnOnPush } from '../state/delivery.js';
 import { offerFullAccountOnce, fullAccountNudge } from '../onboarding/finish-account.js';
 import { renderText } from '../ui/text.js';
-import { getCurrentUser, getMember, getSpace } from '../state/store.js';
+import { getCurrentUser, getMember, getSpace, getSpaces } from '../state/store.js';
 import { findAccountByLogin, getAccounts } from '../state/accounts.js';
-import { findEvent, updateEvent, canViewEvent } from '../state/events.js';
+import { findEvent, updateEvent, canViewEvent, canEditEvent, hostGroupsOf } from '../state/events.js';
 import { can } from '../state/permissions.js';
-import { VISIBILITY, isMultiDay, applyRsvp, colorValue, rsvpOf, hostIdsOf, isHostOf, isFull, promoteWaitlist } from '../modules/calendar/calendar-data.js';
+import { VISIBILITY, isMultiDay, applyRsvp, colorValue, rsvpOf, hostIdsOf, isFull, promoteWaitlist } from '../modules/calendar/calendar-data.js';
 import { repeatLabel } from './event-series.js';
 import { todayKey, addDays } from '../utils/dates.js';
 import { editInPlace } from '../ui/edit-in-place.js';
@@ -84,9 +84,9 @@ function reminderControl(event, me, redraw) {
   });
 }
 
-/** "you", "Grace", "Grace and you", "Grace, Ana, and you": the host first, with an Oxford comma. */
-function hostNames(hosts, me) {
-  const names = hosts.map((m) => (m.id === me.id ? 'you' : m.name.split(' ')[0]));
+/** "you", "Grace", "Grace and you", "Grace, Ana, and Porch Lights": the host first, then hosting groups, with an Oxford comma. */
+function hostNames(hosts, me, groups = []) {
+  const names = [...hosts.map((m) => (m.id === me.id ? 'you' : m.name.split(' ')[0])), ...groups.map((g) => g.name)];
   if (names.length <= 2) return names.join(' and ');
   return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
 }
@@ -114,9 +114,11 @@ export function renderEventPage(container, eventId, friendCode = null) {
   }
   const host = getMember(event.createdBy);
   const hosts = hostIdsOf(event).map(getMember).filter(Boolean);
-  const isHost = isHostOf(event, me.id); // the host or a co-host
+  const isHost = canEditEvent(event, me.id); // the host, a co-host, or someone in a hosting group
+  const hostGroups = hostGroupsOf(event);
   const isMember = space.memberIds.includes(me.id);
-  const canEdit = isHost || (event.visibility === 'group' && isMember) || can(space, me.id, 'moderate');
+  // Hosts (people or groups in the "Hosts" field) can edit, as can the group for group events.
+  const canEdit = isHost || canEditEvent(event, me.id) || (event.visibility === 'group' && isMember) || can(space, me.id, 'moderate');
   const visibility = VISIBILITY.find((v) => v.id === event.visibility);
 
   const answer = (choice) => {
@@ -169,7 +171,7 @@ export function renderEventPage(container, eventId, friendCode = null) {
       reminderControl(event, me, redraw)),
     facts: h('section', { class: 'event-page__facts' },
       event.location || event.area ? h('p', {}, icon('pin', 14), ' ', event.location ? mapLink(event.location) : null, areaLabel(event), ' ', directionsButton(event)) : null,
-      h('p', {}, hosts.length ? [h('span', { class: 'avatar-row' }, hosts.map((m) => avatar(m, 22))), ` Hosted by ${hostNames(hosts, me)}`] : 'Host unknown'),
+      h('p', {}, hosts.length ? [h('span', { class: 'avatar-row' }, hosts.map((m) => avatar(m, 22))), ` Hosted by ${hostNames(hosts, me, hostGroups)}`] : 'Host unknown'),
       event.repeat !== 'none' ? h('p', {}, icon('repeat', 14), ` ${repeatLabel(event)} · `, h('a', { href: `#series-${event.id}` }, 'See every date')) : null,
       h('p', {}, icon('calendar', 14), ' From ', isMember || space.kind === 'blog' ? h('a', { href: spaceHref(space.id) }, space.name) : space.name)),
     about: event.notes ? h('section', { class: 'event-page__about' },
@@ -288,6 +290,9 @@ function renderHostTools(found, me, { isHost, canEdit, moduleId, redraw }) {
   const cohostInput = h('input', { type: 'text', class: 'input input--compact', placeholder: '@username', list: 'event-invite-options', 'aria-label': 'Add a co-host by username' });
   const cohostError = h('span', { class: 'event-details__muted' });
   const cohosts = (event.cohostIds ?? []).map(getMember).filter(Boolean);
+  const hostGroups = hostGroupsOf(event);
+  // Groups you're in can host with you (not the group it already lives in).
+  const groupChoices = getSpaces().filter((g) => g.kind === 'group' && g.memberIds.includes(me.id) && g.id !== found.space.id && !hostGroups.some((x) => x.id === g.id));
   const room = event.capacity ? Number(event.capacity) - Object.values(event.rsvps ?? {}).filter((a) => a === 'going').length : 0;
   const waiting = event.waitlist ?? [];
 
@@ -300,11 +305,14 @@ function renderHostTools(found, me, { isHost, canEdit, moduleId, redraw }) {
         onClick: () => { updateEvent(event.id, (e) => promoteWaitlist(e)); showToast('Moved people up from the waitlist. They’ve been told.'); redraw(); },
       }, `Let the next ${Math.min(room, waiting.length)} in`) : null) : null,
     isHost ? h('div', { class: 'event-page__cohosts' },
-      h('span', { class: 'settings-field__label' }, 'Co-hosts'),
-      h('span', { class: 'settings-field__hint' }, 'Co-hosts can invite people, edit the event, and see the same host tools.'),
+      h('span', { class: 'settings-field__label' }, 'Hosts'),
+      h('span', { class: 'settings-field__hint' }, 'Hosts can invite people, edit the event, and see these host tools. Add a group and everyone in it can.'),
       cohosts.length ? h('ul', { class: 'event-page__cohost-list' }, cohosts.map((m) => h('li', {},
         avatar(m, 22), ` ${m.id === me.id ? 'You' : m.name}`,
         h('button', { type: 'button', class: 'link-button link-button--danger', onClick: () => { updateEvent(event.id, (e) => { e.cohostIds = e.cohostIds.filter((id) => id !== m.id); }); showToast(m.id === me.id ? 'You’re not a co-host anymore.' : `${m.name} isn’t a co-host anymore.`); redraw(); } }, m.id === me.id ? 'Step down' : 'Remove')))) : null,
+      hostGroups.length ? h('ul', { class: 'event-page__cohost-list' }, hostGroups.map((g) => h('li', {},
+        icon('people', 16), ` ${g.name}`,
+        h('button', { type: 'button', class: 'link-button link-button--danger', onClick: () => { updateEvent(event.id, (e) => { e.hostGroupIds = (e.hostGroupIds ?? []).filter((id) => id !== g.id); }); showToast(`${g.name} isn’t hosting anymore.`); redraw(); } }, 'Remove')))) : null,
       h('form', {
         class: 'form-row',
         onSubmit: (submitEvent) => {
@@ -319,7 +327,17 @@ function renderHostTools(found, me, { isHost, canEdit, moduleId, redraw }) {
           showToast(`${account.name} is a co-host now. They’ve been told.`);
           redraw();
         },
-      }, cohostInput, h('button', { type: 'submit', class: 'button button--small' }, 'Add'), cohostError)) : null,
+      }, cohostInput, h('button', { type: 'submit', class: 'button button--small' }, 'Add'), cohostError),
+      groupChoices.length ? h('select', {
+        class: 'input input--compact', 'aria-label': 'Add a group as a host',
+        onChange: (e) => {
+          const group = groupChoices.find((g) => g.id === e.target.value);
+          if (!group) return;
+          updateEvent(event.id, (saved) => { saved.hostGroupIds = [...(saved.hostGroupIds ?? []), group.id]; });
+          showToast(`${group.name} is hosting too. It’s on their calendar.`);
+          redraw();
+        },
+      }, h('option', { value: '' }, 'Add a group as a host…'), groupChoices.map((g) => h('option', { value: g.id }, g.name))) : null) : null,
     isHost ? h('form', {
       class: 'form-row',
       onSubmit: (submitEvent) => {

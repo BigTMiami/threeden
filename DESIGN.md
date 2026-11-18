@@ -51,6 +51,9 @@ should follow them, or the exception should be a deliberate choice.
   opens the swipe view at that module. Its widget order and sizes are set
   from a computer with Edit → Edit mobile, or on the phone itself with
   Edit, which edits the widgets. It's the only layout on phones for now.
+  A module fills the screen under the top bar, with the group's name just
+  above it (a hard pull shows it; the page snaps back). Calendar items open
+  over the calendar with an ×, and a long press on a day or time adds one.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo
   edits drop embedded metadata; permission checks are written as a server
@@ -92,10 +95,10 @@ Member ──links to──────► Friends, and their blogs (the Feed)
 | **Tab** | A page within a space. A group can make a tab public while the rest stays members-only | store.js |
 | **Module** | A block on a page: a type, a size (`span` × `rows`), and its own data | `js/modules/` |
 | **Item** | Something inside a module: a post, a thread, a task, an event, a vault file | each module's `*-data.js` |
-| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page | `js/events/`, `js/state/events.js` |
+| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page. Its hosts (people, and groups whose members can all edit it) are listed in its Hosts field | `js/events/`, `js/state/events.js` |
 | **Conversation** | Messages between people. A Chat module shows a conversation; Messages shows the same one | `js/state/messages.js` |
 | **Notification** | Something that needs your attention, grouped when several are about the same thing | `js/state/notifications.js` |
-| **Linked item** | Something assigned to you in a group, shown live on your personal homepage (not a copy) | `js/editor/linked-items.js` |
+| **Linked item** | Something assigned to you in a group (or a calendar item you added there), shown live on your personal homepage (not a copy); an event co-hosted by a group shows on that group's calendar the same way | `js/editor/linked-items.js` |
 | **Vault file** | A kind of item: what a Vault holds (a folder, note, link, uploaded file, or module file such as a spreadsheet). Any but a folder can be shown on a page with File from vault, live from the vault | `js/modules/vault/`, `js/modules/vaultfile/` |
 
 ### The three kinds of space
@@ -214,7 +217,7 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
 - **Linked items:** assigned tasks, events you're going to, and Gantt tasks
   appear on your homepage live from the group.
 - **Search:** Ctrl+K and advanced search across what you can see.
-- **Events and calendars:** RSVPs, waitlists, co-hosts, series, reminders,
+- **Events and calendars:** RSVPs, waitlists, hosts (people and groups), series, reminders,
   regulars, "You're free" or "Clashes with…" checked against connected
   calendars, and a calendar feed for other apps.
 - **Your blog in a group:** each member chooses whether a group's members get

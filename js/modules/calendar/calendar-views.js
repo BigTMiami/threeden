@@ -25,6 +25,7 @@ import { sourceLabel } from '../../ui/source-tag.js';
 import { h } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { trackPointer } from '../../ui/pointer-tracker.js';
+import { onLongPress } from '../../ui/long-press.js';
 
 /**
  * Dragging events (and drag-to-create) is for mouse and pen. On a touch
@@ -110,7 +111,7 @@ function formatStartTime(time) {
 
 // ─── Month view ──────────────────────────────────────────────────────────────
 
-export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onMoveEvent }) {
+export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onMoveEvent, onLongPressAt = null }) {
   const monthStart = startOfMonth(anchorDate);
   const gridStart = startOfWeek(monthStart);
   const gridEnd = addDays(gridStart, 6 * 7 - 1); // Always 6 weeks, so the grid doesn't jump.
@@ -133,7 +134,7 @@ export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEve
     const hiddenCount = dayOccurrences.length - shown.length;
     const isOtherMonth = fromDateKey(date).getMonth() !== monthIndex;
 
-    dayCells.push(h('div', {
+    const dayCell = h('div', {
       class: `month-view__day${isOtherMonth ? ' is-other-month' : ''}${date === todayKey() ? ' is-today' : ''}`,
       dataset: { date },
       title: 'Click empty space to add an event',
@@ -155,7 +156,10 @@ export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEve
             }, `+${hiddenCount} more`)
           : null,
       ),
-    ));
+    );
+    // Phones: press and hold a day to add something on it.
+    if (onLongPressAt) onLongPress(dayCell, () => onLongPressAt(date, ''), { shouldStart: (event) => !event.target.closest?.('.event-chip, .month-view__more') });
+    dayCells.push(dayCell);
   }
 
   return h('div', { class: 'month-view' }, headerCells, dayCells);
@@ -213,7 +217,7 @@ function daysBetweenKeys(from, to) {
  * below. Timed events are placed by start time and sized by length;
  * overlapping events share the width (see assignLanes in calendar-data.js).
  */
-export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onCreateRange, onMoveEvent }) {
+export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onCreateRange, onMoveEvent, onLongPressAt = null }) {
   const columnTemplate = `56px repeat(${days.length}, minmax(0, 1fr))`;
 
   // Header: weekday + date for each column.
@@ -232,12 +236,16 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
   // All-day row.
   const allDayRow = h('div', { class: 'time-grid__all-day', style: { gridTemplateColumns: columnTemplate } },
     h('div', { class: 'time-grid__all-day-label' }, 'All day'),
-    days.map((date) => h('div', {
-      class: 'time-grid__all-day-cell',
-      onClick: () => onCreateAt(date, ''),
-    }, occurrencesOn(events, date)
-      .filter(belongsInAllDayRow)
-      .map((occurrence) => eventChip(occurrence, { onOpenEvent, selectedEventId })))),
+    days.map((date) => {
+      const cell = h('div', {
+        class: 'time-grid__all-day-cell',
+        onClick: () => onCreateAt(date, ''),
+      }, occurrencesOn(events, date)
+        .filter(belongsInAllDayRow)
+        .map((occurrence) => eventChip(occurrence, { onOpenEvent, selectedEventId })));
+      if (onLongPressAt) onLongPress(cell, () => onLongPressAt(date, ''), { shouldStart: (event) => !event.target.closest?.('.event-chip') });
+      return cell;
+    }),
   );
 
   // Hour labels down the left side.
@@ -246,7 +254,7 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
       hour === 0 ? '' : hourLabel(hour))));
 
   // One column per day with its timed events.
-  const dayColumns = days.map((date) => renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent }));
+  const dayColumns = days.map((date) => renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt }));
 
   const body = h('div', { class: 'time-grid__body', style: { gridTemplateColumns: columnTemplate } }, hourLabels, dayColumns);
   const scroller = h('div', { class: 'time-grid__scroller' }, body);
@@ -257,7 +265,7 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
   return h('div', { class: `time-grid time-grid--${days.length === 1 ? 'day' : 'week'}` }, header, allDayRow, scroller);
 }
 
-function renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent }) {
+function renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt = null }) {
   // Multi-day events are drawn in the all-day row instead (see belongsInAllDayRow).
   const timed = occurrencesOn(events, date).filter((o) => !belongsInAllDayRow(o));
   const column = h('div', {
@@ -274,6 +282,13 @@ function renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateA
   });
 
   if (onCreateRange) column.addEventListener('pointerdown', (downEvent) => startCreateDrag(downEvent, column, date, onCreateRange));
+  // Phones: press and hold a time to add something then (snapped to the half hour).
+  if (onLongPressAt) {
+    onLongPress(column, (point) => {
+      const minutes = Math.floor((((point.y - column.getBoundingClientRect().top) / HOUR_HEIGHT_PX) * 60) / SNAP_MINUTES) * SNAP_MINUTES;
+      onLongPressAt(date, minutesToTime(Math.max(0, Math.min(minutes, 24 * 60 - SNAP_MINUTES))));
+    }, { shouldStart: (event) => event.target === column });
+  }
 
   for (const { lane, laneCount, end, ...occurrence } of assignLanes(timed)) {
     const { event } = occurrence;

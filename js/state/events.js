@@ -19,7 +19,7 @@
 
 import { placeById, distanceMiles } from '../utils/places.js';
 import { getSpaces, getModule, getSpace, getMember, updateModuleData, changeState, getState } from './store.js';
-import { normalizeEvent, canSeeEvent, rsvpOf, occurrencesBetween, createEvent } from '../modules/calendar/calendar-data.js';
+import { normalizeEvent, canSeeEvent, rsvpOf, occurrencesBetween, createEvent, isHostOf } from '../modules/calendar/calendar-data.js';
 import { makeId } from '../ui/dom.js';
 import { todayKey, addDays } from '../utils/dates.js';
 
@@ -56,6 +56,21 @@ export function updateEvent(eventId, changeFn) {
 }
 
 /**
+ * Is this member one of the event's hosts: the person who made it, a
+ * co-host, or someone in a group named in its "Hosts" field? Hosts can
+ * edit the event.
+ */
+export function canEditEvent(event, memberId) {
+  if (isHostOf(event, memberId)) return true;
+  return (event.hostGroupIds ?? []).some((groupId) => getSpace(groupId)?.memberIds.includes(memberId));
+}
+
+/** The groups hosting an event (its "Hosts" field), that still exist. */
+export function hostGroupsOf(event) {
+  return (event.hostGroupIds ?? []).map((id) => getSpace(id)).filter(Boolean);
+}
+
+/**
  * Can this member open the event's page?
  *   public  → anyone
  *   group   → the group's members, plus anyone invited or who answered
@@ -63,6 +78,7 @@ export function updateEvent(eventId, changeFn) {
  */
 export function canViewEvent({ event, space }, memberId) {
   if (event.visibility === 'public') return true;
+  if (canEditEvent(event, memberId)) return true;
   if (event.visibility === 'invite') return canSeeEvent(event, memberId);
   return space.memberIds.includes(memberId) || event.inviteeIds.includes(memberId) || Boolean(rsvpOf(event, memberId));
 }

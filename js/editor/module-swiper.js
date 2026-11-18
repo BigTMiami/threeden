@@ -52,6 +52,7 @@ export function initModuleSwiper(gridElement, stripElement) {
   subscribe('mode', update);
   subscribe('messages', update); // the Chat button's unread count
   grid.addEventListener('scroll', onScroll, { passive: true });
+  watchSoftSnap();
   // The space header above the modules can change height (a description,
   // a next-step line), and so can the screen: refit when either does.
   window.addEventListener('resize', fitToScreen);
@@ -68,6 +69,7 @@ export function initModuleSwiper(gridElement, stripElement) {
  */
 function fitToScreen() {
   if (!grid?.classList.contains('is-swiping')) { grid?.style.removeProperty('--swipe-height'); return; }
+  if (groupPhone()) { fillScreen(); return; }
   const top = grid.getBoundingClientRect().top + window.scrollY; // where the modules start on the page
   const css = getComputedStyle(document.documentElement);
   const px = (name) => parseFloat(css.getPropertyValue(name)) || 0;
@@ -82,6 +84,73 @@ function fitToScreen() {
   if (grid.style.getPropertyValue('--swipe-height') !== `${height}px`) grid.style.setProperty('--swipe-height', `${height}px`);
 }
 const MIN_HEIGHT_PX = 320;
+
+/**
+ * In a group or on your homepage (Nov 18): the module fills the screen
+ * between the top bar and the chips, and the group's name and description
+ * sit just above it, out of view. The page snaps softly between the two
+ * (html.phone-module-snap, softSnap below): pull down hard, well past the
+ * top of the module, and the header comes into view; a small pull springs
+ * back. From the header, any scroll down snaps back to the module.
+ */
+function fillScreen() {
+  const css = getComputedStyle(document.documentElement);
+  const px = (name) => parseFloat(css.getPropertyValue(name)) || 0;
+  const below = px('--module-strip-height') + px('--tab-bar-height') + px('--safe-bottom');
+  const appBar = Math.round(document.querySelector('.app-bar')?.getBoundingClientRect().height ?? 52);
+  const height = Math.floor(Math.max(MIN_HEIGHT_PX, window.innerHeight - appBar - below - SNAP_GAP_PX - DOTS_PX));
+  if (grid.style.getPropertyValue('--swipe-height') !== `${height}px`) grid.style.setProperty('--swipe-height', `${height}px`);
+  document.documentElement.style.setProperty('--snap-top', `${appBar + SNAP_GAP_PX}px`);
+}
+const SNAP_GAP_PX = 6; // air between the top bar and the module
+const DOTS_PX = 22; // the dots under the module
+
+/** Scroll the page so the module sits right under the top bar (the header just out of view). */
+function snapToModule() {
+  if (!grid?.classList.contains('is-swiping') || !groupPhone()) return;
+  const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--snap-top')) || 58;
+  const top = grid.getBoundingClientRect().top + window.scrollY - gap;
+  settledAt = 'module';
+  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+}
+let snapPending = false;
+let wasSwiping = false;
+
+/** Where the module rests (the page's scroll position with the header just out of view). */
+function moduleRest() {
+  const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--snap-top')) || 58;
+  return Math.max(0, Math.round(grid.getBoundingClientRect().top + window.scrollY - gap));
+}
+
+/**
+ * Soft snapping: when the page stops scrolling somewhere between the
+ * header and the module, settle on one of them. Coming from the module, it
+ * takes a real pull (past PULL_SHARE of the header) to show the header;
+ * coming from the header, a little scroll down is enough to go back.
+ */
+const PULL_SHARE = 0.45;
+const NUDGE_PX = 16;
+let settledAt = 'module'; // 'module' | 'header': where the page last came to rest
+let touching = false;
+let settleTimer = 0;
+function softSnap() {
+  if (touching || !document.documentElement.classList.contains('phone-module-snap')) return;
+  const rest = moduleRest();
+  const y = window.scrollY;
+  if (rest < 8) return; // no header to hide
+  if (y > rest + 2) { settledAt = 'module'; window.scrollTo({ top: rest, behavior: 'smooth' }); return; } // past the module: back to it
+  if (y >= rest - 2) { settledAt = 'module'; return; }
+  if (y <= 2) { settledAt = 'header'; return; }
+  const toHeader = settledAt === 'module' ? y < rest * (1 - PULL_SHARE) : y < NUDGE_PX;
+  settledAt = toHeader ? 'header' : 'module';
+  window.scrollTo({ top: toHeader ? 0 : rest, behavior: 'smooth' });
+}
+function watchSoftSnap() {
+  window.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+  window.addEventListener('touchend', () => { touching = false; clearTimeout(settleTimer); settleTimer = window.setTimeout(softSnap, 160); }, { passive: true });
+  window.addEventListener('touchcancel', () => { touching = false; }, { passive: true });
+  window.addEventListener('scroll', () => { clearTimeout(settleTimer); settleTimer = window.setTimeout(softSnap, 140); }, { passive: true });
+}
 
 function prefersList() {
   try { return localStorage.getItem(PREFERENCE_KEY) === 'list'; } catch { return false; }
@@ -105,6 +174,12 @@ function update() {
   const canSwipe = PHONE.matches && !isEditMode() && (modules.length > 1 || (inGroup && modules.length > 0));
   const swiping = canSwipe && (inGroup || !prefersList());
   grid.classList.toggle('is-swiping', swiping);
+  // A group or homepage: the module fills the screen, and the page snaps between it and the header.
+  document.documentElement.classList.toggle('phone-module-snap', swiping && inGroup);
+  if (swiping && inGroup && !wasSwiping) snapPending = true;
+  // Back to the widgets: start at the top, with the group's name.
+  if (wasSwiping && !(swiping && inGroup) && PHONE.matches && document.documentElement.classList.contains('phone-widgets')) window.scrollTo({ top: 0, behavior: 'instant' });
+  wasSwiping = swiping && inGroup;
   if (!swiping) grid.style.removeProperty('--swipe-height');
   if (!swiping) grid.parentElement.querySelector('.module-dots')?.remove();
   strip.hidden = !canSwipe;
@@ -142,6 +217,7 @@ function update() {
       fitToScreen();
       grid.scrollTo({ left: current * grid.clientWidth, behavior: 'instant' });
       drawDots(current);
+      if (snapPending) { snapPending = false; snapToModule(); }
     });
   }
 }
@@ -158,6 +234,7 @@ function chatUnread(frame) {
 export function showModuleAt(moduleId) {
   const index = frames().findIndex((f) => f.dataset.moduleId === moduleId);
   positions[positionKey()] = Math.max(0, index);
+  snapPending = true; // open on the module, the header just above it
   update();
 }
 

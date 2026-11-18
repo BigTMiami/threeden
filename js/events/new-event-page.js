@@ -31,6 +31,7 @@
  * link ready to copy.
  */
 
+import { hostsPicker } from './event-hosts.js';
 import { coverPicker, eventCoverBanner } from './event-cover.js';
 import { h, replaceChildren, makeId } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -90,7 +91,7 @@ export function renderNewEventPage(container) {
   const draft = {
     occasion: null, title: '', date: nextSaturday(), time: '19:00', endTime: '23:00',
     location: '', area: me.location?.placeId ?? null, emoji: '✨', color: 'blue', visibility: 'invite', notes: '', tags: [], cover: null,
-    host: 'me', repeat: 'none', bundle: null,
+    host: 'me', repeat: 'none', bundle: null, cohostIds: [], hostGroupIds: [],
   };
   let step = 0;
   let timeHint = 'We picked next Saturday. Change it if you like.';
@@ -228,7 +229,11 @@ export function renderNewEventPage(container) {
           h('select', { class: 'input', 'aria-label': 'Hosted by', onChange: (e) => { setHost(e.target.value); draw(); } },
             h('option', { value: 'me', selected: draft.host === 'me' }, `Just me (${firstName})`),
             groups.map((g) => h('option', { value: g.id, selected: draft.host === g.id }, g.name))),
-          group ? h('span', { class: 'settings-field__hint' }, 'You’re the host; it goes on the group’s calendar.') : null) : null,
+          group ? h('span', { class: 'settings-field__hint' }, 'You’re the host; it goes on the group’s calendar and yours.') : null) : null,
+        hostsPicker({
+          me, cohostIds: draft.cohostIds, hostGroupIds: draft.hostGroupIds.filter((id) => id !== group?.id), homeGroupId: group?.id ?? null, label: 'Hosting with you (optional)', hint: 'People or groups. Hosts can edit the event, and a group’s members all can.',
+          onChange: ({ cohostIds, hostGroupIds }) => { draft.cohostIds = cohostIds; draft.hostGroupIds = hostGroupIds; },
+        }),
         h('div', { class: 'settings-choices', role: 'radiogroup', 'aria-label': 'Who can come' },
           who.map(([id, label, hint]) => h('label', { class: 'settings-choice' },
             h('input', { type: 'radio', name: 'new-event-visibility', checked: draft.visibility === id, onChange: () => { draft.visibility = id; } }),
@@ -264,6 +269,7 @@ export function renderNewEventPage(container) {
       kind: 'event', title: draft.title.trim(), date: draft.date, allDay: false, time: draft.time, endTime: draft.endTime,
       location: draft.location.trim(), area: draft.area, color: draft.color, emoji: draft.emoji, notes: draft.notes.trim(), tags: draft.tags, cover: draft.cover,
       visibility: draft.visibility, createdBy: me.id, rsvps: { [me.id]: 'going' }, attendeeIds: [me.id], repeat: draft.repeat,
+      cohostIds: draft.cohostIds, inviteeIds: [...draft.cohostIds], hostGroupIds: draft.hostGroupIds.filter((id) => id !== draft.host),
     }), BUNDLES.find((b) => b.id === draft.bundle));
     const group = groups.find((g) => g.id === draft.host);
     changeState((state) => {
@@ -302,7 +308,7 @@ export function renderNewEventPage(container) {
       h('div', { class: 'form-row new-event__nav' },
         step > 0 ? h('button', { type: 'button', class: 'button button--quiet', onClick: () => { step -= 1; draw(); } }, 'Back') : h('a', { class: 'button button--quiet', href: '#' }, 'Cancel'),
         nextButton));
-    root.querySelector('input, button.new-event__choice')?.focus?.({ preventScroll: true });
+    root.querySelector('input:not(.people-search__input), button.new-event__choice')?.focus?.({ preventScroll: true });
   }
 
   replaceChildren(container,

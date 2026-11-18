@@ -40,7 +40,8 @@ with sync_playwright() as p:
             mv.get_by_role('button', name='Agenda').click(); pg.wait_for_timeout(300)
             chip=mv.locator('.agenda-view__event', has_text='Street Fair').first
         chip.click(); pg.wait_for_timeout(500)
-        print(' tap event ->', pg.evaluate('location.hash'), '| panel:', mv.locator('.event-details').count())
+        print(' tap event ->', pg.evaluate('location.hash'), '| panel:', mv.locator('.event-details').count(), '| over the calendar (phones, Nov 18):', pg.locator('dialog.phone-sheet .event-page').count())
+        if pg.locator('dialog.phone-sheet').count(): pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
         # Editor: cover drop zone first, limit text field
         pg.evaluate("location.hash='#module-band-calendar'"); pg.wait_for_timeout(500)
         mv.get_by_role('button', name='Event', exact=False).filter(has_text='Event').last.click(); pg.wait_for_timeout(300)

@@ -28,7 +28,9 @@
  *     location, notes,
  *     color,           // one of EVENT_COLORS' ids
  *     attendeeIds,     // member ids: who's involved (entries) or who's going (events)
- *     createdBy,       // member id: who added it (an event's host)
+ *     createdBy,       // member id: who added it (an event's host). A group item
+ *                      // you add also shows on your homepage calendar, unless
+ *     hiddenFrom,      // member ids who unticked "Show on my calendar"
  *
  *   Events only (entries always have visibility 'group' and none of the rest):
  *     visibility,      // who can see it, one of VISIBILITY:
@@ -36,6 +38,9 @@
  *                      //   'invite' only the host and the people invited
  *                      //   'public' anyone; it shows up in search and Explore
  *     inviteeIds,      // people invited (any account, in the group or not)
+ *     cohostIds,       // people hosting with the creator: the "Hosts" field
+ *     hostGroupIds,    // groups hosting it: their members can edit it, and it
+ *                      // shows on their calendars (js/editor/linked-items.js)
  *     rsvps,           // { [memberId]: 'going' | 'maybe' | 'no' }  (Partiful-style RSVPs)
  *     rsvpAt,          // { [memberId]: when they said Going } (optional; regulars.js)
  *     capacity,        // most people who can say "going", or null for no limit
@@ -137,6 +142,8 @@ export function normalizeEvent(event) {
     rsvps: {},
     capacity: null,
     cohostIds: [], // co-hosts: same powers as the host (hostIdsOf)
+    hostGroupIds: [], // groups hosting it with you: their members can edit it (canEditEvent in js/state/events.js)
+    hiddenFrom: [], // people who took it off their own homepage calendar ("Show on my calendar")
     waitlist: [], // in order; the first moves up when a spot opens (applyRsvp)
     area: null, // a place id from js/utils/places.js, for "events near me"
     tags: [], // ids from js/events/event-tags.js

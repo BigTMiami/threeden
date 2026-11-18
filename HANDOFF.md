@@ -114,6 +114,36 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Calendars, hosts, and the phone module view (Nov 18):**
+  - A group item you add shows on your homepage calendar: the calendar's
+    `assignments.isAssignedTo` counts `createdBy` (and `cohostIds`), unless
+    the person is in `event.hiddenFrom` ("Show on my calendar" in the
+    editor, shown on group calendars via `mineToggle`).
+  - Hosts: `js/events/event-hosts.js` (`hostsPicker`) in the editor (events
+    only), the step-by-step planner, and the event page's host tools.
+    `event.hostGroupIds`; `canEditEvent(event, id)` in js/state/events.js
+    (creator, co-host, or member of a hosting group) gates editing on the
+    calendar page, Upcoming events, and the event page (where it also means
+    host tools), and `canViewEvent`. `isHostOf` stays people-only so the
+    Dashboard and calendar feeds don't call every group member a host.
+    `receivesLinkedItems` now also says yes to a group's first calendar,
+    which gets `coHostedLinks()` (events elsewhere naming the group); the
+    calendar page drops duplicates by id.
+  - Phones: `js/ui/long-press.js` (touch/pen, 500 ms, swallows the next
+    click and the context menu); views take `onLongPressAt`. On the full
+    calendar page a phone tap on an empty day goes to that day.
+    `js/events/event-sheet.js`: `openEventSheet` (event page, or entry
+    details + Edit in place) and `openNewItemSheet`; a modal.js dialog
+    (class `phone-sheet`) that pushes a history step and closes on
+    popstate or hashchange.
+  - The module view: in groups and homepages `fillScreen()` sizes modules
+    from the top bar down and sets `--snap-top`; entering the swipe view
+    (`showModuleAt` or the switch to swiping) scrolls the header out of
+    view; `softSnap()` settles the page after scrolls/touches end (from
+    the module it takes 45% of the header to reveal it; from the header a
+    16 px nudge returns). Tests: tests/test_calendar_hosts_mine.py,
+    tests/test_phone_calendar_sheet.py; test_calendar.py expects the sheet.
+
 - **Editing controls in the header (Nov 17):** while editing, the page
   header shows `editingControls()` (Layouts, Preview, Done editing) from
   js/editor/edit-bar.js instead of Edit; the bottom bar is gone (the file
