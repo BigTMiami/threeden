@@ -23,7 +23,7 @@ function exploreGroup(id, name, [visibility, joining], description, roles, event
     memberIds: Object.keys(roles), roles, permissions: {}, appearance, joinRequests: [],
     modules: [
       {
-        id: `${id}-announcements`, type: 'announcements', title: 'Announcements', span: 8, rows: 10,
+        id: `${id}-announcements`, type: 'announcements', title: 'Board', span: 8, rows: 10,
         data: { posts: [{ id: `${id}-post-1`, authorId: ownerId, title: `Welcome to ${name}`, body: description, pinned: true, createdAt: hoursAgo(80), seenBy: [], comments: [] }] },
       },
       { id: `${id}-calendar`, type: 'calendar', title: 'Calendar', span: 4, rows: 10, data: { events } },

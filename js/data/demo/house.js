@@ -26,7 +26,7 @@ export function createHouse() {
     appearance: {},
     modules: [
       {
-        id: 'house-announcements', type: 'announcements', title: 'Announcements', span: 8, rows: 12,
+        id: 'house-announcements', type: 'announcements', title: 'Board', span: 8, rows: 12,
         data: {
           posts: [
             post('house-post-1', 'm-maya', 'House meeting Sunday at 7', 'Living room. I’ll make dumplings. Agenda is in the note below. Add anything you want to talk about.', {

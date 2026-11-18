@@ -1,6 +1,7 @@
 // @ts-check
 /**
- * announcements-module.js — the Announcements module: updates for the group.
+ * announcements-module.js — the group's Board (Nov 18; it was Announcements,
+ * and keeps that type so saved pages carry on): anyone posts, admins pin.
  *
  * Files in this folder:
  *   announcements-module.js  ← this file: the module definition
@@ -16,8 +17,8 @@ import { renderAnnouncementsPage } from './announcements-page.js';
 
 export const announcementsModule = {
   type: 'announcements',
-  label: 'Announcements',
-  description: 'Pinned updates for everyone',
+  label: 'Board',
+  description: 'Posts for the whole group: anyone can share, admins pin what matters',
   icon: 'announcements',
   defaultSpan: 8,
   defaultRows: 12,

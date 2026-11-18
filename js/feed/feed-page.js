@@ -31,6 +31,7 @@
  * Account settings → Your feed); the items come from feed-items.js.
  */
 
+import { isPinned } from '../modules/announcements/announcements-data.js';
 import { postMenu } from './post-menu.js';
 import { getReactions } from '../state/reactions.js';
 import { postKey } from '../modules/blog-feeds/feed-data.js';
@@ -386,6 +387,7 @@ function menuFor(item, me, settings, extras = {}) {
 
 function renderItem(item, me, settings, redraw) {
   if (item.kind === 'thread') return renderThreadItem(item, me, settings);
+  if (item.kind === 'boardpost') return renderBoardItem(item, me, settings);
   if (item.kind === 'feedpost') return renderFeedPostItem(item, me, settings);
   const author = getMember(item.authorId);
   const name = h('a', { href: blogHref(author), class: 'feed-item__name' }, author.name);
@@ -478,6 +480,25 @@ function renderFeedPostItem(item, me, settings) {
 }
 
 /** A new forum thread from one of your groups. Anonymous threads don't say who. */
+/** A post on a group's Board (feed-items.js): the words, the first picture, and the way to it. */
+function renderBoardItem(item, me, settings) {
+  const { post, module, space } = item;
+  const author = getMember(item.authorId);
+  const open = (event) => { event.preventDefault(); requestModuleFocus(module.id, post.id); openModulePage(module.id); };
+  const text = (post.body ?? '').replace(/\s+/g, ' ').trim();
+  const picture = (post.media ?? []).find((m) => m.kind === 'image');
+  return h('li', { class: 'feed-item feed-item--board' },
+    cardHead(author,
+      [author ? h('a', { href: blogHref(author), class: 'feed-item__name' }, author.name) : h('span', { class: 'feed-item__name' }, 'Someone')],
+      [h('a', { href: spaceHref(space.id) }, space.name), ` · ${module.title}`, isPinned(post) ? ' · pinned' : ''],
+      item.timestamp, { href: author ? blogHref(author) : null, menu: menuFor(item, me, settings) }),
+    post.title ? h('p', { class: 'feed-board__title' }, post.title) : null,
+    text ? h('p', { class: 'feed-board__text' }, text.length > 280 ? `${text.slice(0, 279)}…` : text) : null,
+    picture ? h('img', { class: 'feed-board__photo', src: picture.src, alt: picture.caption ?? '' }) : null,
+    h('a', { class: 'link-button feed-board__open', href: `#module-${module.id}`, onClick: open },
+      `${post.comments?.length ? `${post.comments.length} ${post.comments.length === 1 ? 'comment' : 'comments'} · ` : ''}${post.likes?.length ? `♡ ${post.likes.length} · ` : ''}Open on the board →`));
+}
+
 function renderThreadItem(item, me, settings) {
   const { thread, module, space } = item;
   const author = item.anonymous ? null : getMember(item.authorId);

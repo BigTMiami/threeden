@@ -44,9 +44,9 @@ def open_add(pg, scope):
 
 
 def card_composer(pg):
-    card = pg.locator('.module-frame', has=pg.locator('.announcements__compose')).first
+    card = pg.locator('.module-frame', has=pg.locator('.board__compose')).first
     card.scroll_into_view_if_needed()
-    card.locator('.announcements__compose button').first.click(); pg.wait_for_timeout(250)
+    card.locator('.board__compose button').first.click(); pg.wait_for_timeout(250)
     return card
 
 
@@ -72,7 +72,7 @@ with sync_playwright() as p:
         pg.evaluate(f"location.hash='#module-{aid}'"); pg.wait_for_timeout(900)
         page = pg.locator('#module-page-view')
         page.locator('.announcements-page__compose button, .compose-toggle__button').first.click(); pg.wait_for_timeout(300)
-        comp = page.locator('.announcements-page__composer')
+        comp = page.locator('.board-composer')
         menu, v = open_add(pg, comp)
         check(v['inside'] and not v['covered'], f'{label} page: Add menu fully on screen ({v})')
         check(v['names'] == ['Poll', 'File from your vault', 'Upload from camera roll'], f'{label} page: order {v["names"]}')
@@ -95,7 +95,7 @@ with sync_playwright() as p:
         name = first.inner_text().split('\n')[0]
         first.click(); pg.wait_for_timeout(300)
         check(comp.locator('.announcement-files__chip').count() == 1, f'{label}: picked file shows above the words ({name})')
-        comp.locator('input[aria-label="Announcement title"]').fill(f'Files test {label}')
+        comp.locator('input[aria-label="Title (optional)"]').fill(f'Files test {label}')
         comp.get_by_role('button', name='Post', exact=True).click(); pg.wait_for_timeout(500)
         post = page.locator('.announcement-post', has_text=f'Files test {label}').first
         check(post.locator('.announcement-files .file-preview, .announcement-files > *').count() >= 1, f'{label}: the post shows the file as a preview card')

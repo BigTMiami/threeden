@@ -133,7 +133,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'community', label: 'IRL community', featured: true, description: 'People who meet in person, like a neighborhood, a club, or a congregation: announcements and events with RSVPs',
     modules: () => [
-      module('announcements', 'Announcements', 8, 9, { posts: [] }),
+      module('announcements', 'Board', 8, 9, { posts: [] }),
       module('events', 'Upcoming events', 4, 9, { events: [], ownEvents: true }),
     ],
   },
@@ -162,7 +162,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'class', label: 'Class', description: 'Announcements and assignments',
     modules: () => [
-      module('announcements', 'Announcements', 6, 9, { posts: [] }),
+      module('announcements', 'Board', 6, 9, { posts: [] }),
       module('submissions', 'Assignments', 6, 9, null),
     ],
   },
@@ -190,7 +190,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'faith', label: 'Faith community', description: 'Announcements and a calendar of services and gatherings',
     modules: () => [
-      module('announcements', 'Announcements', 8, 9, { posts: [] }),
+      module('announcements', 'Board', 8, 9, { posts: [] }),
       module('calendar', 'Calendar', 4, 9, { events: [] }),
     ],
   },
@@ -239,7 +239,7 @@ export const GROUP_TEMPLATES = [
   {
     id: 'other', label: 'Something else', hidden: true, description: 'Announcements, a calendar, and a to-do list',
     modules: () => [
-      module('announcements', 'Announcements', 8, 12, { posts: [] }),
+      module('announcements', 'Board', 8, 12, { posts: [] }),
       module('calendar', 'Calendar', 4, 12, { events: [] }),
       module('todo', 'To-do', 12, 10, { tasks: [] }),
     ],

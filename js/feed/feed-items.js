@@ -14,6 +14,8 @@
  * "Show new threads in members' Feeds":
  *
  *   Forum            threads' createdAt → kind 'thread'  ("started Heat log…")
+ *   Board            posts' createdAt   → kind 'boardpost' (every post, unless its
+ *                                        poster unticked "Show in members' Feeds")
  *
  * Each item: { id, kind, kindGroup ('posts'|'photos'|'events'|'groupPosts'),
  *              authorId, timestamp, blog or space, module, …kind-specific fields }
@@ -27,6 +29,7 @@ import { normalizeEvent } from '../modules/calendar/calendar-data.js';
 import { normalizeThread, settingsOf as forumSettingsOf } from '../modules/forum/forum-data.js';
 import { sortedPosts } from '../modules/blog-feeds/feed-data.js';
 import { normalizeArticle, summaryOf } from '../modules/articles/articles-data.js';
+import { normalizePost as normalizeBoardPost } from '../modules/announcements/announcements-data.js';
 import { toDateKey, todayKey } from '../utils/dates.js';
 
 const EXCERPT_CHARS = 240;
@@ -151,6 +154,14 @@ export function collectGroupItems(memberId) {
         continue;
       }
       if (module.type === 'articles') { items.push(...articleItems(module, space, 'groupPosts', space)); continue; }
+      // The group's Board (the 'announcements' type): its posts go to members' Feeds by default.
+      if (module.type === 'announcements') {
+        for (const post of (module.data?.posts ?? []).map(normalizeBoardPost)) {
+          if (post.toFeed === false || post.authorId === memberId) continue;
+          items.push({ id: `boardpost-${post.id}`, kind: 'boardpost', kindGroup: 'groupPosts', authorId: post.authorId, timestamp: post.createdAt, space, module, post });
+        }
+        continue;
+      }
       if (module.type !== 'forum' || !forumSettingsOf(module.data ?? {}).showInFeed) continue;
       for (const thread of (module.data.threads ?? []).map(normalizeThread)) {
         if (thread.pending) continue;

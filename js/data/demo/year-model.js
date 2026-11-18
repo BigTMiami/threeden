@@ -69,7 +69,7 @@ export const FEATURE_TOOL = {
 export const FEATURE_LABELS = {
   feed: 'Feed', blog: 'Blog', photos: 'Photos', calendar: 'Calendar', docs: 'Notes and documents', articles: 'Articles',
   sheets: 'Spreadsheets', budget: 'Budget and shared costs', events: 'Events and RSVPs', chat: 'Group chat', messages: 'Direct messages',
-  forum: 'Forum', announcements: 'Announcements', tasks: 'To-do lists', shifts: 'Volunteer shifts', chores: 'Chore wheel',
+  forum: 'Forum', announcements: 'Board', tasks: 'To-do lists', shifts: 'Volunteer shifts', chores: 'Chore wheel',
 };
 
 /**

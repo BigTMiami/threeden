@@ -835,3 +835,46 @@ a.feed-attach__title:hover {
 .doc-share__add { display: flex; flex-direction: column; gap: 6px; }
 .doc-share__add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .doc-share__publish { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ─── The group's Board (js/modules/announcements/announcements-card.js) ─── */
+
+.board__compose { margin-bottom: 10px; }
+.board__compose .compose-toggle__bar { display: flex; justify-content: flex-end; }
+.board__body { display: flex; flex-direction: column; gap: 10px; }
+
+/* The pinned post: the accent box on top (design 1). */
+.board-pinned { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 14px; background: var(--color-accent-soft); border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent); }
+.board-pinned__kicker { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-accent); }
+.board-pinned__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.board-pinned__meta { font-size: 12px; color: var(--color-text-muted); }
+.board__more-pins { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 0 4px; font-size: 13px; color: var(--color-text-muted); }
+.board__more-pins > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Everyone's posts, newest first. */
+.board__stream { display: flex; flex-direction: column; }
+.board-post { display: flex; flex-direction: column; gap: 6px; padding: 12px 2px; border-top: 1px solid var(--color-border-faint); }
+.board-post__byline { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted); }
+.board-post__who { flex: 1; min-width: 0; }
+.board-post__who strong { color: var(--color-text); }
+.board-post__title { margin: 0; font-size: 15px; font-weight: 600; }
+.board-post__text { margin: 0; font-size: 14px; line-height: 1.45; }
+.board-post__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; }
+.board-like.is-on { color: var(--color-danger); font-weight: 600; }
+.board-like.is-on svg { fill: currentColor; }
+.board-pin { display: inline-flex; }
+.board-pin__choices { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.board-pin__label { font-size: 12px; color: var(--color-text-muted); }
+.board-pin__choice { height: 26px; font-size: 12px; }
+
+/* "+ Post" form (board-parts.js). */
+.board-composer { display: flex; flex-direction: column; gap: 8px; }
+.board-composer__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.board-composer__feed { font-size: 13px; }
+.board-who { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+
+/* A board post in the Feed (feed-page.js). */
+.feed-board__title { margin: 6px 0 0; font-weight: 600; }
+.feed-board__text { margin: 4px 0 0; line-height: 1.45; }
+.feed-board__photo { display: block; width: 100%; max-height: 320px; object-fit: cover; margin-top: 8px; border-radius: var(--radius); }
+.feed-board__open { display: inline-block; margin-top: 8px; font-size: 13px; }
+.board-pinned .board-post__title { font-size: 16px; }

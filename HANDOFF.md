@@ -153,6 +153,27 @@ functions, no build step.
   `joinedAt[me]` is on or after Nov 18 2026 and unanswered. Test:
   `test_blog_in_groups.py`.
 
+- **Group Board (Nov 18, morning):** Leo chose design 1 of the board mockups
+  (canvas "3den: mobile module layouts", row 2) and asked: replace
+  Announcements; admins pin with a duration; everyone posts with a + by
+  default, admins can change that; posts go to members' Feeds by default.
+  - Kept the `announcements` type (no type migration); label "Board". Data:
+    `post.pin = { until, by, at }` (normalizePost turns old `pinned: true`
+    into a pin until unpinned), `toFeed`, `likes`, optional `title`;
+    `isPinned`, `pinLabel`, `makePin`, `PIN_DURATIONS`, `postName`.
+  - Posting = the existing `postAnnouncements` permission (relabelled "Post
+    on the board", members by default); pinning = `pinPosts` (admins). The
+    full page's "Who can post" calls `setPermission`.
+  - Feed: `collectGroupItems` adds kind 'boardpost' (not your own, not
+    `toFeed: false`); `renderBoardItem` in feed-page.js.
+  - The card doesn't redraw when data changes from elsewhere (as before);
+    an expired pin moves on the next draw.
+  - Migration 71 renames modules titled "Announcements" to "Board".
+  - Test: `test_group_board.py`; six older tests updated for the new markup.
+  - Leo also asked (not done yet): a Budget overhaul proposal with mockups,
+    and whether Lists should become a Tasks view (I suggested a Checklist
+    view and offered to do it).
+
 - **Aliases removed (Nov 18, morning):** Leo decided aliases were a bad idea;
   the alias commit was reverted (no `memberIn`, `aliasIn`, Names section).
 

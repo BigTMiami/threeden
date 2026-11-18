@@ -147,7 +147,7 @@ export function createTenantsUnion() {
     modules: [
       // ─── Home ─────────────────────────────────────────────────────────────
       {
-        id: 'tenants-announcements', type: 'announcements', title: 'Announcements', span: 8, rows: 11,
+        id: 'tenants-announcements', type: 'announcements', title: 'Board', span: 8, rows: 11,
         data: {
           posts: [
             post('tenants-post-1', 'm-priya', 'We got a meeting with Crestline', 'After 112 heat complaints, their regional manager agreed to meet with the union on the 3rd. Come to the general meeting to help plan what we ask for.', {

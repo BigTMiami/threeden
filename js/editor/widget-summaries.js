@@ -21,7 +21,7 @@ import { getMember, getModule } from '../state/store.js';
 import { needsYou, myUpcoming, groupUpdates } from '../modules/dashboard/dashboard-data.js';
 import { getModuleType } from '../modules/registry.js';
 import { getConversation, unreadCount, lastMessage, messagePreview } from '../state/messages.js';
-import { hasSeen } from '../modules/announcements/announcements-data.js';
+import { hasSeen, sortPosts, normalizePost, isPinned, postName } from '../modules/announcements/announcements-data.js';
 import { nextEventIn } from '../modules/upnext/upnext-data.js';
 import { normalizeEvent, occurrencesBetween, occurrenceTimeLabel } from '../modules/calendar/calendar-data.js';
 import { listsOf } from '../modules/grocery/grocery-lists.js';
@@ -58,9 +58,9 @@ const SUMMARIES = {
   announcements(module, space, me) {
     const posts = module.data?.posts ?? [];
     const unseen = me ? posts.filter((p) => !hasSeen(p, me.id)).length : 0;
-    const top = [...posts].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.createdAt - a.createdAt)[0];
-    if (!top) return { lines: ['No announcements yet'] };
-    return { badge: unseen ? `${unseen} new` : '', kicker: top.pinned ? 'Pinned' : '', title: top.title, lines: [`${getMember(top.authorId)?.name ?? 'Someone'} · ${timeAgo(top.createdAt)}`] };
+    const top = sortPosts(posts.map(normalizePost))[0];
+    if (!top) return { lines: ['Nothing on the board yet'] };
+    return { badge: unseen ? `${unseen} new` : '', kicker: isPinned(top) ? 'Pinned' : '', title: postName(top), lines: [`${getMember(top.authorId)?.name ?? 'Someone'} · ${timeAgo(top.createdAt)}`] };
   },
   todo(module) {
     const tasks = module.data?.tasks ?? [];

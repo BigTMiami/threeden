@@ -58,8 +58,8 @@ with sync_playwright() as p:
     pg.locator('.photo-viewer__close').click(); pg.wait_for_timeout(200)
     # announcements and forum threads: photos and the poll come before the text in a new one
     pg.evaluate("location.hash='#module-tenants-announcements'"); pg.wait_for_timeout(900)
-    pg.get_by_role('button', name='New announcement').first.click(); pg.wait_for_timeout(300)
-    order=pg.evaluate("(()=>{const f=document.querySelector('.announcements-page__composer-title').closest('form'); const t=f.querySelector('textarea'); const p=f.querySelector('.poll-attacher'); return Boolean(p.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)})()")
+    pg.locator('#module-page-view .announcements-page__compose .compose-toggle__open').first.click(); pg.wait_for_timeout(300)
+    order=pg.evaluate("(()=>{const f=document.querySelector('#module-page-view .board-composer'); const t=f.querySelector('textarea'); const p=f.querySelector('.poll-attacher'); return Boolean(p.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)})()")
     print('announcement: poll fields before the text:', order)
     if not order: errs.append('announcement composer order')
     # photo tiles: the words only while hovering

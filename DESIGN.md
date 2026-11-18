@@ -132,7 +132,7 @@ jumps anywhere.
 | Purpose | Modules | Fits in |
 | --- | --- | --- |
 | **Getting your bearings** | Dashboard, Recents, Recent groups (personal); Up next (every group's first module) | personal or group |
-| **Talking** | Announcements, Forum, Chat | group (Chat on personal too) |
+| **Talking** | Board (was Announcements), Forum, Chat | group (Chat on personal too) |
 | **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
 | **Getting things done** | Tasks (list and board views), List, Budget, Gantt chart, Survey | group, personal |
 | **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
@@ -259,7 +259,8 @@ The prototype was built so each piece has a clear server counterpart. The
 Things to settle as the design grows. Some are flagged in the goals review
 and the simulated user test.
 
-- **Too many ways to post?** A group can have Announcements, a Forum, feeds,
+- **Too many ways to post?** (Partly answered Nov 18: the Board is the group's
+  feed, with pins for what were announcements.) A group can have a Board, a Forum, feeds,
   Articles, and Chat. Each has a reason, but newcomers may not know which to
   use. Should a group's template pick for them, or should some merge?
 - **Too many "needs you" lists?** The Dashboard's For you, the Feed's From

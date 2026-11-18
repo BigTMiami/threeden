@@ -11,6 +11,7 @@
  *   sinceLine(stream, me, since) → "Since Tuesday: 1 announcement, 3 replies" (or '')
  */
 
+import { isPinned } from '../announcements/announcements-data.js';
 import { normalizeEvent, occurrencesBetween, isEvent } from '../calendar/calendar-data.js';
 import { normalizeThread } from '../forum/forum-data.js';
 import { sortedPosts, postTitle } from '../blog-feeds/feed-data.js';
@@ -19,7 +20,7 @@ import { canSeePost } from '../../ui/audience-chip.js';
 import { addDays, todayKey, weekdayName } from '../../utils/dates.js';
 
 export const STREAM_KINDS = [
-  { id: 'announcement', label: 'Announcements' },
+  { id: 'announcement', label: 'Board' },
   { id: 'thread', label: 'Forum' },
   { id: 'post', label: 'Posts' },
   { id: 'article', label: 'Articles' },
@@ -54,7 +55,7 @@ export function streamOf(space, me) {
     const data = module.data ?? {};
     if (module.type === 'announcements') {
       for (const post of data.posts ?? []) {
-        items.push({ kind: 'announcement', kindLabel: post.pinned ? 'Announcement · pinned' : 'Announcement', icon: 'announcements', id: `a-${post.id}`, moduleId: module.id, itemId: post.id, authorId: post.authorId, timestamp: post.createdAt, title: post.title || cut(post.body).slice(0, 80), excerpt: post.title ? cut(post.body) : '' });
+        items.push({ kind: 'announcement', kindLabel: isPinned(post) ? 'Board · pinned' : 'Board', icon: 'announcements', id: `a-${post.id}`, moduleId: module.id, itemId: post.id, authorId: post.authorId, timestamp: post.createdAt, title: post.title || cut(post.body).slice(0, 80), excerpt: post.title ? cut(post.body) : '' });
       }
     } else if (module.type === 'forum') {
       for (const thread of (data.threads ?? []).map(normalizeThread)) {
