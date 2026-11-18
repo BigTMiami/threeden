@@ -68,10 +68,12 @@ export function pickMedia(kind, onPicked) {
  * Place an open menu where all of it can be seen: under its button when it
  * fits, otherwise above it, kept inside the screen sideways. It's fixed to
  * the screen, so a card that cuts off what overflows it can't hide it.
+ * `align: 'end'` lines its right edge up with the button's (a "…" menu).
  * @param {HTMLElement} menu
  * @param {HTMLElement} anchor
+ * @param {{ align?: 'start' | 'end' }} [options]
  */
-export function placeMenuOnScreen(menu, anchor) {
+export function placeMenuOnScreen(menu, anchor, { align = 'start' } = {}) {
   const gap = 4;
   const margin = 8;
   const box = anchor.getBoundingClientRect();
@@ -90,7 +92,8 @@ export function placeMenuOnScreen(menu, anchor) {
   const room = height <= below || below >= above ? below : above;
   if (height > room) { menu.style.maxHeight = `${Math.max(room, 120)}px`; menu.style.overflowY = 'auto'; }
   menu.style.top = `${top}px`;
-  menu.style.left = `${Math.min(Math.max(margin, box.left), Math.max(margin, window.innerWidth - width - margin))}px`;
+  const wanted = align === 'end' ? box.right - width : box.left;
+  menu.style.left = `${Math.min(Math.max(margin, wanted), Math.max(margin, window.innerWidth - width - margin))}px`;
   return true;
 }
 
@@ -100,15 +103,16 @@ export function placeMenuOnScreen(menu, anchor) {
  * @param {HTMLElement} menu
  * @param {HTMLElement} anchor
  * @param {() => void} close
+ * @param {{ align?: 'start' | 'end' }} [options]
  */
-export function followAnchor(menu, anchor, close) {
+export function followAnchor(menu, anchor, close, options = {}) {
   const onMove = (event) => {
     if (event?.target instanceof Node && menu.contains(event.target)) return;
-    if (!placeMenuOnScreen(menu, anchor)) close();
+    if (!placeMenuOnScreen(menu, anchor, options)) close();
   };
   document.addEventListener('scroll', onMove, true);
   window.addEventListener('resize', onMove);
-  placeMenuOnScreen(menu, anchor);
+  placeMenuOnScreen(menu, anchor, options);
   return () => { document.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
 }
 

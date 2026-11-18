@@ -812,3 +812,7 @@
   .event-editor__when-row .input[type="time"] { grid-column: 2; }
 }
 .calendar-page__editor { container-type: inline-size; }
+
+/* A group's own calendar on its calendar page: always shown, so a dot instead of a checkbox. */
+.calendar-sources__label--fixed { cursor: default; }
+.calendar-sources__dot { flex: 0 0 auto; width: 10px; height: 10px; margin: 0 3px; border-radius: 50%; background: var(--color-accent); }

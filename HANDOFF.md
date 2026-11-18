@@ -146,6 +146,23 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
+- **Phone editing, sweep fixes (Nov 18, late night):**
+  - Leo: widgets-then-modules is the only phone layout for groups and
+    homepages. `isPhoneEditing()` (mobile-editor.js) makes editing on a
+    phone the widget editor (no toggle, no frame, plus × via the newly
+    exported `handleRemove`); edit-bar's `layoutsControl` returns null there.
+    The editor's drag listens on the document (moving the cell dropped
+    pointer capture).
+  - Sweep (`tests/sweep_menus_and_choices.py`, ~10 min; it skips popups far
+    from the clicked button). Fixed: post/person "…" menus, choice menus,
+    member picker (all via `placeMenuOnScreen`, which now takes
+    `{ align: 'end' }`), tab rename Escape/blur double finish (the
+    removeChild error), the locked calendar checkbox. Remaining reports are
+    false alarms: redrawn app-bar wrappers, checkboxes in closed details,
+    a toast, and pages where Leo isn't an admin.
+  - Tests: `test_phone_widget_editing.py`; `test_edit_controls.py` expects
+    no Layouts on a phone for groups and homepages.
+
 - **Chat on the page, From groups undo (Nov 18, night):**
   - Phones: the chat module is swiped to like any module (the
     `.module-strip__chat` button, `has-phone-chat`, and its CSS are gone);

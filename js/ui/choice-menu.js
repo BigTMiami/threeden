@@ -15,6 +15,7 @@
  *   choiceMenu({ label: 'Show', options: [{ id, label }], value, onChange })
  */
 
+import { followAnchor } from './media-attach.js';
 import { h, replaceChildren } from './dom.js';
 import { icon } from './icons.js';
 
@@ -39,6 +40,7 @@ export function choiceMenu({ label, options, value, onChange, prefix = '', iconN
     if (!open) return;
     open = false;
     list.hidden = true;
+    stopFollowing();
     button.setAttribute('aria-expanded', 'false');
     document.removeEventListener('pointerdown', outside, true);
     if (refocus) button.focus();
@@ -52,6 +54,7 @@ export function choiceMenu({ label, options, value, onChange, prefix = '', iconN
     onChange(id);
   };
 
+  let stopFollowing = () => {};
   const openList = () => {
     open = true;
     list.hidden = false;
@@ -62,7 +65,9 @@ export function choiceMenu({ label, options, value, onChange, prefix = '', iconN
       onKeydown: (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(o.id); } },
     }, o.label, o.id === current ? icon('check', 13) : null)));
     document.addEventListener('pointerdown', outside, true);
-    /** @type {HTMLElement | null} */ (list.querySelector('.is-current') ?? list.firstElementChild)?.focus();
+    // All of it on screen, under the button or above it (media-attach.js).
+    stopFollowing = followAnchor(list, button, () => close(false));
+    /** @type {HTMLElement | null} */ (list.querySelector('.is-current') ?? list.firstElementChild)?.focus({ preventScroll: true });
   };
 
   button.addEventListener('click', () => (open ? close() : openList()));

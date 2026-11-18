@@ -64,7 +64,7 @@ POPUPS_JS = r"""() => {
   });
 }"""
 
-CHECK_JS = r"""(ids) => {
+CHECK_JS = r"""(near) => {
   const sel = '[role=menu], [role=listbox], [role=dialog], dialog[open], .media-attach__menu, [class*="__menu"], [class*="-menu"], [class*="popover"], [class*="dropdown"], [class*="sheet"]';
   const bar = document.querySelector('.tab-bar');
   const barTop = bar && bar.getClientRects().length ? bar.getBoundingClientRect().top : Infinity;
@@ -74,7 +74,10 @@ CHECK_JS = r"""(ids) => {
     const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
     return r.width > 20 && r.height > 20 && cs.visibility !== 'hidden' && cs.display !== 'none' && !el.hidden && !el.closest('[hidden]');
   });
-  const fresh = all.filter(el => !el.dataset.sweepSeen);
+  // New since the click, and near the button that was clicked (a redrawn wrapper far away isn't the menu it opened).
+  const close = (r) => !near || el_isOverlay(r.el) || (r.bottom > near.top - 400 && r.top < near.bottom + 400);
+  function el_isOverlay(el) { return el.matches('dialog, [role=dialog]') || /sheet|modal/.test(el.className) || getComputedStyle(el).position === 'fixed'; }
+  const fresh = all.filter(el => !el.dataset.sweepSeen && !/(^| )sheet(__|-|$)/.test(el.className) && close({ el, ...el.getBoundingClientRect().toJSON() }));
   // Only the outermost new popups.
   const top = fresh.filter(el => !fresh.some(o => o !== el && o.contains(el)));
   const problems = [];
@@ -197,7 +200,8 @@ with sync_playwright() as p:
                     if edit:
                         break
                     continue
-                res = pg.evaluate(CHECK_JS, None)
+                near = btn.evaluate("b => b.isConnected ? b.getBoundingClientRect().toJSON() : null") if btn.count() else None
+                res = pg.evaluate(CHECK_JS, near)
                 opened += res['opened']
                 for prob in res['problems']:
                     report['menus'].append(f'{where} [{t["text"]}]: {prob}')

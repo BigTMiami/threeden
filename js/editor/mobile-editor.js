@@ -20,6 +20,11 @@
  * setPhonePosition) and space.mobileWidgets (store.setWidgetSize).
  * Done editing, leaving the page, or a phone-sized window turns it off.
  *
+ * On a phone (Nov 18) this IS editing a group or your homepage: Edit shows
+ * the widgets with the same controls plus × (take the module off the page,
+ * with Undo), under "+ Add modules"; there's no toggle, no phone frame, and
+ * no Layouts (widgets, then modules, is the only layout on phones).
+ *
  *   initMobileEditor()       once, at startup
  *   isMobileEditing()
  *   setMobileEditing(on)
@@ -31,16 +36,18 @@ import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { getCurrentSpace, getCurrentTabId, getCurrentUser, isEditMode, subscribe, setPhoneOrder, setPhonePosition, setWidgetSize, widgetSize, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
 import { renderWidget, widgetModules, WIDGET_KINDS } from './mobile-widgets.js';
+import { handleRemove } from './module-frame.js';
 
 const PHONE = window.matchMedia('(max-width: 640px)');
 let on = false;
 let container = null;
 let lastKey = '';
 
-/** Groups and homepages open on widgets on a phone, and only a computer has room for this. */
-const available = () => !PHONE.matches && isEditMode() && WIDGET_KINDS.includes(getCurrentSpace()?.kind);
-
-export const isMobileEditing = () => on && available();
+const widgetPage = () => isEditMode() && WIDGET_KINDS.includes(getCurrentSpace()?.kind);
+/** On a phone, editing a group or your homepage is editing its widgets. */
+export const isPhoneEditing = () => PHONE.matches && widgetPage();
+/** On a computer, Edit mobile switches to it. */
+export const isMobileEditing = () => isPhoneEditing() || (on && !PHONE.matches && widgetPage());
 
 export function setMobileEditing(value) {
   on = Boolean(value);
@@ -53,7 +60,7 @@ export function setMobileEditing(value) {
 
 /** The "Edit mobile" toggle in the page header while editing a group. */
 export function mobileEditToggle() {
-  if (!WIDGET_KINDS.includes(getCurrentSpace()?.kind)) return null;
+  if (PHONE.matches || !WIDGET_KINDS.includes(getCurrentSpace()?.kind)) return null;
   return h('button', {
     type: 'button',
     class: `button space-header__mobile${isMobileEditing() ? ' is-on' : ''}`,
@@ -78,9 +85,9 @@ function startDrag(event, cell, gridEl) {
     if (cells.indexOf(target) > cells.indexOf(cell)) target.after(cell); else target.before(cell);
   };
   const end = (e, cancel = false) => {
-    grip.removeEventListener('pointermove', move);
-    grip.removeEventListener('pointerup', up);
-    grip.removeEventListener('pointercancel', cancelled);
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', up);
+    document.removeEventListener('pointercancel', cancelled);
     document.removeEventListener('keydown', escape, true);
     cell.classList.remove('is-dragging');
     const after = [...gridEl.children].map((c) => /** @type {HTMLElement} */ (c).dataset.widgetId);
@@ -90,9 +97,10 @@ function startDrag(event, cell, gridEl) {
   const up = (e) => end(e);
   const cancelled = (e) => end(e, true);
   const escape = (e) => { if (e.key === 'Escape') { e.preventDefault(); end(e, true); } };
-  grip.addEventListener('pointermove', move);
-  grip.addEventListener('pointerup', up);
-  grip.addEventListener('pointercancel', cancelled);
+  // On the document: moving the widget in the page drops the grip's pointer capture.
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', cancelled);
   document.addEventListener('keydown', escape, true);
 }
 
@@ -110,7 +118,9 @@ function controlsFor(module, index, count, space, gridEl) {
       ['small', 'wide'].map((value) => h('button', {
         type: 'button', class: `mwidget__size${size === value ? ' is-on' : ''}`, 'aria-pressed': String(size === value),
         onClick: () => { if (size !== value) setWidgetSize(module.id, value); },
-      }, value === 'small' ? 'Small' : 'Wide'))));
+      }, value === 'small' ? 'Small' : 'Wide'))),
+    // Take it off the page (a copy is kept; the toast has Undo).
+    h('button', { type: 'button', class: 'mwidget__remove', 'aria-label': `Remove ${name} from the page`, title: 'Remove', onClick: () => handleRemove(module.id) }, icon('trash', 15)));
 }
 
 function draw() {
@@ -126,14 +136,24 @@ function draw() {
   const me = getCurrentUser();
   const modules = widgetModules();
   const tab = space.tabs?.length > 1 ? space.tabs.find((t) => t.id === getCurrentTabId()) : null;
+  const phone = PHONE.matches;
+  container.classList.toggle('mobile-editor--phone', phone);
   const gridEl = h('div', { class: 'mwidgets__grid', role: 'list', 'aria-label': 'Widgets, in phone order' });
   modules.forEach((module, index) => gridEl.append(h('div', { role: 'listitem', class: `mwidgets__cell mwidgets__cell--${widgetSize(module, space)}`, dataset: { widgetId: module.id } },
     renderWidget(module, space, me, { controls: controlsFor(module, index, modules.length, space, gridEl) }))));
+  const empty = h('p', { class: 'module-empty' }, phone ? 'Nothing here yet. Add modules: each one gets a widget.' : 'Add modules to this page first: each one gets a widget.');
+  if (phone) {
+    replaceChildren(container,
+      h('p', { class: 'mobile-editor__hint' }, 'Drag ', icon('grip', 13), ' or use ‹ › to move a widget. Tapping a widget opens its module, in this order.'),
+      modules.length ? gridEl : empty,
+      hasPhoneOrder() ? h('button', { type: 'button', class: 'button button--small mobile-editor__reset', onClick: () => { resetPhoneOrder(); showToast('Back to the page’s own order and sizes.'); } }, icon('reset', 14), ' Reset order and sizes') : null);
+    return;
+  }
   replaceChildren(container,
     h('div', { class: 'mobile-editor__phone' },
       h('div', { class: 'mobile-editor__screen' },
         h('div', { class: 'mobile-editor__group' }, h('strong', {}, space.name), tab ? h('span', {}, tab.name) : null),
-        modules.length ? gridEl : h('p', { class: 'module-empty' }, 'Add modules to this page first: each one gets a widget.'))),
+        modules.length ? gridEl : empty)),
     h('aside', { class: 'mobile-editor__side' },
       h('h2', { class: 'mobile-editor__title' }, 'Phone layout', tab ? h('span', { class: 'mobile-editor__tab' }, ` · ${tab.name} tab`) : null),
       h('p', {}, `On a phone, ${space.kind === 'personal' ? 'your homepage' : space.name} opens on these widgets. Tapping one opens its module, and people swipe between modules in this same order.`),

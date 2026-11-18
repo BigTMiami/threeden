@@ -50,27 +50,33 @@ with sync_playwright() as p:
             pg.evaluate(f"location.hash='{space}'"); pg.wait_for_timeout(900)
             header = start_editing(pg, space)
             who = f'{tag} {space}'
-            check(all(header.get_by_role('button', name=n).count() == 1 for n in ['Layouts', 'Preview', 'Done editing']), f'{who}: Layouts, Preview, Done editing')
+            # Phones: groups and homepages have one layout (widgets, then modules; Nov 18), so no Layouts there.
+            layouts = not (tag == 'phone' and space != '#blog-leo')
+            want = ['Layouts', 'Preview', 'Done editing'] if layouts else ['Preview', 'Done editing']
+            check(all(header.get_by_role('button', name=n).count() == 1 for n in want), f'{who}: {", ".join(want)}')
+            if not layouts:
+                check(header.locator('.layout-menu__button').count() == 0, f'{who}: no Layouts on a phone')
             check(header.get_by_role('button', name='Edit', exact=True).count() == 0, f'{who}: no Edit while editing')
             check(pg.locator('.edit-bar').count() == 0, f'{who}: no bottom bar')
             names = [n.strip() for n in header.locator('.space-header__actions > *').all_inner_texts()]
             order = [n for n in names if n in ('Layouts', 'Preview', 'Done editing')]
-            check(order == ['Layouts', 'Preview', 'Done editing'], f'{who}: in that order, left to right ({order})')
+            check(order == want, f'{who}: in that order, left to right ({order})')
 
-            # 2. Layouts.
-            header.locator('.layout-menu__button').click(); pg.wait_for_timeout(300)
-            menu = pg.locator('.layout-menu')
-            box, btn = menu.bounding_box(), header.locator('.layout-menu__button').bounding_box()
-            check(box['y'] > btn['y'] + btn['height'] - 1 and box['x'] >= 0 and box['x'] + box['width'] <= width, f'{who}: Layouts opens under its button, on screen')
-            if space == '#space-juniper':
-                menu.locator('.layout-menu__item', has_text='Spotlight').click(); pg.wait_for_timeout(500)
-                check(st(pg, 'return s.getPageLayout().kind') == 'spotlight', f'{who}: choosing Spotlight applies it')
+            # 2. Layouts (not on a phone for groups and homepages).
+            if layouts:
                 header.locator('.layout-menu__button').click(); pg.wait_for_timeout(300)
-                check(menu.locator('.layout-menu__featured select').count() == 1, f'{who}: Featured is in the Layouts menu')
-                menu.locator('.layout-menu__item', has_text='Grid').click(); pg.wait_for_timeout(500)
-            else:
-                pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
-                check(menu.is_hidden(), f'{who}: Escape closes Layouts')
+                menu = pg.locator('.layout-menu')
+                box, btn = menu.bounding_box(), header.locator('.layout-menu__button').bounding_box()
+                check(box['y'] > btn['y'] + btn['height'] - 1 and box['x'] >= 0 and box['x'] + box['width'] <= width, f'{who}: Layouts opens under its button, on screen')
+                if space == '#space-juniper':
+                    menu.locator('.layout-menu__item', has_text='Spotlight').click(); pg.wait_for_timeout(500)
+                    check(st(pg, 'return s.getPageLayout().kind') == 'spotlight', f'{who}: choosing Spotlight applies it')
+                    header.locator('.layout-menu__button').click(); pg.wait_for_timeout(300)
+                    check(menu.locator('.layout-menu__featured select').count() == 1, f'{who}: Featured is in the Layouts menu')
+                    menu.locator('.layout-menu__item', has_text='Grid').click(); pg.wait_for_timeout(500)
+                else:
+                    pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
+                    check(menu.is_hidden(), f'{who}: Escape closes Layouts')
 
             # 3. Preview.
             header.get_by_role('button', name='Preview').click(); pg.wait_for_timeout(500)

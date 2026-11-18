@@ -128,8 +128,12 @@ function sketch(id) {
 /** Whether the Layouts menu is open (kept while the header redraws). */
 let layoutMenuOpen = false;
 
+const PHONE = window.matchMedia('(max-width: 640px)');
+
 /** "Layouts": the layouts, then the featured column's picker and the phone order. */
 function layoutsControl() {
+  // On a phone, groups and homepages have one layout: widgets, then modules (mobile-editor.js).
+  if (PHONE.matches && ['group', 'personal'].includes(getCurrentSpace()?.kind)) return null;
   const current = getPageLayout();
   const menu = h('div', { class: 'layout-menu layout-menu--down', role: 'menu', 'aria-label': 'Page layouts', hidden: !layoutMenuOpen },
     h('div', { class: 'layout-menu__layouts' }, LAYOUTS.map((layout) => h('button', {

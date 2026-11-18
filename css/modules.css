@@ -4116,7 +4116,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  z-index: 40;
+  z-index: 150; /* placed on the screen by placeMenuOnScreen (media-attach.js) */
   min-width: 140px;
   margin: 0;
   padding: 4px;

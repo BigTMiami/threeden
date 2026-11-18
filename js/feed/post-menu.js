@@ -24,6 +24,7 @@
  *     report: { key, kind, spaceId, moduleId, itemId, authorId } or null (your own post)
  */
 
+import { followAnchor } from '../ui/media-attach.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { isSaved, toggleSaved } from '../state/saved.js';
@@ -55,11 +56,15 @@ export function postMenu({ why = null, info = [], link = null, report = null, ti
   const wrapper = h('div', { class: 'post-menu' }, button, menu);
 
   const closeIfOutside = (event) => { if (!wrapper.contains(event.target)) setOpen(false); };
+  let stopFollowing = () => {};
   function setOpen(open) {
     menu.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     if (open) document.addEventListener('pointerdown', closeIfOutside);
     else document.removeEventListener('pointerdown', closeIfOutside);
+    // Placed where all of it shows: under the "…", or above it near the bottom (media-attach.js).
+    stopFollowing();
+    stopFollowing = open ? followAnchor(menu, button, () => setOpen(false), { align: 'end' }) : () => {};
   }
 
   const item = (iconName, label, onChoose, danger = false) => h('button', {
@@ -176,10 +181,13 @@ export function personMenu(person, onChange) {
   }, icon('more', 16));
   const wrapper = h('div', { class: 'post-menu' }, button, menu);
   const closeIfOutside = (event) => { if (!wrapper.contains(event.target)) setOpen(false); };
+  let stopFollowing = () => {};
   function setOpen(open) {
     menu.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     if (open) { draw(); document.addEventListener('pointerdown', closeIfOutside); } else document.removeEventListener('pointerdown', closeIfOutside);
+    stopFollowing();
+    stopFollowing = open ? followAnchor(menu, button, () => setOpen(false), { align: 'end' }) : () => {};
   }
   const first = person.name.split(' ')[0];
   const entry = (iconName, label, run) => h('button', { type: 'button', role: 'menuitem', class: 'post-menu__item', onClick: () => { setOpen(false); run(); } }, icon(iconName, 15), ` ${label}`);

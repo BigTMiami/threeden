@@ -226,7 +226,8 @@ function iconButton(iconName, label, onClick, isAtEdge = false) {
   }, icon(iconName, 16));
 }
 
-function handleRemove(moduleId) {
+/** Take a module off the page, keeping a copy, with Undo (also the phone widget editor's ×, mobile-editor.js). */
+export function handleRemove(moduleId) {
   // Removing a shared module's link here stops sharing it with this group.
   const sharing = sharingOf(moduleId);
   if (sharing.link && sharing.source) {

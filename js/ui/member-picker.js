@@ -28,11 +28,11 @@
  * Escape, an outside click, or when its button scrolls out of view.
  */
 
+import { placeMenuOnScreen } from './media-attach.js';
 import { h, replaceChildren } from './dom.js';
 import { avatar, avatarStack } from './avatar.js';
 
 const POPOVER_WIDTH = 220;
-const VIEWPORT_MARGIN = 8;
 
 /** The checklist that's currently open (only one at a time), and how to close it. */
 let openPopover = null;
@@ -162,15 +162,8 @@ function isInViewport(element) {
 }
 
 /** Place the checklist under the button (or above it, if there's no room below). */
+/** Under the button, or above it; inside the screen and above the phone tab bar (placeMenuOnScreen). */
 function positionNextTo(popover, anchor) {
-  const rect = anchor.getBoundingClientRect();
   popover.style.width = `${POPOVER_WIDTH}px`;
-
-  const left = Math.min(rect.left, window.innerWidth - POPOVER_WIDTH - VIEWPORT_MARGIN);
-  const height = popover.offsetHeight;
-  const fitsBelow = rect.bottom + 4 + height <= window.innerHeight - VIEWPORT_MARGIN;
-  const top = fitsBelow ? rect.bottom + 4 : Math.max(VIEWPORT_MARGIN, rect.top - 4 - height);
-
-  popover.style.left = `${Math.max(VIEWPORT_MARGIN, left)}px`;
-  popover.style.top = `${top}px`;
+  placeMenuOnScreen(popover, anchor);
 }

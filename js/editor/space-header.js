@@ -349,16 +349,25 @@ function renderTabs(space, canEditTabs) {
   const tabLink = (tab) => {
     const isCurrent = tab.id === currentId;
     if (isCurrent && renamingTabId === tab.id) {
+      // Finish once: Enter or leaving saves, Escape cancels. (The redraw that
+      // removes the box blurs it; without the guard that saved and redrew again.)
+      let finished = false;
+      const finish = (save) => {
+        if (finished) return;
+        finished = true;
+        renamingTabId = null;
+        if (save) renameTab(tab.id, input.value); else renderSpaceHeader();
+      };
       const input = h('input', {
         type: 'text',
         class: 'input input--compact space-tabs__rename',
         value: tab.name,
         'aria-label': 'Tab name',
         onKeydown: (event) => {
-          if (event.key === 'Enter') event.target.blur();
-          if (event.key === 'Escape') { renamingTabId = null; renderSpaceHeader(); }
+          if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+          if (event.key === 'Escape') { event.preventDefault(); finish(false); }
         },
-        onBlur: (event) => { renamingTabId = null; renameTab(tab.id, event.target.value); },
+        onBlur: () => finish(true),
       });
       requestAnimationFrame(() => { input.focus(); input.select(); });
       return input;

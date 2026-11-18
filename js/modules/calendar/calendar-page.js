@@ -398,9 +398,14 @@ export function renderCalendarPage(container, context) {
     const count = (key) => allEvents().filter((e) => sourceOf(e) === key).length;
     const setHidden = (key, hidden) => { if (hidden) view.hiddenSources.add(key); else view.hiddenSources.delete(key); drawAll(); };
     const row = (key, label, { checked, onToggle, onOnly = null, locked = false, total = count(key) }) => h('li', { class: 'calendar-sources__row' },
-      h('label', { class: 'calendar-sources__label' },
-        h('input', { type: 'checkbox', checked, disabled: locked, onChange: (e) => onToggle(e.target.checked) }),
-        h('span', {}, label), h('span', { class: 'calendar-sources__count' }, String(total || ''))),
+      // This group's own calendar always shows: a dot, not a checkbox nobody can untick (DESIGN.md).
+      locked
+        ? h('span', { class: 'calendar-sources__label calendar-sources__label--fixed', title: 'Always shown on this calendar' },
+          h('span', { class: 'calendar-sources__dot', 'aria-hidden': 'true' }),
+          h('span', {}, label), h('span', { class: 'calendar-sources__count' }, String(total || '')))
+        : h('label', { class: 'calendar-sources__label' },
+          h('input', { type: 'checkbox', checked, onChange: (e) => onToggle(e.target.checked) }),
+          h('span', {}, label), h('span', { class: 'calendar-sources__count' }, String(total || ''))),
       onOnly ? h('button', { type: 'button', class: 'link-button calendar-sources__only', title: `Show only ${label}`, onClick: onOnly }, 'only') : null);
 
     if (isPersonal) {

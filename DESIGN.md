@@ -49,7 +49,8 @@ should follow them, or the exception should be a deliberate choice.
   Groups, Messages, and Blog), bottom sheets, one module per screen when swiping.
   A group or your homepage on a phone opens on widgets (one glance per module); tapping one
   opens the swipe view at that module. Its widget order and sizes are set
-  from a computer with Edit → Edit mobile.
+  from a computer with Edit → Edit mobile, or on the phone itself with
+  Edit, which edits the widgets. It's the only layout on phones for now.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo
   edits drop embedded metadata; permission checks are written as a server
