@@ -494,7 +494,7 @@ body.is-dragging-module * {
 .layout-menu__layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
 .layout-menu__extras { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 4px 2px; border-top: 1px solid var(--color-border-faint); }
 .layout-menu__featured { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-small); color: var(--color-text-muted); }
-.layout-menu__fit, .layout-menu__phone-reset, .layout-menu__copy { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-small); }
+.layout-menu__fit, .layout-menu__copy { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-small); }
 .layout-menu__item { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid transparent; border-radius: 8px; background: none; text-align: left; font: inherit; color: var(--color-text); cursor: pointer; }
 .layout-menu__item:hover { background: var(--color-surface-muted); }
 .layout-menu__item.is-current { border-color: var(--color-accent); background: var(--color-accent-soft); }
@@ -517,9 +517,6 @@ body.is-dragging-module * {
 .library { border-bottom: 1px solid var(--color-border); border-bottom-right-radius: 10px; }
 
 /* Edit mode: where a module comes on phones (module-frame.js renderPhoneNumber). */
-.module-frame__phone { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 6px; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-muted); background: var(--color-surface); flex: none; cursor: pointer; }
-.module-frame__phone:hover, .module-frame__phone:focus-within { border-color: var(--color-accent); color: var(--color-accent); }
-.module-frame__phone-select { border: 0; background: none; font: inherit; font-size: var(--font-size-small); font-weight: 700; color: inherit; padding: 2px 0; cursor: pointer; font-variant-numeric: tabular-nums; }
 /* In layouts, only modules with a set height can be resized (the rest follow their content or their column). */
 .module-frame--grow:not(.module-frame--featured) .resize-handle, .module-frame--fill .resize-handle, .module-frame--tile .resize-handle { display: none; }
 

@@ -59,12 +59,29 @@ with sync_playwright() as p:
     strip_top = pg.evaluate("Math.round(document.querySelector('.module-strip').getBoundingClientRect().top)")
     check(frame_bottom <= strip_top and strip_top - frame_bottom < 40, f'it fills the screen down to the chips ({frame_bottom} / {strip_top})')
     rest = y()
-    pg.mouse.move(195, 80); pg.mouse.wheel(0, -50); pg.wait_for_timeout(900)
-    check(abs(y() - rest) <= 2, 'a small pull springs back to the module')
-    pg.mouse.wheel(0, -400); pg.wait_for_timeout(900)
-    check(y() == 0 and header_bottom() > app_bar(), 'a hard pull shows the group’s name and description')
-    pg.mouse.wheel(0, 40); pg.wait_for_timeout(900)
-    check(abs(y() - rest) <= 2, 'a small scroll down from the header snaps back to the module')
+    cdp = ctx.new_cdp_session(pg)
+    import time
+
+    def drag(y0, y1, steps=8, hold_ms=0, x=195):
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y0}]})
+        for i in range(1, steps + 1):
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x, 'y': y0 + (y1 - y0) * i / steps}]})
+        if hold_ms:
+            time.sleep(hold_ms / 1000)  # the finger stops before letting go: no momentum
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        pg.wait_for_timeout(1300)
+
+    # The snap rides the scroll: it's the browser's own scroll snapping, not a second motion afterwards.
+    check(pg.evaluate("getComputedStyle(document.documentElement).scrollSnapType").startswith('y'), 'the page snaps with the scroll itself (CSS scroll snapping)')
+    drag(650, 690, hold_ms=250)
+    check(abs(y() - rest) <= 2, 'a small pull (then letting go) springs back to the module')
+    drag(600, 760, steps=5)
+    check(y() == 0 and header_bottom() > app_bar(), 'a flick down carries on to the group’s name and description')
+    drag(700, 560, steps=5)
+    check(abs(y() - rest) <= 2, 'a flick back up lands on the module')
+    drag(300, 400, steps=5)
+    check(y() == 0 and pg.locator('dialog.phone-sheet').count() == 0, 'a flick starting on the month grid scrolls too (no long press)')
+    drag(700, 560, steps=5)
 
     # 2
     pg.evaluate(LONG_PRESS, ['.module-grid [aria-label^="November 25"]', None]); pg.wait_for_timeout(500)

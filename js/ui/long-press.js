@@ -6,7 +6,8 @@
  *
  * Fires after the finger has stayed put for half a second (a small wobble
  * is fine; moving further is a scroll or a swipe, and cancels it). A hard
- * press on screens that report pressure fires straight away. The tap that
+ * press fires sooner on screens that sense pressure: the pressure has to
+ * rise well above where the touch started, with the finger still. The tap that
  * follows a long press is swallowed, so the element's own click (select
  * the day, say) doesn't also happen, and so is the phone's own
  * press-and-hold menu.
@@ -16,7 +17,11 @@
 
 const HOLD_MS = 500;
 const WOBBLE_PX = 10;
-const HARD_PRESS = 0.6; // pointer pressure (0–1) that counts as a hard press
+// A hard press: the pressure has to climb this far above where the touch
+// started (some screens report full pressure for every touch, so a high
+// reading alone means nothing), with the finger still, after HARD_MIN_MS.
+const HARD_RISE = 0.35;
+const HARD_MIN_MS = 120;
 
 /**
  * @param {HTMLElement} element
@@ -41,14 +46,15 @@ export function onLongPress(element, handler, { shouldStart = () => true } = {})
   element.addEventListener('pointerdown', (event) => {
     if (event.pointerType === 'mouse' || !event.isPrimary || !shouldStart(event)) return;
     fired = false;
-    start = { x: event.clientX, y: event.clientY, target: event.target };
+    start = { x: event.clientX, y: event.clientY, target: event.target, pressure: event.pressure, at: event.timeStamp };
     clearTimeout(timer);
     timer = window.setTimeout(fire, HOLD_MS);
   });
   element.addEventListener('pointermove', (event) => {
     if (!start) return;
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > WOBBLE_PX) { cancel(); return; }
-    if (event.pressure >= HARD_PRESS && event.pointerType !== 'mouse') fire();
+    const rise = event.pressure - (start.pressure ?? 0);
+    if (rise >= HARD_RISE && event.timeStamp - start.at >= HARD_MIN_MS) fire();
   });
   element.addEventListener('pointerup', cancel);
   element.addEventListener('pointercancel', cancel);

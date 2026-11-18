@@ -28,7 +28,7 @@ import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { getModuleType } from '../modules/registry.js';
 import {
-  renameModule, removeModule, restoreModule, phoneOrdered, naturalPhoneOrder, setPhonePosition,
+  renameModule, removeModule, restoreModule, 
   setEditMode, getRows, getSpaceOfModule, getModule,
 } from '../state/store.js';
 import { backupRemovedModule, dropBackup, BACKUP_FOLDER } from '../state/module-backups.js';
@@ -116,7 +116,6 @@ function renderHeader(module, moduleType, { editMode, frame }) {
       onInput: (event) => { event.target.size = Math.max(8, event.target.value.length + 1); },
       onChange: (event) => renameModule(module.id, event.target.value),
     }),
-    renderPhoneNumber(module),
     // No expand button or ↑ ↓ while editing (drag to move); Share and Remove stay in reach.
     renderEditControls(module),
   ]);
@@ -178,26 +177,6 @@ function makeDraggable(element, module, moduleType, frame) {
       sourceElement: frame,
     });
   });
-}
-
-/**
- * The small phone number in edit mode: where this module comes in the
- * one-column stack on a phone. Pick another number to move it there
- * (store.setPhonePosition). Only on computers: phones edit in that order.
- */
-function renderPhoneNumber(module) {
-  if (window.matchMedia('(max-width: 640px)').matches) return null;
-  const order = phoneOrdered(naturalPhoneOrder());
-  const position = order.findIndex((m) => m.id === module.id) + 1;
-  if (!position) return null;
-  return h('label', { class: 'module-frame__phone', title: 'Where this module comes on phones (one column). Pick a number to move it.' },
-    icon('phone', 13),
-    h('span', { class: 'visually-hidden' }, `Position on phones for ${module.title}`),
-    h('select', {
-      class: 'module-frame__phone-select',
-      onPointerdown: (event) => event.stopPropagation(), // not the start of a drag
-      onChange: (event) => setPhonePosition(module.id, Number(event.target.value)),
-    }, order.map((_, i) => h('option', { value: String(i + 1), selected: i + 1 === position }, String(i + 1)))));
 }
 
 function renderEditControls(module) {

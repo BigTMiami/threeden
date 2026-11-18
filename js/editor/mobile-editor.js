@@ -6,7 +6,7 @@
  *   [▦ Layouts ▾] [📱 Edit mobile] [👁 Preview] [✓ Done editing]
  *
  *   ┌─ phone ───────────┐   Phone layout
- *   │ ⠿ ‹ › [Small|Wide]│   On a phone, 14 Juniper Lane opens on these
+ *   │ ⠿ ‹ › [S|W|Big]   │   On a phone, 14 Juniper Lane opens on these
  *   │ ┌───────────────┐ │   widgets. Tapping one opens its module, and
  *   │ │ Up next       │ │   people swipe between modules in this order.
  *   │ └───────────────┘ │   [Reset phone layout]  [Back to the page]
@@ -15,7 +15,7 @@
  * While it's on, the page's modules give way to a phone-sized copy of the
  * widget screen (mobile-widgets.js renderWidget). Each widget has a grip to
  * drag it (pointer events, so touch and pen work too), ‹ › to move it with
- * the keyboard, and Small / Wide. Changes save at once, per tab, in the same
+ * the keyboard, and Small / Wide / Big. Changes save at once, per tab, in the same
  * places phones read them: space.mobileOrders (store.setPhoneOrder,
  * setPhonePosition) and space.mobileWidgets (store.setWidgetSize).
  * Done editing, leaving the page, or a phone-sized window turns it off.
@@ -115,10 +115,10 @@ function controlsFor(module, index, count, space, gridEl) {
     h('button', { type: 'button', class: 'mwidget__move mwidget__move--earlier', 'aria-label': `Move ${name} earlier`, title: 'Earlier', disabled: index === 0, onClick: () => move(index) }, icon('chevronLeft', 15)),
     h('button', { type: 'button', class: 'mwidget__move mwidget__move--later', 'aria-label': `Move ${name} later`, title: 'Later', disabled: index === count - 1, onClick: () => move(index + 2) }, icon('chevronRight', 15)),
     h('span', { class: 'mwidget__sizes', role: 'group', 'aria-label': `Size of ${name}` },
-      ['small', 'wide'].map((value) => h('button', {
+      ['small', 'wide', 'big'].map((value) => h('button', {
         type: 'button', class: `mwidget__size${size === value ? ' is-on' : ''}`, 'aria-pressed': String(size === value),
         onClick: () => { if (size !== value) setWidgetSize(module.id, value); },
-      }, value === 'small' ? 'Small' : 'Wide'))),
+      }, { small: 'Small', wide: 'Wide', big: 'Big' }[value]))),
     // Take it off the page (a copy is kept; the toast has Undo).
     h('button', { type: 'button', class: 'mwidget__remove', 'aria-label': `Remove ${name} from the page`, title: 'Remove', onClick: () => handleRemove(module.id) }, icon('trash', 15)));
 }
@@ -159,7 +159,7 @@ function draw() {
       h('p', {}, `On a phone, ${space.kind === 'personal' ? 'your homepage' : space.name} opens on these widgets. Tapping one opens its module, and people swipe between modules in this same order.`),
       h('ul', { class: 'mobile-editor__tips' },
         h('li', {}, 'Drag a widget by ', icon('grip', 13), ' to move it, or use ‹ ›.'),
-        h('li', {}, 'Small takes half the width; Wide takes all of it.')),
+        h('li', {}, 'Small takes half the width; Wide takes all of it; Big is as wide and twice as tall, and shows the next few things.')),
       h('div', { class: 'form-row' },
         hasPhoneOrder() ? h('button', { type: 'button', class: 'button', onClick: () => { resetPhoneOrder(); showToast('Phones follow the page’s own order again.'); } }, icon('reset', 14), ' Reset phone layout') : null,
         h('button', { type: 'button', class: 'button button--quiet', onClick: () => setMobileEditing(false) }, 'Back to the page'))));

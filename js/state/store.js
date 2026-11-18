@@ -658,11 +658,13 @@ export function placeModule(moduleId, { slot = null, beforeId = null, afterId = 
 
 // ─── The order modules show in on phones ──────────────────────────────────────
 //
-// On a phone a page is one stack. By default it follows the page's own order
-// (the featured module first in a layout); people who edit the page can set
-// it with the small phone numbers on each module (module-frame.js), saved
-// per tab: space.mobileOrders[tabId] = [moduleId, …]. Modules not in the
-// list (added later) go at the end in their usual order.
+// On a phone, groups and homepages open on widgets, and swiping goes through
+// the modules in the widgets' order, counting from the top left to the bottom
+// right. By default that follows the page's own order (the featured module
+// first in a layout); Edit mobile (mobile-editor.js) rearranges the widgets,
+// saved per tab: space.mobileOrders[tabId] = [moduleId, …]. Modules not in
+// the list (added later) go at the end in their usual order. (The small phone
+// numbers on each module in edit mode are gone, Nov 18.)
 
 /** The current tab's modules in phone order. `natural` = the order they'd have without a set order. */
 export function phoneOrdered(natural, space = getCurrentSpace(), tabId = getCurrentTabId()) {

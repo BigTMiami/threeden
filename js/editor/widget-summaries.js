@@ -11,7 +11,12 @@
  *     title?:    the main line
  *     lines:     [smaller lines]
  *     chips?:    ['Rice', 'Lemons', '+2'] (groceries)
- *   }
+ *     more?:     [lines]                  Big widgets only: the next few
+ *   }                                     things after the first (MORE)
+ *
+ * widgetSummary(module, space, me, 'big') adds MORE's extras: a Big widget
+ * is as wide as a Wide one and twice as tall, so it lists the next few
+ * events, messages, tasks, posts, or files, and every grocery chip.
  *
  * Every kind of module gets something: the ones without their own summary
  * show their description. Nothing here changes data.
@@ -149,10 +154,61 @@ SUMMARIES.textfeed = SUMMARIES.generalfeed;
 SUMMARIES.carousel = SUMMARIES.generalfeed;
 SUMMARIES.document = SUMMARIES.note;
 
-export function widgetSummary(module, space, me) {
+// ─── Big widgets: the next few things after the first ───
+const shortDate = (key) => { const d = dateBlock(key); return `${d.weekday} ${d.month.slice(0, 1)}${d.month.slice(1).toLowerCase()} ${d.day}`; };
+const eventLine = (o) => [shortDate(o.date), o.event.allDay ? '' : occurrenceTimeLabel(o), o.event.title].filter(Boolean).join(' · ');
+/** Coming occurrences (first days only) in some events, from today, soonest first. */
+function comingIn(events, days = 60) {
+  const start = todayKey();
+  return occurrencesBetween((events ?? []).map(normalizeEvent), start, addDays(start, days))
+    .filter((o) => o.dayNumber === 1)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.event.time ?? '').localeCompare(b.event.time ?? ''));
+}
+const spaceEvents = (space) => (space?.modules ?? []).filter((m) => m.type === 'calendar' || m.type === 'events').flatMap((m) => m.data?.events ?? []);
+const MORE = {
+  calendar: (module) => ({ more: comingIn(module.data?.events).slice(1, 5).map(eventLine) }),
+  upnext: (module, space) => ({ more: comingIn(spaceEvents(space)).slice(1, 4).map(eventLine) }),
+  events: (module, space, me) => (module.data?.events?.length ? MORE.calendar(module)
+    : space.kind !== 'personal' ? MORE.upnext(module, space) : { more: myUpcoming(me, 60).slice(1, 4).map(eventLine) }),
+  chat: (module) => {
+    const conversation = module.data?.conversationId ? getConversation(module.data.conversationId) : null;
+    return { more: (conversation?.messages ?? []).slice(-5, -1).reverse().map((m) => `${firstName(m.authorId)}: ${messagePreview(m)}`) };
+  },
+  announcements: (module) => ({ more: sortPosts((module.data?.posts ?? []).map(normalizePost)).slice(1, 4).map((p) => `${postName(p)} · ${firstName(p.authorId)}`) }),
+  todo: (module) => ({ more: (module.data?.tasks ?? []).filter((t) => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')).slice(1, 5).map((t) => (t.due ? `${t.text} · ${shortDate(t.due)}` : t.text)) }),
+  grocery: (module) => {
+    const items = listsOf(module.data).flatMap((l) => l.items ?? []).filter((i) => !i.bought);
+    const shown = items.slice(0, 10).map((i) => i.name);
+    return items.length ? { chips: items.length > 10 ? [...shown, `+${items.length - 10}`] : shown } : {};
+  },
+  forum: (module) => ({ more: (module.data?.threads ?? []).filter((t) => !t.pending).sort((a, b) => (b.lastActivityAt ?? b.createdAt ?? 0) - (a.lastActivityAt ?? a.createdAt ?? 0)).slice(1, 4).map((t) => `${t.title} · ${(t.replies ?? []).length} replies`) }),
+  generalfeed: (module) => ({ more: [...(module.data?.posts ?? [])].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0)).slice(1, 3).map((p) => `${firstName(p.authorId)}: ${plain(p.text ?? p.body).slice(0, 70) || 'A photo'}`) }),
+  vault: (module) => ({ more: (module.data?.items ?? []).filter((i) => i.kind !== 'folder').sort((a, b) => (b.updatedAt ?? b.createdAt ?? 0) - (a.updatedAt ?? a.createdAt ?? 0)).slice(1, 5).map((i) => i.name) }),
+  note: (module) => { const text = plain(module.data?.html ?? module.data?.text ?? ''); return text ? { lines: [text.slice(0, 320)] } : {}; },
+  dashboard: (module, space, me) => ({ more: myUpcoming(me, 14).slice(1, 4).map((o) => [eventLine(o), o.space?.kind === 'group' ? o.space.name : ''].filter(Boolean).join(' · ')) }),
+  recentgroups: (module, space, me) => ({ lines: groupUpdates(me).slice(0, 6).map((g) => { const fresh = (g.newPosts ?? 0) + (g.newThreads ?? 0) + (g.unreadChat ?? 0); return fresh ? `${g.space.name} · ${fresh} new` : g.space.name; }) }),
+  kanban: (module) => { const cards = module.data?.cards ?? []; return { chips: (module.data?.columns ?? []).map((c) => `${c.title} ${cards.filter((card) => card.columnId === c.id).length}`) }; },
+};
+MORE.textfeed = MORE.generalfeed;
+MORE.carousel = MORE.generalfeed;
+MORE.document = MORE.note;
+
+/**
+ * @param {any} module
+ * @param {any} space
+ * @param {any} me
+ * @param {string} [size] 'small' | 'wide' | 'big': a Big widget gets MORE's extras
+ */
+export function widgetSummary(module, space, me, size = 'small') {
   const summarize = SUMMARIES[module.type];
   try {
-    if (summarize) return { lines: [], ...summarize(module, space, me) };
+    if (summarize) {
+      const summary = { lines: [], ...summarize(module, space, me) };
+      if (size === 'big' && MORE[module.type]) {
+        try { Object.assign(summary, MORE[module.type](module, space, me)); } catch { /* the extras are a bonus */ }
+      }
+      return summary;
+    }
   } catch { /* an odd module's data: fall back to its description */ }
   return { lines: [getModuleType(module.type)?.description ?? ''] };
 }

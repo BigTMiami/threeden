@@ -50,9 +50,10 @@ should follow them, or the exception should be a deliberate choice.
   A group or your homepage on a phone opens on widgets (one glance per module); tapping one
   opens the swipe view at that module. Its widget order and sizes are set
   from a computer with Edit → Edit mobile, or on the phone itself with
-  Edit, which edits the widgets. It's the only layout on phones for now.
+  Edit, which edits the widgets (Small, Wide, or Big). Swiping goes through the
+  modules in the widgets' order, top left to bottom right. It's the only layout on phones for now.
   A module fills the screen under the top bar, with the group's name just
-  above it (a hard pull shows it; the page snaps back). Calendar items open
+  above it (a flick shows it; the snap rides the scroll). Calendar items open
   over the calendar with an ×, and a long press on a day or time adds one.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo

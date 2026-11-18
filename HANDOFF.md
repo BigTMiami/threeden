@@ -114,6 +114,22 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Phone order, Big widgets, and native snapping (Nov 18):** the phone
+  numbers on module frames (`renderPhoneNumber`) and Layouts → Reset phone
+  order are gone; swipe order = widget order (`phoneOrdered(naturalPhoneOrder())`,
+  which the widgets and grid.js share; widgets flow in a 2-column grid
+  without dense packing, so list order is top-left-to-bottom-right).
+  `setPhonePosition` stays for Edit mobile's ‹ ›. Widget size `'big'`:
+  span 2, min-height 192px, `widgetSummary(…, 'big')` merges `MORE[type]`
+  (`more` lines, or more chips/lines). Snapping is now CSS
+  (`html.phone-module-snap:not(.phone-widgets)` scroll-snap mandatory,
+  header and `.module-grid.is-swiping` snap targets); `softSnap()` and its
+  scroll/touch listeners were removed because the snap came after the
+  scroll. long-press.js: a hard press needs pressure to rise 0.35 above
+  the start after 120 ms (some screens report 1.0 for every touch, which
+  made drags on the month grid open the sheet). Tests: test_phone_order.py
+  (rewritten), test_phone_calendar_sheet.py (touch drags via CDP).
+
 - **Calendars, hosts, and the phone module view (Nov 18):**
   - A group item you add shows on your homepage calendar: the calendar's
     `assignments.isAssignedTo` counts `createdBy` (and `cohostIds`), unless
@@ -141,14 +157,15 @@ functions, no build step.
     (`showModuleAt` or the switch to swiping) scrolls the header out of
     view; `softSnap()` settles the page after scrolls/touches end (from
     the module it takes 45% of the header to reveal it; from the header a
-    16 px nudge returns). Tests: tests/test_calendar_hosts_mine.py,
+    16 px nudge returns; replaced the same day by CSS scroll snapping, see
+    above). Tests: tests/test_calendar_hosts_mine.py,
     tests/test_phone_calendar_sheet.py; test_calendar.py expects the sheet.
 
 - **Editing controls in the header (Nov 17):** while editing, the page
   header shows `editingControls()` (Layouts, Preview, Done editing) from
   js/editor/edit-bar.js instead of Edit; the bottom bar is gone (the file
   keeps its name). Layouts is the old layout menu opening downward
-  (`.layout-menu--down`), with Featured / Fit to content / Reset phone order
+  (`.layout-menu--down`), with Featured / Fit to content (Reset phone order was removed Nov 18)
   under the layouts (`layoutExtras()`). Preview: groups use
   `setMemberView(true)`; other pages set `previewSpaceId` and leave edit
   mode; `isPagePreview()` makes the header show `previewControls()`.
@@ -252,7 +269,7 @@ functions, no build step.
     (`widgetSize` defaults wide for upnext, feeds, grocery, forum, events,
     kanban, gantt, budget). `resetPhoneOrder` clears both.
   - `mobile-editor.js`: Edit mobile toggle (groups, computers), drag by grip
-    (own pointer code), ‹ › via `setPhonePosition`, Small/Wide.
+    (own pointer code), ‹ › via `setPhonePosition`, Small/Wide/Big.
   - Widgets use `data-widget-id` (not `data-module-id`, which other code
     looks up). Chat widgets open Messages, like the swipe view's Chat button.
   - Later the same night: homepages too (`WIDGET_KINDS` in

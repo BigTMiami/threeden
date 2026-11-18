@@ -594,12 +594,24 @@ html.in-phone-frame[data-device='se'] {
 
 /* ─── A group's module fills the screen; the page snaps (module-swiper.js) ─
  * Two resting places: the module, right under the top bar (the group's name
- * and description just out of view above it), and the top of the page.
- * The settling is done in module-swiper.js (softSnap), so a small pull
- * springs back and a hard one carries on to the header.
+ * and description just out of view above it), and the top of the page. The
+ * browser's own scroll snapping picks one while the scroll is still moving,
+ * so it reads as the scroll's momentum: a small pull springs back, a flick
+ * carries on to the header, and a flick back lands on the module.
  */
 @media (max-width: 640px) {
+  /* Only with a module open: on the widgets the page scrolls freely. */
+  html.phone-module-snap:not(.phone-widgets) {
+    scroll-snap-type: y mandatory;
+  }
+
+  html.phone-module-snap #space-header {
+    scroll-snap-align: start;
+    scroll-margin-top: 400px; /* rests at the very top of the page */
+  }
+
   html.phone-module-snap .module-grid.is-swiping {
+    scroll-snap-align: start;
     scroll-margin-top: var(--snap-top, 58px);
   }
 }
