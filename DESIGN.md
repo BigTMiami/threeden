@@ -85,7 +85,7 @@ Member ──links to──────► Friends, and their blogs (the Feed)
 | **Conversation** | Messages between people. A Chat module shows a conversation; Messages shows the same one | `js/state/messages.js` |
 | **Notification** | Something that needs your attention, grouped when several are about the same thing | `js/state/notifications.js` |
 | **Linked item** | Something assigned to you in a group, shown live on your personal homepage (not a copy) | `js/editor/linked-items.js` |
-| **Vault file** | A note, document, or module kept in a vault, which can also be shown on a page | `js/modules/vault/`, `js/modules/vaultfile/` |
+| **Vault file** | A kind of item: what a Vault holds (a folder, note, link, uploaded file, or module file such as a spreadsheet). Any but a folder can be shown on a page with File from vault, live from the vault | `js/modules/vault/`, `js/modules/vaultfile/` |
 
 ### The three kinds of space
 
@@ -121,10 +121,10 @@ jumps anywhere.
 | Purpose | Modules | Fits in |
 | --- | --- | --- |
 | **Getting your bearings** | Dashboard, Recents, Recent groups (personal); Up next (every group's first module) | personal or group |
-| **Talking** | Announcements, Forum, Chat | group, personal |
+| **Talking** | Announcements, Forum, Chat | group (Chat on personal too) |
 | **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
 | **Getting things done** | Tasks (list and board views), List, Budget, Gantt chart, Survey | group, personal |
-| **Making and keeping things** | Document, Vault, Vault file, Spreadsheet, Canvas, Presentation, Submissions | group, personal (Document and Vault file on blogs too) |
+| **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
 | **Publishing** | Articles, General feed, Photo & video feed, Text feed | blog and group |
 | **A blog's front page** | About, Photo gallery, Photo carousel | blog |
 | **Organizing** | Relationship map | group, personal |

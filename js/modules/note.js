@@ -26,6 +26,10 @@
  *              can end it with a poll anyone signed in can vote on
  *
  * Visitors (a group's public tab, someone else's blog) read it; they can't edit.
+ *
+ * Since Nov 17 a new Document isn't added from the module list: File from
+ * vault (js/modules/vaultfile/) shows a vault note through this same code,
+ * with a context that reads and writes the note in its vault.
  */
 
 import { h, replaceChildren, debounce, appendChildren } from '../ui/dom.js';
@@ -51,6 +55,8 @@ export const noteModule = {
   defaultRows: 11,
   available: true,
   spaceKinds: ['group', 'personal', 'blog'],
+  // Not in the module list since Nov 17: added with File from vault from a vault file.
+  hiddenFromLibrary: true,
 
   createInitialData(state) {
     return { title: '', html: '<p></p>', lastEditedBy: state?.currentUserId ?? null, lastEditedAt: null, updatedAt: null };
@@ -93,7 +99,7 @@ function renderNote(container, context, isFullPage) {
       !data.title && isEmpty(data.html) ? h('p', { class: 'module-empty' }, 'Nothing here yet.') : null,
     ]);
     container.append(article);
-    if (onBlog) container.append(renderPollSlot(context, false));
+    if (onBlog) appendChildren(container, [renderPollSlot(context, false)]);
     return null;
   }
 
@@ -176,7 +182,7 @@ function renderNote(container, context, isFullPage) {
     drawOutline();
   } else {
     container.append(h('div', { class: 'note' }, titleInput, onBlog ? byline : null, editor.toolbar, editor.content, editor.statusBar));
-    if (onBlog) container.append(renderPollSlot(context, true));
+    if (onBlog) appendChildren(container, [renderPollSlot(context, true)]);
   }
 
   return () => clearInterval(refreshTimer);
@@ -187,6 +193,8 @@ function renderNote(container, context, isFullPage) {
  * Remove; votes are saved straight to the document, so visitors can vote.
  */
 function renderPollSlot(context, isOwner) {
+  // A vault document shown through File from vault keeps its words in the vault, not a module: no poll.
+  if (getModule(context.moduleId)?.type !== 'note') return null;
   const slot = h('div', { class: 'blog-doc__poll' });
   const me = context.currentUser;
   const savePoll = (poll) => updateModuleData(context.moduleId, { ...getModule(context.moduleId).data, poll });

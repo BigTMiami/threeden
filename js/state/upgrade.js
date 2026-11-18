@@ -25,14 +25,27 @@
  */
 
 /** Bump this when the sample data or the saved shape changes (it used to be the storage key's version). */
-export const DATA_VERSION = 68;
+export const DATA_VERSION = 69;
 
 /**
  * Steps for saves from before a version, oldest first.
  * @type {{ version: number, note: string, run: (state: any) => void }[]}
  */
 const MIGRATIONS = [
-  // { version: 69, note: 'what changed', run: (state) => { … } },
+  {
+    version: 69,
+    note: 'Canvas is no longer a feature: drop Canvas modules, Canvas vault files, and removed Canvas copies',
+    run: (state) => {
+      const isCanvasFile = (item) => item?.kind === 'module' && item.moduleType === 'canvas';
+      for (const space of state.spaces ?? []) {
+        space.modules = (space.modules ?? []).filter((m) => m.type !== 'canvas');
+        for (const module of space.modules) {
+          if (module.type === 'vault' && Array.isArray(module.data?.items)) module.data.items = module.data.items.filter((i) => !isCanvasFile(i));
+        }
+        if (Array.isArray(space.removedModules)) space.removedModules = space.removedModules.filter((r) => r.type !== 'canvas' && r.module?.type !== 'canvas');
+      }
+    },
+  },
 ];
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);

@@ -1,5 +1,5 @@
 # Simpler: four app themes (an old choice falls back to Daylight); the module list has a "Less common modules" menu at the bottom
-# (Gantt chart, Relationship map…); Shared note and Document are one module, Document, on groups, homepages, and blogs.
+# (Gantt chart, Relationship map…); Document still exists everywhere but comes from File from vault (not in the list since Nov 17).
 from playwright.sync_api import sync_playwright
 errs=[]
 with sync_playwright() as p:
@@ -26,7 +26,7 @@ with sync_playwright() as p:
     basics=lib.locator('.library__list').first.locator('.library-item__label').all_inner_texts(); print('basics:', basics)
     st("s.setEditMode(false)")
     # Document everywhere
-    print('document on blogs and groups:', st("return ['group','personal','blog'].map(k=>r.moduleTypesFor(k).some(x=>x.type==='note'))"), '| label:', st("return r.getModuleType('note').label"))
+    print('document on blogs and groups:', st("return ['group','personal','blog'].map(k=>r.moduleTypesFor(k).some(x=>x.type==='note'))"), '| label:', st("return r.getModuleType('note').label"), '| hidden from the list:', st("return r.getModuleType('note').hiddenFromLibrary"))
     pg.evaluate("location.hash='#blog-jamal'"); pg.wait_for_timeout(700)
     print('jamal about (visitor):', pg.locator('.note-doc').first.inner_text()[:60].replace('\n',' | '))
     print('errors', errs)

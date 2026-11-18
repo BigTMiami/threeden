@@ -517,3 +517,133 @@ body.is-dragging-module * {
 .edit-bar__phone-reset { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-small); }
 /* In layouts, only modules with a set height can be resized (the rest follow their content or their column). */
 .module-frame--grow:not(.module-frame--featured) .resize-handle, .module-frame--fill .resize-handle, .module-frame--tile .resize-handle { display: none; }
+
+/* ─── File from vault: choosing a file (js/editor/vault-file-picker.js) ──── */
+
+.vault-picker-modal {
+  width: min(560px, calc(100vw - 16px));
+}
+
+.vault-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vault-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vault-picker__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.vault-picker__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.vault-picker__results {
+  max-height: min(60vh, 480px);
+  overflow-y: auto;
+}
+
+.vault-picker__vault + .vault-picker__vault {
+  margin-top: 12px;
+}
+
+.vault-picker__vault-name {
+  margin: 0 0 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vault-picker__where {
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.vault-picker__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vault-picker__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vault-picker__item:hover,
+.vault-picker__item:focus-visible {
+  background: var(--color-accent-soft);
+}
+
+.vault-picker__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.vault-picker__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vault-picker__name {
+  overflow: hidden;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-picker__detail {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 0;
+  color: var(--color-text-muted);
+}
+
+.vault-picker__empty p {
+  margin: 0;
+}
+
+/* An empty File from vault module (dragged on before choosing). */
+.vaultfile__choose {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}

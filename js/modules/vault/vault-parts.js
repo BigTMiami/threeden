@@ -29,8 +29,8 @@ export const TOP_LEVEL_NAME = 'Vault';
 export const NEW_MENU_ENTRIES = [
   { action: 'note', label: 'Note', description: 'A doc the group edits together', icon: 'note' },
   { action: 'module:sheet', label: 'Spreadsheet', description: 'Rows, formulas, and charts', icon: 'table' },
+  { action: 'module:presentation', label: 'Presentation', description: 'Slides to present full screen', icon: 'slides' },
   { action: 'article', label: 'Article', description: 'Write it here, then publish it to Articles', icon: 'newspaper' },
-  { action: 'module:canvas', label: 'Canvas', description: 'Draw, paint, and add pictures', icon: 'brush' },
   { action: 'upload', label: 'Upload files', description: 'From your device', icon: 'upload' },
   { action: 'folder', label: 'Folder', description: 'Organize files', icon: 'folder' },
 ];
@@ -42,7 +42,6 @@ export const MORE_MENU_ENTRIES = [
   { action: 'module:relationship', label: 'Relationship map', description: 'Who is connected to whom', icon: 'relationship' },
   { action: 'module:gantt', label: 'Gantt chart', description: 'Plan phases over time', icon: 'gantt' },
   { action: 'module:survey', label: 'Survey', description: 'Ask questions, see the answers add up', icon: 'survey' },
-  { action: 'module:presentation', label: 'Presentation', description: 'Slides to present full screen', icon: 'slides' },
   { action: 'link', label: 'Link', description: 'Save a web page for the group', icon: 'link' },
 ];
 

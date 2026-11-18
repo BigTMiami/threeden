@@ -18,21 +18,20 @@
  * contents, to put back (js/state/module-backups.js). Pages with a vault
  * keep those copies in the vault, and they're listed here too.
  *
- * Under the modules, "From your vaults" lists the files in this page's
- * vaults and your own homepage's vault. Dragging (or clicking) one adds a
- * Vault file module showing it: a note, a picture, a kanban board kept as
- * a file… (js/modules/vaultfile/).
+ * Documents, spreadsheets, and presentations aren't in the list (Nov 17):
+ * "File from vault" opens your vault (js/editor/vault-file-picker.js) and
+ * the file you choose goes on the page (js/modules/vaultfile/). Dragging
+ * File from vault onto the page drops an empty one with "Choose a file".
  */
 
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { moduleTypesFor, getModuleType } from '../modules/registry.js';
-import { addModule, getCurrentSpace, getPersonalSpace, getMember, getCurrentUser, subscribe } from '../state/store.js';
+import { addModule, getCurrentSpace, getMember, getCurrentUser, subscribe } from '../state/store.js';
 import { removedFor, putBack } from '../state/module-backups.js';
 import { timeAgo } from '../utils/dates.js';
-import { iconForItem, describeItem, pathTo } from '../modules/vault/vault-data.js';
-import { listsOf } from '../modules/grocery/grocery-lists.js';
+import { openVaultFilePicker } from './vault-file-picker.js';
 import { beginPointerDrag } from './pointer-drag.js';
 
 /**
@@ -59,10 +58,10 @@ export function renderLibrary(container) {
           tab('removed', removed.length ? `Removed (${removed.length})` : 'Removed')),
         libraryTab === 'add' ? h('p', { class: 'library__hint' }, isPhone() ? 'Tap one to add it at the end of the page.' : 'Drag onto the page, or click to add at the end.') : null,
       ),
-      libraryTab === 'add' ? [renderModuleList(kind), renderVaultFiles(space)] : renderRemoved(space, removed, draw),
+      libraryTab === 'add' ? renderModuleList(kind) : renderRemoved(space, removed, draw),
     );
   }
-  // Redrawn when edit mode opens, so the vault list is current; and after a module comes off or goes back.
+  // Redrawn when edit mode opens, and after a module comes off or goes back.
   subscribe('space', draw);
   subscribe('account', draw);
   subscribe('layout', draw);
@@ -138,10 +137,13 @@ function closeOnEscape(event) {
   if (event.key === 'Escape') closeLibrarySheet();
 }
 
-/** The modules most groups start with; the rest are one tap away. */
-const BASICS = ['announcements', 'calendar', 'chat', 'todo', 'note', 'vault'];
-/** Modules few pages use: in their own "Less common modules" menu at the bottom of the list. */
-const LESS_COMMON = ['gantt', 'relationship', 'survey', 'presentation', 'canvas', 'shifts', 'recents', 'recentgroups', 'gallery', 'carousel'];
+/** "The basics", in order, for each kind of page; the rest are one tap away. */
+const BASICS = {
+  group: ['announcements', 'calendar', 'chat', 'todo', 'vaultfile', 'vault'],
+  personal: ['dashboard', 'calendar', 'events', 'todo', 'vault', 'vaultfile', 'budget', 'gantt', 'recentgroups'],
+};
+/** Modules few pages use: in their own "Less common modules" menu at the bottom of the list (unless they're one of the basics). */
+const LESS_COMMON = ['gantt', 'relationship', 'survey', 'shifts', 'recents', 'recentgroups', 'gallery', 'carousel'];
 /** Whether "More modules" is open (kept while the page is open). */
 let showAllModules = false;
 let showRare = false;
@@ -152,15 +154,17 @@ let showRare = false;
  */
 function renderModuleList(kind) {
   const all = moduleTypesFor(kind).filter((t) => !t.hiddenFromLibrary);
+  const basicIds = BASICS[kind] ?? BASICS.group;
   // Modules few pages use go in their own menu at the very bottom.
-  const rare = all.filter((t) => LESS_COMMON.includes(t.type));
-  const types = all.filter((t) => !LESS_COMMON.includes(t.type));
+  const isRare = (t) => LESS_COMMON.includes(t.type) && !basicIds.includes(t.type);
+  const rare = all.filter(isRare);
+  const types = all.filter((t) => !isRare(t));
   const feeds = types.filter((t) => t.isFeed);
   const rareMenu = rare.length ? collapsible('library-rare', 'Less common modules', rare, () => showRare, (on) => { showRare = on; }) : null;
-  // In a group or on a homepage: the six most groups start with, then the rest behind "More modules".
+  // In a group or on a homepage: the basics for that kind of page, then the rest behind "More modules".
   if (kind !== 'blog' || feeds.length === 0) {
-    const basics = BASICS.map((type) => types.find((t) => t.type === type)).filter(Boolean);
-    const rest = types.filter((t) => !BASICS.includes(t.type));
+    const basics = basicIds.map((type) => types.find((t) => t.type === type)).filter(Boolean);
+    const rest = types.filter((t) => !basicIds.includes(t.type));
     if (basics.length < 3 || rest.length === 0) return [h('ul', { class: 'library__list' }, types.map(renderLibraryItem)), rareMenu];
     return [
       h('h3', { class: 'library__section' }, 'The basics'),
@@ -194,70 +198,6 @@ function collapsible(id, label, types, isOpen, setOpen) {
   return [toggle, list];
 }
 
-// ─── From your vaults ────────────────────────────────────────────────────────
-
-/** The vaults whose files can go on this page: its own, then your homepage's. */
-function vaultsFor(space) {
-  if (!space) return [];
-  const own = space.modules.filter((m) => m.type === 'vault').map((vault) => ({ vault, where: space.kind === 'personal' ? 'Your homepage' : space.name }));
-  const personal = getPersonalSpace();
-  const mine = personal && personal.id !== space.id
-    ? personal.modules.filter((m) => m.type === 'vault').map((vault) => ({ vault, where: 'Your homepage' }))
-    : [];
-  return [...own, ...mine];
-}
-
-function renderVaultFiles(space) {
-  const vaults = vaultsFor(space).filter(({ vault }) => (vault.data.items ?? []).some((i) => i.kind !== 'folder'));
-  if (vaults.length === 0) return null;
-  return h('div', { class: 'library__vaults' },
-    h('h2', { class: 'library__title' }, 'From your vaults'),
-    h('p', { class: 'library__hint' }, 'Show a file on this page: drag it on, or click it.'),
-    vaults.map(({ vault, where }) => h('section', { class: 'library__vault' },
-      h('h3', { class: 'library__vault-name' }, icon('vault', 13), ` ${vault.title}`, h('span', { class: 'library__vault-where' }, ` · ${where}`)),
-      h('ul', { class: 'library__list' }, vault.data.items
-        .filter((item) => item.kind !== 'folder')
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .flatMap((item) => vaultEntries(vault, item))))));
-}
-
-/** A file's entries: one, or for a List file holding several lists, one per list (it opens on that list: grocery-lists.js). */
-function vaultEntries(vault, item) {
-  if (item.kind === 'module' && item.moduleType === 'grocery') {
-    const lists = listsOf(item.data);
-    if (lists.length > 1) return lists.map((list) => renderVaultItem(vault, item, list));
-  }
-  return [renderVaultItem(vault, item)];
-}
-
-function renderVaultItem(vault, item, list = null) {
-  const folders = pathTo(vault.data.items, item.parentId).map((f) => f.name);
-  const name = list ? list.name || item.name : item.name;
-  const drag = {
-    kind: 'new',
-    moduleType: 'vaultfile',
-    overrides: { title: name, data: { vaultModuleId: vault.id, itemId: item.id, ...(list ? { listId: list.id } : {}) } },
-    label: name,
-    icon: iconForItem(item),
-  };
-  return h('li', {}, h('button', {
-    type: 'button',
-    class: 'library-item library-item--file',
-    onClick: () => {
-      const module = addModule('vaultfile', undefined, drag.overrides);
-      closeLibrarySheet();
-      showToast(`“${name}” added to the end of the page.`);
-      requestAnimationFrame(() => document.querySelector(`[data-module-id="${module.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-    },
-    onPointerdown: (event) => { if (event.pointerType !== 'touch') beginPointerDrag(event, drag); },
-  },
-    h('span', { class: 'library-item__icon' }, icon(iconForItem(item), 16)),
-    h('span', { class: 'library-item__text' },
-      h('span', { class: 'library-item__label' }, name),
-      h('span', { class: 'library-item__description' }, [list ? `A list in ${item.name}` : describeItem(item, vault.data.items), ...folders].join(' · '))),
-    h('span', { class: 'library-item__grip' }, icon('grip', 16))));
-}
-
 function renderLibraryItem(moduleType) {
   const isAvailable = moduleType.available;
 
@@ -285,13 +225,29 @@ function handleClick(moduleType) {
     showToast(`${moduleType.label} is coming in a later phase.`);
     return;
   }
+  // File from vault: choose the file first, then it goes on the page.
+  if (moduleType.type === 'vaultfile') {
+    closeLibrarySheet();
+    openVaultFilePicker({
+      space: getCurrentSpace(),
+      onPick: ({ vaultModuleId, itemId, listId, name }) => {
+        const module = addModule('vaultfile', undefined, { title: name, data: { vaultModuleId, itemId, ...(listId ? { listId } : {}) } });
+        showToast(`“${name}” added to the end of the page.`);
+        scrollToModule(module.id);
+      },
+    });
+    return;
+  }
   const module = addModule(moduleType.type);
   showToast(`${moduleType.label} added to the end of the page.`);
   closeLibrarySheet();
+  scrollToModule(module.id);
+}
 
-  // Bring the new module into view once the grid has re-rendered.
+/** Bring a new module into view once the grid has re-rendered. */
+function scrollToModule(moduleId) {
   requestAnimationFrame(() => {
-    document.querySelector(`[data-module-id="${module.id}"]`)
+    document.querySelector(`[data-module-id="${moduleId}"]`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }

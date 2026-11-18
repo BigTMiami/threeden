@@ -114,6 +114,31 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **File from vault; Canvas deleted; My Homepage's list (Nov 17):** Document,
+  Spreadsheet, and Presentation are `hiddenFromLibrary` everywhere; the
+  vaultfile module is now labeled "File from vault" and in the list. Its
+  library click opens `openVaultFilePicker()` (js/editor/vault-file-picker.js;
+  `vaultsFor()` moved there; any file but folders); dragged on, it starts
+  empty with "Choose a file". A vault note renders through `noteModule`
+  with `documentContext()` (name ↔ title, html, updatedBy/At), so it is the
+  Document module; note.js skips its blog poll when the module isn't a real
+  'note'. Module types can give `iconFor(module)` for the frame icon.
+  Announcements, Forum, Submissions are `spaceKinds: ['group']`.
+  `BASICS` is per kind (personal: Dashboard, Calendar, Upcoming events,
+  Tasks, Vault, File from vault, Budget, Gantt chart, Recent groups).
+  Canvas files and module removed; MIGRATIONS v69 drops Canvas modules,
+  Canvas vault files, and removed Canvas copies (DATA_VERSION 69).
+  Templates (page-templates.js, starter-layouts.js) still create Document
+  modules directly. Test: `test_file_from_vault.py`; four older tests
+  updated (vault + New order, library, many lists).
+  **Queued from Leo (Nov 17):** (1) vault sharing tile for documents and
+  folders with editable who-can-open / shared in / published, a Publish
+  button (Post for photos and videos) opening a "where to publish" overlay
+  (blog feeds first, then groups, expandable), photo and video tiles in
+  vaults, selecting several vault files at once; (2) in edit mode, Edit
+  becomes "Done editing" with "Layouts" and "Preview" buttons to its left,
+  replacing the bottom bar.
+
 - **New message: search people (Nov 17):** the To box on `#messages-new` and
   in the + menu's Message is `createPeopleSearch()` (js/ui/people-search.js):
   suggestions on focus (recent direct conversations, then friends), search by
@@ -215,9 +240,9 @@ Batch of Nov 15 (late):
 - **Feeds:** a "New post" button on the module's title line opens the
   composer in a pop-up (`js/ui/modal.js`, a native `<dialog>`).
 - **Blog Edit** has no menu; in edit mode, click the name or About.
-- **Vault "+ New":** Note, Spreadsheet, Article, Canvas, Upload files,
-  Folder, then More (List, Tasks, Relationship map, Gantt chart, Survey,
-  Presentation, Link). Calendar and Forum are no longer made as vault files
+- **Vault "+ New":** Note, Spreadsheet, Presentation, Article, Upload
+  files, Folder, then More (List, Tasks, Relationship map, Gantt chart,
+  Survey, Link). Canvas was removed Nov 17. Calendar and Forum are no longer made as vault files
   (old ones still open). An Article is `{ kind: 'note', article: true }`.
 - **New modules:** Survey (`js/modules/survey/`) and Presentation
   (`js/modules/presentation/`), both in the library's Less common list and
@@ -230,10 +255,6 @@ Batch of Nov 15 (late):
   gone; module bodies scroll right away and hand the scroll to the page at
   their ends (`overscroll-behavior: auto`). The grid gap is 26px. Maps on a
   homepage zoom only with Ctrl + wheel.
-- **Canvas photo editing:** Edit a photo, Crop, Rotate canvas, and Adjust
-  (filters, light and color, blur, sharpen, rotate, flip, scale,
-  straighten). Steps that change the canvas size undo as whole-canvas
-  snapshots (`snapshotAll`).
 - **Invite link** shows only as a button until clicked.
 - **Create a group** is one page (no steps); access choices sit above the
   templates.
@@ -663,7 +684,7 @@ Also done (Nov 13, night), Leo's 11-item list:
 4. **Calendar**: swipe on phones, tap opens the event page, drag-to-frame
    covers, bigger covers, a small typed limit box, and Customize page on
    events (js/events/event-page-layout.js).
-5. **Canvas** module for drawing (js/modules/canvas/).
+5. **Canvas** module for drawing (removed Nov 17).
 6. **Photo editor** (js/ui/photo-editor.js) before posting or sending, and
    in vaults for whoever may edit the photo.
 7. **Rough location first** on Explore, with a radius map (js/ui/area-map.js).

@@ -93,7 +93,7 @@ function renderHeader(module, moduleType, { editMode, frame }) {
     // appendChildren (not header.append) skips the null that
     // renderOpenButton returns for modules without a full page.
     appendChildren(header, [
-      h('span', { class: 'module-frame__icon' }, icon(moduleType.icon, 16)),
+      h('span', { class: 'module-frame__icon' }, icon(moduleType.iconFor?.(module) ?? moduleType.icon, 16)),
       h('h2', { class: 'module-frame__title' }, module.title),
       sharedTag(module),
       renderOpenButton(module, moduleType),

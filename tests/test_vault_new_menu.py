@@ -1,5 +1,5 @@
-# The vault's "+ New": Note, Spreadsheet, Article, Canvas, Upload files, Folder; "More" shows List, Tasks, Relationship map,
-# Gantt chart, Survey, Presentation, and Link (no Calendar or Forum). Article makes an article draft note; Canvas, Survey,
+# The vault's "+ New": Note, Spreadsheet, Presentation, Article, Upload files, Folder; "More" shows List, Tasks, Relationship map,
+# Gantt chart, Survey, and Link (no Calendar, Forum, or Canvas). Article makes an article draft note; Survey
 # and Presentation work as files. Survey: questions, answers, results. Presentation: slides, typing on the slide, presenting.
 from playwright.sync_api import sync_playwright
 import os; os.makedirs('test-output', exist_ok=True)
@@ -23,9 +23,9 @@ with sync_playwright() as p:
     menu.locator('.vault__menu-more-toggle').click(); pg.wait_for_timeout(100)
     more=[t.split('\n')[0] for t in menu.locator('.vault__menu-more .vault__menu-item').all_inner_texts()]
     print('top:', top); print('more hidden at first:', hidden, '| more:', more, '| toggle:', menu.locator('.vault__menu-more-toggle').inner_text())
-    if top!=['Note','Spreadsheet','Article','Canvas','Upload files','Folder']: errs.append('top order')
-    if more[:6]!=['List','Tasks','Relationship map','Gantt chart','Survey','Presentation']: errs.append('more order')
-    if any(x in top+more for x in ['Calendar','Forum']): errs.append('calendar/forum still listed')
+    if top!=['Note','Spreadsheet','Presentation','Article','Upload files','Folder']: errs.append('top order')
+    if more[:6]!=['List','Tasks','Relationship map','Gantt chart','Survey','Link']: errs.append('more order')
+    if any(x in top+more for x in ['Calendar','Forum','Canvas']): errs.append('calendar/forum/canvas still listed')
     pg.screenshot(path='test-output/vault-new-menu.png'); pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
     if v.locator('.vault__menu').count(): v.get_by_role('button', name='New').first.click(); pg.wait_for_timeout(200)
 
@@ -35,11 +35,6 @@ with sync_playwright() as p:
     print('saved:', st(pg, "const it=s.getModule('tenants-vault').data.items.find(i=>i.name==='Why the boiler keeps failing'); return [it.kind, it.article]"))
     v.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
     print('tile label:', v.locator('.vault-tile', has_text='Why the boiler').locator('.vault-tile__meta').inner_text() if v.locator('.vault-tile', has_text='Why the boiler').count() else v.locator('text=Why the boiler').count())
-
-    # Canvas
-    new(v, pg, 'Canvas', 'Flyer sketch')
-    print('canvas file opened:', v.locator('.vault-module-file--canvas canvas').count()>0)
-    v.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
 
     # Survey
     new(v, pg, 'Survey', 'Cleanup day', more=True)
@@ -62,7 +57,7 @@ with sync_playwright() as p:
     v.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
 
     # Presentation
-    new(v, pg, 'Presentation', 'Rent strike basics', more=True)
+    new(v, pg, 'Presentation', 'Rent strike basics')
     pp=v.locator('.pres-page')
     pp.locator('.pres-page__stage .pres-slide__title').fill('Rent strike basics'); pp.locator('.pres-page__stage .pres-slide__body').fill('Juniper Tenants Union')
     pp.get_by_role('button', name='Slide', exact=True).click(); pg.wait_for_timeout(200)

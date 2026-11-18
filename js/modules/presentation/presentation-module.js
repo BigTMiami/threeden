@@ -223,6 +223,8 @@ export const presentationModule = {
   defaultSpan: 6,
   defaultRows: 11,
   available: true,
+  // Not in the module list since Nov 17: added with File from vault from a vault file.
+  hiddenFromLibrary: true,
 
   createInitialData() {
     return { slides: [newSlide('title')] };

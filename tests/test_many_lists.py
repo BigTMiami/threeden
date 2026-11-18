@@ -1,6 +1,6 @@
 # The List module holds many lists: chips on the card to switch, "+" for a new one; the full page lists them down the side, with
 # rename and Delete list (Undo). An old single list keeps working. A List file in a vault with several lists shows each list in
-# "From your vaults"; put on a page, it opens on that list.
+# File from vault's picker; put on a page, it opens on that list.
 from playwright.sync_api import sync_playwright
 import os; os.makedirs('test-output', exist_ok=True)
 errs=[]
@@ -27,14 +27,15 @@ with sync_playwright() as p:
     pg.screenshot(path='test-output/lists-page.png')
     pg.get_by_role('button', name='Delete list').click(); pg.wait_for_timeout(300); print('deleted:', st(pg, f"return s.getModule('{mid}').data.lists.length"))
     pg.locator('.toast').get_by_role('button', name='Undo').click(); pg.wait_for_timeout(300); print('undo:', st(pg, f"return s.getModule('{mid}').data.lists.length"))
-    # a vault List file with two lists → each in From your vaults; opens on that list
+    # a vault List file with two lists → each in File from vault's picker; opens on that list
     st(pg, """const sp=s.getSpace('juniper'); const v=sp.modules.find(m=>m.type==='vault'); const data=structuredClone(v.data);
       data.items.push({id:'lf-t', kind:'module', moduleType:'grocery', name:'Party lists', parentId:null, createdBy:'m-leo', createdAt:Date.now(), updatedAt:Date.now(),
         data:{lists:[{id:'food', name:'Food', items:[{id:'i1', name:'Chips', bought:false}], history:[]},{id:'music', name:'Music', items:[{id:'i2', name:'Speaker', bought:false}], history:[]}]}});
       s.updateModuleData(v.id, data); s.setEditMode(true); return 1""")
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
-    entries=pg.locator('.library__vaults .library-item--file', has_text='A list in Party lists'); print('library entries for the lists:', entries.all_inner_texts())
-    pg.locator('.library__vaults .library-item--file', has_text='Music').click(); pg.wait_for_timeout(600)
+    pg.locator('#module-library .library-item', has_text='File from vault').click(); pg.wait_for_timeout(400)
+    entries=pg.locator('.vault-picker__item', has_text='A list in Party lists'); print('picker entries for the lists:', entries.all_inner_texts())
+    pg.locator('.vault-picker__item', has_text='Music').click(); pg.wait_for_timeout(600)
     st(pg, "s.setEditMode(false); return 1"); pg.wait_for_timeout(500)
     vf=pg.locator('.module-frame[data-module-type="vaultfile"]').last
     print('on the page, opens on:', vf.locator('.lists__chip.is-open').inner_text() if vf.locator('.lists__chip.is-open').count() else None, '| shows Speaker:', vf.locator('text=Speaker').count()>0)

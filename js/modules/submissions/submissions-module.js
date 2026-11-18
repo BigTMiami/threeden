@@ -30,6 +30,8 @@ export const submissionsModule = {
   defaultSpan: 6,
   defaultRows: 12,
   available: true,
+  // Groups only since Nov 17: not something to add to your own homepage.
+  spaceKinds: ['group'],
 
   createInitialData: () => ({ assignments: [] }),
   render: renderSubmissionsCard,

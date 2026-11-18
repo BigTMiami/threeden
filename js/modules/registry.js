@@ -14,6 +14,7 @@
  *     defaultSpan: 5,                // starting width, in grid columns (3–12)
  *     defaultRows: 12,               // starting height, in grid rows (5–40)
  *     available: true,               // false = listed as "Soon", can't be added
+ *     iconFor: (module) => 'note',   // optional: a header icon for this module instead of `icon`
  *     hiddenFromLibrary: true,       // optional: not in the module list (e.g. Vault file,
  *                                    // which is added from the library's vault list)
  *     spaceKinds: ['group', 'personal'],  // optional: where it can be added
@@ -83,7 +84,6 @@ import { chatModule } from './chat/chat-module.js';
 import { groceryModule } from './grocery/grocery-module.js';
 import { budgetModule } from './budget/budget-module.js';
 import { sheetModule } from './sheet/sheet-module.js';
-import { canvasModule } from './canvas/canvas-module.js';
 import { shiftsModule } from './shifts/shifts-module.js';
 import { eventsModule } from './events/events-module.js';
 import { submissionsModule } from './submissions/submissions-module.js';
@@ -118,7 +118,6 @@ export const MODULE_TYPES = [
   submissionsModule,
   groceryModule,
   budgetModule,
-  canvasModule,
   shiftsModule,
   ganttModule,
   relationshipModule,

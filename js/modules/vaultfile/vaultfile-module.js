@@ -1,10 +1,12 @@
 // @ts-check
 /**
- * vaultfile-module.js — a file from a vault, shown on a homepage or blog.
+ * vaultfile-module.js — File from vault: a file from a vault, shown on a page.
  *
- * In edit mode, the module library lists the files in this page's vaults
- * (and your own homepage's vault). Drag one onto the page, or click it,
- * and it becomes one of these modules. It's a live link, not a copy:
+ * Since Nov 17 this is how documents, spreadsheets, and presentations go on
+ * a page: "File from vault" in the module list opens your vault
+ * (js/editor/vault-file-picker.js), and the file you choose becomes one of
+ * these modules. Dragged onto the page instead, it starts empty with
+ * "Choose a file". It's a live link, not a copy:
  *
  *   module data: { vaultModuleId, itemId, access, listId? }  (listId: a List file with several lists opens on that one)
  *
@@ -13,8 +15,9 @@
  * under it), or 'edit' (documents and module files: anyone signed in who
  * sees it can change it). People who can edit the page set it under the file.
  *
- *   note          → the note's text (editable by people who can edit the vault)
- *   module file   → that module's card: a kanban board, a relationship map…
+ *   note          → the Document module itself (js/modules/note.js), reading and
+ *                   writing the note in its vault: same look, editor, and title
+ *   module file   → that module's card: a spreadsheet, a presentation, tasks…
  *                   with ↗ opening its full page
  *   image         → the picture;  other files → name, size, download
  *   link          → the link;     folder → what's in it
@@ -27,10 +30,9 @@
 import { accessPicker, accessNote, effectiveAccess, renderFileComments } from '../../ui/file-access.js';
 import { h, appendChildren } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
-import { sanitizeHtml } from '../../utils/sanitize.js';
-import { decorateMentions } from '../../ui/mentions.js';
-import { createRichTextEditor } from '../../ui/rich-text-editor.js';
-import { getModule, getSpaceOfModule, getCurrentUser, updateModuleData } from '../../state/store.js';
+import { getModule, getSpaceOfModule, getCurrentUser, updateModuleData, renameModule } from '../../state/store.js';
+import { noteModule } from '../note.js';
+import { openVaultFilePicker } from '../../editor/vault-file-picker.js';
 import { getModuleType } from '../registry.js';
 import { createItemContext } from '../vault/vault-module-files.js';
 import { describeItem, iconForItem, formatBytes } from '../vault/vault-data.js';
@@ -39,16 +41,19 @@ import { openModulePage } from '../../router.js';
 
 export const vaultFileModule = {
   type: 'vaultfile',
-  label: 'Vault file',
-  description: 'A file from a vault, shown on the page (drag one from the list below)',
+  label: 'File from vault',
+  description: 'A document, spreadsheet, presentation, or any file you made in your vault',
   icon: 'vault',
   defaultSpan: 6,
   defaultRows: 12,
   available: true,
-  // Added from the library's "From your vaults" list, not the module list.
-  hiddenFromLibrary: true,
   spaceKinds: ['group', 'personal', 'blog'],
 
+  // The header icon follows the file: a document, a spreadsheet, a picture…
+  iconFor: (module) => {
+    const found = findLinkedFile(module.data);
+    return found ? iconForItem(found.item) : 'vault';
+  },
   createInitialData: () => ({ vaultModuleId: null, itemId: null }),
   render: (container, context) => renderVaultFile(container, context, false),
   renderFullPage: (container, context) => renderVaultFile(container, context, true),
@@ -64,8 +69,28 @@ export function findLinkedFile(data) {
 function renderVaultFile(container, context, isFullPage) {
   // Skips the parts that are null (no access row, no comments), unlike append().
   const add = (...parts) => appendChildren(container, parts);
-  const found = findLinkedFile(context.getData());
+  const data = context.getData() ?? {};
+  const found = findLinkedFile(data);
   if (!found) {
+    const canChoose = !context.isVisitor && context.can('editHomepage');
+    if (!data.itemId) {
+      // Dragged on from the module list: no file chosen yet.
+      add(h('div', { class: 'vaultfile__choose' },
+        h('p', { class: 'module-empty' }, canChoose ? 'Choose a file from your vault to show here.' : 'No file chosen yet.'),
+        canChoose ? h('button', {
+          type: 'button', class: 'button button--small',
+          onClick: () => openVaultFilePicker({
+            space: getSpaceOfModule(context.moduleId),
+            onPick: ({ vaultModuleId, itemId, listId, name }) => {
+              context.saveData({ ...data, vaultModuleId, itemId, ...(listId ? { listId } : {}) });
+              renameModule(context.moduleId, name);
+              container.replaceChildren();
+              renderVaultFile(container, context, isFullPage);
+            },
+          }),
+        }, icon('vault', 14), ' Choose a file') : null));
+      return null;
+    }
     add(h('p', { class: 'module-empty' }, 'This file was moved or deleted from its vault.'));
     return null;
   }
@@ -99,22 +124,12 @@ function renderVaultFile(container, context, isFullPage) {
   }
 
   if (item.kind === 'note') {
-    if (itemContext.isVisitor || !itemContext.can('createInVault')) {
-      add(decorateMentions(h('div', { class: 'rich-text__content vaultfile__note', html: sanitizeHtml(item.html || '') })), source, accessRow, comments);
-    } else {
-      const editor = createRichTextEditor({
-        html: item.html,
-        label: `${item.name} text`,
-        mentions: { getCandidates: () => itemContext.members, excludeId: getCurrentUser().id },
-        onChange: (html) => {
-          const vaultData = structuredClone(getModule(vault.id).data);
-          Object.assign(vaultData.items.find((i) => i.id === item.id), { html, updatedBy: getCurrentUser().id, updatedAt: Date.now() });
-          updateModuleData(vault.id, vaultData);
-        },
-      });
-      add(editor.toolbar, editor.content, editor.statusBar, source, accessRow, comments);
-    }
-    return null;
+    // The Document module draws it, with a context that reads and writes the note in its vault.
+    const body = h('div', { class: 'vaultfile__module vaultfile__document' });
+    const noteContext = documentContext(itemContext, context, vault.id, item.id);
+    const cleanup = (isFullPage ? noteModule.renderFullPage : noteModule.render)(body, noteContext);
+    add(body, source, accessRow, comments);
+    return cleanup;
   }
 
   if (item.kind === 'link') {
@@ -141,4 +156,38 @@ function renderVaultFile(container, context, isFullPage) {
       file?.dataUrl ? h('a', { href: file.dataUrl, download: item.name }, 'Download') : h('span', { class: 'vaultfile__url' }, '(too big to store in this prototype)')),
     source, accessRow, comments);
   return null;
+}
+
+/**
+ * What the Document module needs for a vault note: its name as the title,
+ * its text, and who changed it last; saving writes those back to the note.
+ * The page's own module id and kind go along, so mentions point at this
+ * page and a blog shows its byline.
+ */
+function documentContext(itemContext, pageContext, vaultModuleId, itemId) {
+  const note = () => getModule(vaultModuleId)?.data.items.find((i) => i.id === itemId);
+  return {
+    ...itemContext,
+    moduleId: pageContext.moduleId,
+    spaceId: pageContext.spaceId,
+    spaceKind: pageContext.spaceKind,
+    getData: () => {
+      const n = note();
+      return { title: n?.name ?? '', html: n?.html || '<p></p>', lastEditedBy: n?.updatedBy ?? n?.createdBy ?? null, lastEditedAt: n?.updatedAt ?? null, updatedAt: n?.updatedAt ?? null };
+    },
+    saveData: (changes) => {
+      const vault = getModule(vaultModuleId);
+      if (!vault || itemContext.isVisitor) return;
+      const vaultData = structuredClone(vault.data);
+      const saved = vaultData.items.find((i) => i.id === itemId);
+      if (!saved) return;
+      Object.assign(saved, {
+        name: (changes.title ?? '').trim() || saved.name, // a vault file always keeps a name
+        html: changes.html ?? saved.html,
+        updatedBy: changes.lastEditedBy ?? getCurrentUser()?.id ?? saved.updatedBy,
+        updatedAt: changes.lastEditedAt ?? Date.now(),
+      });
+      updateModuleData(vaultModuleId, vaultData);
+    },
+  };
 }

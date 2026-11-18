@@ -24,6 +24,8 @@ export const forumModule = {
   defaultSpan: 7,
   defaultRows: 13,
   available: true,
+  // Groups only since Nov 17: not something to add to your own homepage.
+  spaceKinds: ['group'],
 
   createInitialData() {
     return { tags: [...DEFAULT_TAGS], threads: [] };

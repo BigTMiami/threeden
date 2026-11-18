@@ -43,6 +43,8 @@ export const sheetModule = {
   defaultSpan: 6,
   defaultRows: 14,
   available: true,
+  // Not in the module list since Nov 17: added with File from vault from a vault file.
+  hiddenFromLibrary: true,
   createInitialData: newWorkbook,
   render: (container, context) => render(container, context, true),
   renderFullPage: (container, context) => render(container, context, false),
