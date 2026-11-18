@@ -55,6 +55,10 @@ should follow them, or the exception should be a deliberate choice.
   A module fills the screen under the top bar, with the group's name just
   above it (a flick shows it; the snap rides the scroll). Calendar items open
   over the calendar with an ×, and a long press on a day or time adds one.
+- **Security settings people can see.** Your account and each group have a
+  Security tab: passkeys (never text-message codes), what's encrypted, a
+  recovery key only you keep, and, for groups, who must use a passkey and
+  what new members can read from before they joined.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo
   edits drop embedded metadata; permission checks are written as a server

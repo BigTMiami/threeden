@@ -33,6 +33,7 @@ import {
 } from '../state/permissions.js';
 import { removeMember, transferOwnership, deleteGroup, snapshotGroup, restoreGroup } from '../state/groups.js';
 import { renderHealthTab, healthCount } from './health-tab.js';
+import { renderSecurityTab } from './security-tab.js';
 import {
   DRAFT_PART_LABELS, getDraft, setDraft, hasDraft, saveDraft, discardDraft, startPreview,
 } from './settings-drafts.js';
@@ -129,6 +130,7 @@ const GROUP_TABS = [
   { id: 'members', label: 'Members' },
   { id: 'permissions', label: 'Roles & permissions' },
   { id: 'appearance', label: 'Cover' },
+  { id: 'security', label: 'Security' }, // security-tab.js: encryption, passkeys, new members' history, invite links (who can manage roles)
   { id: 'moderation', label: 'Moderation' }, // moderation-tab.js: reports, for whoever can 'moderate'
   { id: 'health', label: 'Health' }, // health-tab.js: quiet members, unanswered questions, events with no host (organizers)
 ];
@@ -148,7 +150,7 @@ export function renderSettingsPage(container, spaceId, tabId) {
   // Moderation only for people who moderate (moderation-tab.js).
   const tabs = isPersonal ? PERSONAL_TABS : GROUP_TABS
     .filter((tab) => tab.id !== 'moderation' || can(space, me.id, 'moderate'))
-    .filter((tab) => tab.id !== 'health' || canManageRoles(space, me.id));
+    .filter((tab) => (tab.id !== 'health' && tab.id !== 'security') || canManageRoles(space, me.id));
   const activeTab = tabs.find((tab) => tab.id === tabId) ?? tabs[0];
   const redraw = () => renderSettingsPage(container, spaceId, activeTab.id);
 
@@ -162,6 +164,7 @@ export function renderSettingsPage(container, spaceId, tabId) {
       : activeTab.id === 'appearance' ? renderAppearanceEditor(space, me, onDraftChange)
         : activeTab.id === 'moderation' ? renderModerationTab(space, me, redraw)
           : activeTab.id === 'health' ? renderHealthTab(space, me, redraw)
+          : activeTab.id === 'security' ? renderSecurityTab(space, me, redraw)
           : renderGeneralTab(space, me, onDraftChange);
 
   replaceChildren(container,

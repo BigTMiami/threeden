@@ -114,6 +114,22 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Security tabs (Nov 18):** js/state/security.js holds `member.security`
+  (passkeys, twoStep, passkeyUnlock, recoveryKeyAt, previews, disappearing,
+  newDeviceAlerts, leaveNoTrace) and `space.security` (encrypt,
+  requirePasskey, history, inviteExpiry, disappearing, publishFiles), with
+  defaults. Account → Security (security-section.js; Password moved there;
+  the recovery words and authenticator key are module-level, never saved,
+  because saving re-renders the page). Group → Security (security-tab.js,
+  canManageRoles). Wired: `chatStartFor()` in thread-view hides group chat
+  messages from before a member's `space.joinedAt` (founders without a join
+  date see all); the group's disappearing choice calls `setDisappearing` on
+  its Chat modules' conversations; your disappearing default seeds
+  `openDirectConversation`; `passkeyNeededIn()` drives the notice in
+  space-header.js. Settings only (for the backend): encrypt, inviteExpiry,
+  publishFiles, previews, leaveNoTrace, passkeyUnlock, newDeviceAlerts.
+  Test: tests/test_security_tabs.py.
+
 - **Phone order, Big widgets, and native snapping (Nov 18):** the phone
   numbers on module frames (`renderPhoneNumber`) and Layouts → Reset phone
   order are gone; swipe order = widget order (`phoneOrdered(naturalPhoneOrder())`,

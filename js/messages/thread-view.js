@@ -34,6 +34,7 @@
  * count).
  */
 
+import { chatStartFor } from '../state/security.js';
 import { blogShownIn } from '../state/groups.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { avatar } from '../ui/avatar.js';
@@ -216,8 +217,14 @@ export function createThreadView(conversationId, { compact = false, placeholder 
     let previous = null;
     let lastDay = null;
     if (conversation.messages.some((m) => m.sealed && !openMessage(m))) unsealConversation(conversation);
+    // A group can keep earlier messages from new members (its Security settings).
+    const startsAt = conversation.spaceId ? chatStartFor(chatSpace(), me.id) : null;
+    if (startsAt && conversation.messages.some((m) => !m.threadOf && m.createdAt < startsAt)) {
+      rows.push(h('div', { class: 'thread__notice thread__notice--history', role: 'note' }, icon('lock', 12), ' Messages from before you joined are hidden. The group’s admins chose this.'));
+    }
     for (const message of conversation.messages) {
       if (message.threadOf) continue; // shown in its thread's panel
+      if (startsAt && message.createdAt < startsAt) continue;
       const day = toDateKey(new Date(message.createdAt));
       if (day !== lastDay) {
         rows.push(h('div', { class: 'thread__day', role: 'separator' }, h('span', {}, dayLabel(day))));
