@@ -22,7 +22,10 @@
  * reach, with how many messages you haven't read, and opens the chat full
  * screen in Messages. (On a computer the chat stays a module on the page,
  * where it's easier to keep an eye on than in Messages.)
- * The last chip, "List", switches back to one long column; that choice is
+ * In a group, phones open on widgets first (mobile-widgets.js): tapping one
+ * opens this view at that module, and a Widgets button at the start of the
+ * chips goes back (there's no List there).
+ * Elsewhere, the last chip, "List", switches back to one long column; that choice is
  * remembered in this browser. The swiping itself is CSS (scroll snapping in
  * css/mobile.css); this file draws the chips, keeps the current one lit, and
  * remembers which module you were on, per homepage and tab.
@@ -98,12 +101,16 @@ const chatFrames = () => [...grid.querySelectorAll(':scope > .module-frame[data-
 const phoneChat = () => PHONE.matches && !isEditMode();
 const positionKey = () => `${getCurrentSpace()?.id}:${getCurrentTabId()}`;
 
+/** A group on a phone: widgets first (mobile-widgets.js), then this swipe view; no list. */
+const groupPhone = () => PHONE.matches && getCurrentSpace()?.kind === 'group';
+
 function update() {
   const modules = frames();
   const chats = phoneChat() ? chatFrames() : [];
   grid.classList.toggle('has-phone-chat', chats.length > 0);
-  const canSwipe = PHONE.matches && !isEditMode() && modules.length > 1;
-  const swiping = canSwipe && !prefersList();
+  const inGroup = groupPhone();
+  const canSwipe = PHONE.matches && !isEditMode() && (modules.length > 1 || (inGroup && modules.length > 0));
+  const swiping = canSwipe && (inGroup || !prefersList());
   grid.classList.toggle('is-swiping', swiping);
   if (!swiping) grid.style.removeProperty('--swipe-height');
   if (!swiping) grid.parentElement.querySelector('.module-dots')?.remove();
@@ -113,6 +120,8 @@ function update() {
 
   const current = Math.min(positions[positionKey()] ?? 0, modules.length - 1);
   replaceChildren(strip,
+    // In a group: back to the widgets, first, where a thumb finds it.
+    inGroup ? h('button', { type: 'button', class: 'module-strip__widgets', 'aria-label': 'Back to widgets', title: 'Widgets', onClick: () => window.dispatchEvent(new CustomEvent('3den:widgets')) }, icon('dashboard', 16)) : null,
     chats.map(chatButton),
     h('div', { class: 'module-strip__chips', role: swiping ? 'tablist' : null, 'aria-label': 'Modules on this page' },
       modules.map((frame, index) => {
@@ -125,7 +134,7 @@ function update() {
           onClick: () => goTo(index),
         }, icon(getModuleType(type).icon, 14), ` ${frame.getAttribute('aria-label')}`);
       })),
-    h('button', {
+    inGroup ? null : h('button', {
       type: 'button',
       class: 'module-strip__mode',
       'aria-label': swiping ? 'Show modules as a list' : 'Swipe between modules',
@@ -154,6 +163,13 @@ function chatButton(frame) {
     'aria-label': unread ? `${module?.title ?? 'Chat'}: ${unread} unread` : module?.title ?? 'Chat',
     onClick: () => navigate(conversation ? `#messages-${conversation.id}` : `#module-${frame.dataset.moduleId}`),
   }, icon('chat', 15), ' Chat', unread ? h('span', { class: 'module-strip__badge' }, unread > 9 ? '9+' : String(unread)) : null);
+}
+
+/** Open the swipe view at a module (a widget was tapped, mobile-widgets.js). */
+export function showModuleAt(moduleId) {
+  const index = frames().findIndex((f) => f.dataset.moduleId === moduleId);
+  positions[positionKey()] = Math.max(0, index);
+  update();
 }
 
 /** Jump to a module: swipe there, or (as a list) scroll down to it. */

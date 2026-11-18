@@ -4,7 +4,8 @@
  * to sit in a bar at the bottom of the screen).
  *
  *   Not editing:  [✎ Edit ▾]
- *   Editing:      [▦ Layouts ▾] [👁 Preview] [✓ Done editing]
+ *   Editing:      [▦ Layouts ▾] [📱 Edit mobile] [👁 Preview] [✓ Done editing]
+ *                 (Edit mobile only in groups: their phone widgets, mobile-editor.js)
  *   Previewing:   👁 Previewing (as a member)  [Back to editing]
  *
  * Layouts opens the page layouts (js/editor/page-layouts.js), each with a
@@ -30,6 +31,7 @@ import { icon } from '../ui/icons.js';
 import { getCurrentSpace, getVisibleModules, isEditMode, isMemberView, setEditMode, setMemberView, subscribe, getPageLayout, setPageLayout, setFeaturedModule, setFeaturedRows, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
 import { LAYOUTS, layoutById } from './page-layouts.js';
 import { openCopyLayout } from './copy-layout.js';
+import { mobileEditToggle, setMobileEditing } from './mobile-editor.js';
 import { getRoute, onRouteChange } from '../router.js';
 
 /** The space being previewed (personal pages and blogs; groups use the member view). */
@@ -59,6 +61,7 @@ export function initEditBar() {
 function startPreview() {
   const space = getCurrentSpace();
   layoutMenuOpen = false;
+  setMobileEditing(false); // the preview is of the page
   if (space?.kind === 'group') { setMemberView(true); return; }
   previewSpaceId = space?.id ?? null;
   setEditMode(false);
@@ -73,6 +76,7 @@ function backToEditing() {
 export function editingControls() {
   return [
     layoutsControl(),
+    mobileEditToggle(), // groups: arrange the phone's widgets (mobile-editor.js)
     h('button', { type: 'button', class: 'button space-header__preview', onClick: startPreview }, icon('eye', 16), ' Preview'),
     h('button', {
       type: 'button',

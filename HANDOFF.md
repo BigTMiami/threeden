@@ -146,6 +146,28 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
+- **Phone widgets and Edit mobile (Nov 18, night):**
+  - Leo's call: on phones a group opens on widgets (layout C on the
+    "mobile module layouts" canvas), tapping one opens the swipe view (A).
+    `mobile-widgets.js` owns the view state ('widgets' | 'swipe'): reset to
+    widgets on any hashchange that isn't to or from a module page; a tap
+    pushes a history entry (`phoneSwipe`) so Back returns; popstate counts
+    only when the hash didn't change. It sets `html.phone-widgets`, which
+    hides #homepage-grid, #module-strip, and the dots (css/widgets.css).
+  - `module-swiper.js`: `showModuleAt(id)`; in groups no List toggle and a
+    Widgets button that dispatches `3den:widgets`; swipes with one module.
+  - Order = `space.mobileOrders` (existing); sizes = `space.mobileWidgets`
+    (`widgetSize` defaults wide for upnext, feeds, grocery, forum, events,
+    kanban, gantt, budget). `resetPhoneOrder` clears both.
+  - `mobile-editor.js`: Edit mobile toggle (groups, computers), drag by grip
+    (own pointer code), ‹ › via `setPhonePosition`, Small/Wide.
+  - Widgets use `data-widget-id` (not `data-module-id`, which other code
+    looks up). Chat widgets open Messages, like the swipe view's Chat button.
+  - Tests: `test_mobile_widgets.py`; `test_phone_chat_button.py`,
+    `test_phone_scroll_chain.py` (now on the personal homepage), and
+    `test_add_menus.py` updated. `tests/sweep_menus_and_choices.py` is
+    written but paused (Leo asked for the mockups first); run it next.
+
 - **Group setup, Add menus, and Copy layout (Nov 18, later):**
   - Create a group: no access choice is disabled any more; `reconcileAccess`
     (settings-page.js) moves the other choice and says so in `.access-note`

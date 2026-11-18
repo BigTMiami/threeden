@@ -693,17 +693,52 @@ export function setPhonePosition(moduleId, position) {
   emit('layout');
 }
 
-/** Back to the page's own order on phones. */
+/** Back to the page's own order on phones (and, in a group, the widgets' own sizes). */
 export function resetPhoneOrder() {
   const space = getCurrentSpace();
-  if (!space?.mobileOrders) return;
-  delete space.mobileOrders[getCurrentTabId()];
+  if (!space?.mobileOrders && !space?.mobileWidgets) return;
+  if (space.mobileOrders) delete space.mobileOrders[getCurrentTabId()];
+  if (space.mobileWidgets) delete space.mobileWidgets[getCurrentTabId()];
+  persist();
+  emit('layout');
+}
+
+// ─── Widgets: a group's first screen on phones ──────────────────────────────
+//
+// On a phone a group opens on a grid of widgets, one per module, in the phone
+// order above (js/editor/mobile-widgets.js). Each widget is 'small' (half
+// the width) or 'wide' (the whole width), saved per tab:
+// space.mobileWidgets[tabId] = { [moduleId]: 'small' | 'wide' }.
+
+/** Modules whose widget starts wide: what's going on, lists, and streams. */
+const WIDE_WIDGETS = new Set(['upnext', 'generalfeed', 'textfeed', 'carousel', 'grocery', 'forum', 'events', 'kanban', 'gantt', 'budget']);
+
+/** A module's widget size on the current tab: what was set, else its kind's default. */
+export function widgetSize(module, space = getCurrentSpace(), tabId = getCurrentTabId()) {
+  return space?.mobileWidgets?.[tabId]?.[module.id] ?? (WIDE_WIDGETS.has(module.type) ? 'wide' : 'small');
+}
+
+/** Set a module's widget size on the current tab. */
+export function setWidgetSize(moduleId, size) {
+  const space = getCurrentSpace();
+  const tabId = getCurrentTabId();
+  if (!space) return;
+  space.mobileWidgets = { ...(space.mobileWidgets ?? {}), [tabId]: { ...(space.mobileWidgets?.[tabId] ?? {}), [moduleId]: size } };
+  persist();
+  emit('layout');
+}
+
+/** Set the whole phone order of the current tab at once (the widget editor's drag). */
+export function setPhoneOrder(moduleIds) {
+  const space = getCurrentSpace();
+  if (!space) return;
+  space.mobileOrders = { ...(space.mobileOrders ?? {}), [getCurrentTabId()]: [...moduleIds] };
   persist();
   emit('layout');
 }
 
 /** Has the current tab a phone order of its own? */
-export const hasPhoneOrder = (space = getCurrentSpace(), tabId = getCurrentTabId()) => Boolean(space?.mobileOrders?.[tabId]?.length);
+export const hasPhoneOrder = (space = getCurrentSpace(), tabId = getCurrentTabId()) => Boolean(space?.mobileOrders?.[tabId]?.length || Object.keys(space?.mobileWidgets?.[tabId] ?? {}).length);
 
 /** Move a module to a new position on the current tab. */
 export function moveModule(moduleId, toIndex) {

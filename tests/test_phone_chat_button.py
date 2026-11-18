@@ -7,6 +7,8 @@ with sync_playwright() as p:
     pg=b.new_page(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True); pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://localhost:8765/index.html'); pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(1000)
+    # Groups open on widgets on phones (Nov 18): a widget opens the swipe view, where the Chat button is.
+    pg.locator('.mwidget', has_text='House to-do').first.tap(); pg.wait_for_timeout(700)
     btn=pg.locator('.module-strip__chat')
     print('chat button:', btn.count(), '|', btn.inner_text().replace('\n',' ') if btn.count() else '', '| label:', btn.get_attribute('aria-label') if btn.count() else '')
     chips=pg.locator('.module-strip__chip').all_inner_texts(); print('chips:', [c.strip() for c in chips])

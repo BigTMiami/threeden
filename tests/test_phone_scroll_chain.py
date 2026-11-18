@@ -4,7 +4,9 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':390,'height':844}, has_touch=True, is_mobile=True)
     errs=[]
     pg=ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e))); pg.goto('http://localhost:8765/index.html'); pg.evaluate("localStorage.clear(); localStorage.setItem('3den.phone-homepage-layout','list')"); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
-    pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
+    # Groups open on widgets on phones (Nov 18), so the List mode is checked on the personal homepage.
+    pid=pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getPersonalSpace().id})()")
+    pg.evaluate(f"location.hash='#space-{pid}'"); pg.wait_for_timeout(900)
     pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(200)
     cdp=ctx.new_cdp_session(pg)
     def drag(x,y,dy):

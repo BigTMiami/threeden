@@ -47,6 +47,9 @@ should follow them, or the exception should be a deliberate choice.
   rest of a page around.
 - **Phones are first-class.** The same app, rearranged: a tab bar (Home, Feed,
   Groups, Messages, and Blog), bottom sheets, one module per screen when swiping.
+  A group on a phone opens on widgets (one glance per module); tapping one
+  opens the swipe view at that module. Its widget order and sizes are set
+  from a computer with Edit → Edit mobile.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo
   edits drop embedded metadata; permission checks are written as a server
@@ -266,8 +269,9 @@ and the simulated user test.
 - **Encrypted spaces versus discovery.** End-to-end encrypted spaces can't
   use server search, Explore, or scanning. Which groups should get them, and
   how is the trade-off explained?
-- **Phones.** Swiping one module per screen works for a few modules. What
-  happens on a group page with fifteen?
+- **Phones.** Groups now open on widgets, which scale better than swiping
+  through fifteen modules. Should personal homepages and blogs open on
+  widgets too?
 - **The new tutorial.** What should a new account see first, and how much
   should it teach? The old one led with "Add your first task," which didn't
   fit why most people arrive.

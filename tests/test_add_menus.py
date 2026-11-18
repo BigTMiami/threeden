@@ -104,6 +104,8 @@ with sync_playwright() as p:
 
         # 2. Up next
         pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
+        if label == 'phone':  # groups open on widgets on phones: Up next's widget opens it
+            pg.locator('.mwidget', has_text='Up next').first.tap(); pg.wait_for_timeout(700)
         up = pg.locator('.module-frame', has=pg.locator('.upnext__foot')).first
         up.scroll_into_view_if_needed()
         menu, v = open_add(pg, up)

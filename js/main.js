@@ -22,6 +22,8 @@ import { FEATURES, uses, setUses } from './state/features.js';
 import { initAppBar } from './editor/app-bar.js';
 import { initTabBar } from './editor/tab-bar.js';
 import { initModuleSwiper } from './editor/module-swiper.js';
+import { initMobileWidgets } from './editor/mobile-widgets.js';
+import { initMobileEditor } from './editor/mobile-editor.js';
 import { needsWelcomeSplash, welcomeOnce, needsBlogWelcome, renderBlogWelcome } from './onboarding/welcome.js';
 import { needsFullAccount, renderFinishAccount } from './onboarding/finish-account.js';
 import { initSearchBox } from './editor/search-box.js';
@@ -138,6 +140,8 @@ initShortcuts();
 initScrollFlow(); // one continuous wheel stroke over a homepage's modules
 initGrid(document.getElementById('homepage-grid'));
 initModuleSwiper(document.querySelector('#homepage-grid .module-grid'), document.getElementById('module-strip'));
+initMobileWidgets(document.querySelector('#homepage-grid .module-grid')); // phones: a group opens on widgets
+initMobileEditor(); // computers: Edit → Edit mobile arranges those widgets
 initModulePage(modulePageView);
 
 let wasOnHomepage = true;

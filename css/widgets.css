@@ -1,0 +1,153 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   widgets.css — a group's widgets on phones (js/editor/mobile-widgets.js)
+   and Edit → Edit mobile on a computer (js/editor/mobile-editor.js).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ─── The widget screen (phones) ─── */
+
+.mwidgets[hidden] { display: none; }
+
+/* While the widgets show, the modules, their chips, and their dots wait. */
+html.phone-widgets #homepage-grid,
+html.phone-widgets #module-strip,
+html.phone-widgets .module-dots { display: none !important; }
+
+.mwidgets { padding: 4px 0 16px; }
+
+.mwidgets__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mwidgets__cell { min-width: 0; display: flex; }
+.mwidgets__cell--wide { grid-column: span 2; }
+
+/* ─── One widget ─── */
+
+.mwidget {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--color-border-faint);
+  border-radius: 18px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+}
+
+button.mwidget { cursor: pointer; }
+button.mwidget:active { transform: scale(0.98); }
+button.mwidget:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { button.mwidget:active { transform: none; } }
+
+.mwidget--small { min-height: 150px; }
+.mwidget--wide { min-height: 96px; }
+
+.mwidget__body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.mwidget__head { display: flex; align-items: center; gap: 6px; color: var(--color-accent); }
+.mwidget__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; color: var(--color-text); }
+.mwidget__badge { flex: 0 0 auto; min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 7px; border-radius: 10px; background: var(--color-accent); color: var(--color-on-accent); font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+
+.mwidget__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mwidget__kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-accent); }
+.mwidget__title { font-size: 15px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mwidget__line { font-size: 13px; line-height: 1.35; color: var(--color-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mwidget__big { font-size: 18px; }
+
+.mwidget__event { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mwidget--small .mwidget__event { flex-direction: column; align-items: flex-start; gap: 6px; }
+.mwidget__date { flex: 0 0 auto; width: 48px; height: 52px; border-radius: 12px; background: var(--color-accent-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.mwidget__date span { font-size: 10px; font-weight: 700; color: var(--color-accent); }
+.mwidget__date strong { font-size: 20px; line-height: 1.1; }
+
+/* Up next: the group's next event, in the accent color, first. */
+.mwidget--featured { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
+.mwidget--featured .mwidget__head,
+.mwidget--featured .mwidget__name,
+.mwidget--featured .mwidget__kicker,
+.mwidget--featured .mwidget__line { color: var(--color-on-accent); }
+.mwidget--featured .mwidget__line { opacity: 0.9; }
+.mwidget--featured .mwidget__date { background: color-mix(in srgb, var(--color-on-accent) 18%, transparent); }
+.mwidget--featured .mwidget__date span,
+.mwidget--featured .mwidget__date strong { color: var(--color-on-accent); }
+
+.mwidget__progress { display: flex; align-items: center; gap: 10px; }
+
+.mwidget__image { width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
+.mwidget--small .mwidget__image { height: 72px; }
+
+.mwidget__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mwidget__chip { height: 26px; padding: 0 10px; border-radius: 13px; background: var(--color-surface-muted); border: 1px solid var(--color-border-faint); font-size: 13px; display: inline-flex; align-items: center; }
+
+.mwidget__people { display: flex; margin-top: auto; }
+.mwidget__people > * { margin-left: -6px; box-shadow: 0 0 0 2px var(--color-surface); border-radius: 50%; }
+.mwidget__people > :first-child { margin-left: 0; }
+
+/* Back to the widgets, at the start of the swipe view's chips. */
+.module-strip__widgets { flex: 0 0 auto; width: 34px; height: 34px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* ─── Edit → Edit mobile (computers) ─── */
+
+.mobile-editor[hidden] { display: none; }
+html.mobile-editing #homepage-grid { display: none; }
+
+.mobile-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 8px 0 32px;
+}
+
+.mobile-editor__phone {
+  flex: 0 0 auto;
+  width: 390px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 44px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-editor__screen {
+  min-height: 640px;
+  padding: 18px 14px 24px;
+  border-radius: 32px;
+  background: var(--color-page);
+}
+
+.mobile-editor__group { display: flex; flex-direction: column; gap: 2px; margin: 0 2px 14px; }
+.mobile-editor__group strong { font-size: 18px; }
+.mobile-editor__group span { font-size: 12px; color: var(--color-text-muted); }
+
+.mobile-editor__side { flex: 1 1 260px; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
+.mobile-editor__title { margin: 0; font-size: 20px; }
+.mobile-editor__tab { font-weight: 400; color: var(--color-text-muted); font-size: 16px; }
+.mobile-editor__side p { margin: 0; color: var(--color-text-muted); line-height: 1.5; }
+.mobile-editor__tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--color-text-muted); }
+
+.mwidget--editing { gap: 10px; padding-top: 10px; }
+.mwidget__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding-bottom: 8px; border-bottom: 1px dashed var(--color-border-faint); }
+.mwidget__grip,
+.mwidget__move { width: 30px; height: 30px; border: 0; border-radius: 8px; background: none; color: var(--color-text-muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mwidget__grip { cursor: grab; touch-action: none; }
+.mwidget__grip:hover,
+.mwidget__move:hover:not(:disabled) { background: var(--color-surface-muted); color: var(--color-text); }
+.mwidget__move:disabled { opacity: 0.35; cursor: default; }
+.mwidget__sizes { margin-left: auto; display: inline-flex; border: 1px solid var(--color-border); border-radius: 15px; overflow: hidden; }
+.mwidget__size { height: 28px; padding: 0 10px; border: 0; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; cursor: pointer; }
+.mwidget__size.is-on { background: var(--color-accent); color: var(--color-on-accent); font-weight: 600; }
+.mwidgets__cell.is-dragging { opacity: 0.45; }
+.mwidgets__cell.is-dragging .mwidget__grip { cursor: grabbing; }
+
+.space-header__mobile.is-on { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
