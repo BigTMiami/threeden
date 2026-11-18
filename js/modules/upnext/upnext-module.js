@@ -12,11 +12,12 @@
  *   📣 Announcement
  *   (PN) We got a meeting with Crestline · Priya Nair · 14h
  *        After 112 heat complaints…
- *   …                                         Show all · [+ Post]
+ *   …                                         Show all · [+ Add ▾]
  *
  * Nothing is saved: it reads the group's other modules each time (upnext-data.js).
  * Tapping an item opens it where it lives. The filter is kept while you're
- * on the page. The card shows a few; the full page shows all.
+ * on the page. The card shows a few; the full page shows all. "+ Add"
+ * offers New event or one from your calendar (upnext-add.js).
  */
 
 import { h, replaceChildren } from '../../ui/dom.js';
@@ -33,7 +34,7 @@ import { eventHref } from '../../events/event-details.js';
 import { dateBlock } from '../events/events-list.js';
 import { applyRsvp, occurrenceTimeLabel, colorValue } from '../calendar/calendar-data.js';
 import { availabilityChip } from '../../ui/availability-chip.js';
-import { openQuickCreate } from '../../editor/quick-create.js';
+import { upNextAddButton } from './upnext-add.js';
 import { nextEventIn, streamOf, STREAM_KINDS, sinceLine } from './upnext-data.js';
 
 const CARD_ITEMS = 5;
@@ -65,7 +66,7 @@ function render(container, context, { full = false } = {}) {
       : h('p', { class: 'module-empty' }, all.length ? 'Nothing of this kind yet.' : 'Nothing posted yet. Say hello, or plan the first event.'),
     h('div', { class: 'upnext__foot' },
       !full && shown.length > CARD_ITEMS ? h('button', { type: 'button', class: 'link-button', onClick: () => context.openFullPage() }, `Show all ${shown.length}`) : h('span', {}),
-      context.isVisitor ? null : h('button', { type: 'button', class: 'button button--primary button--small upnext__post', onClick: () => openQuickCreate('post') }, icon('plus', 14), ' Post')));
+      context.isVisitor ? null : upNextAddButton({ space, moduleId: context.moduleId, me, onAdded: redraw })));
 }
 
 /** The next event: date, what and where, RSVP buttons. */

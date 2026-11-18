@@ -8,8 +8,9 @@
  * newsroom…) or a blank slate can be changed in edit mode, and you add
  * people in Group settings → Members. Picking a template moves the access
  * choices to where that kind of group usually wants them (until you pick
- * them yourself), and a private group can't be "Anyone can join" or "Ask to
- * join". After it's made, a short tour shows you around (group-tour.js).
+ * them yourself). Every access choice can be picked: "Anyone can join" or
+ * "Ask to join" on a private group makes it public, and the page says so
+ * (reconcileAccess in settings-page.js). After it's made, a short tour shows you around (group-tour.js).
  */
 
 import { isChild } from '../state/children.js';
@@ -18,13 +19,13 @@ import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { createGroup } from '../state/groups.js';
 import { goTo, spaceHref } from '../router.js';
-import { section, field, accessChoices, readAccessChoices, groupTypeInput } from './settings-page.js';
+import { section, field, accessChoices, readAccessChoices, reconcileAccess, groupTypeInput } from './settings-page.js';
 import { GROUP_TEMPLATES } from '../data/starter-layouts.js';
 import { getOnboarding, updateOnboarding } from '../onboarding/onboarding-state.js';
 import { getCurrentUser } from '../state/store.js';
 import { usernameProblem, suggestUsername, finishAccount } from '../state/accounts.js';
 import { hashPassword, passwordProblem, MIN_PASSWORD_LENGTH } from '../account/password.js';
-import { accessFor, joiningAllowed } from './group-access-defaults.js';
+import { accessFor } from './group-access-defaults.js';
 import { startGroupTour } from '../onboarding/group-tour.js';
 
 const DEFAULT_TEMPLATE = 'friends';
@@ -120,16 +121,11 @@ export function renderNewGroupPage(container) {
       h('a', { class: 'button button--quiet', href: '#' }, 'Cancel')),
   );
 
-  // The access choices follow the template until you pick them yourself; a private group can't be found to join.
+  // The access choices follow the template until you pick them yourself.
+  // Every choice can be picked: one that needs the other choice to change
+  // (a private group that anyone can join) changes it and says so.
   let accessTouched = false;
   const radio = (name, value) => form.querySelector(`input[name=new-${name}][value=${value}]`);
-  function syncJoining() {
-    const visibility = form.querySelector('input[name=new-visibility]:checked')?.value;
-    for (const input of form.querySelectorAll('input[name=new-joining]')) {
-      input.disabled = !joiningAllowed(visibility, input.value);
-      if (input.disabled && input.checked) radio('joining', 'invite').checked = true;
-    }
-  }
   form.addEventListener('change', (event) => {
     const { name, value } = event.target;
     if (name === 'new-template' && !accessTouched) {
@@ -137,10 +133,11 @@ export function renderNewGroupPage(container) {
       radio('visibility', access.visibility).checked = true;
       radio('joining', access.joining).checked = true;
     }
-    if (name === 'new-visibility' || name === 'new-joining') accessTouched = true;
-    syncJoining();
+    if (name === 'new-visibility' || name === 'new-joining') {
+      accessTouched = true;
+      reconcileAccess(form, 'new-', name);
+    }
   });
-  syncJoining();
 
   replaceChildren(container,
     h('header', { class: 'settings-page__header' },

@@ -239,6 +239,7 @@ export function pollAttacher({ me, kind = 'text', onToggle = null }) {
     read: () => (builder ? builder.read() : { poll: null }),
     preview: () => (builder ? builder.preview() : null),
     isOpen: () => Boolean(builder),
+    open: () => { if (!builder) open(); },
     reset,
   };
 }

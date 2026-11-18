@@ -4772,3 +4772,20 @@ ul.pres-slide__body { margin: 0; padding-left: 1.2em; color: var(--color-text); 
 .vault-select__all { display: inline-flex; align-items: center; gap: 6px; font-weight: bold; }
 .vault-select__actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .vault-select__move { flex-basis: 100%; }
+
+/* Announcements: vault files (announcement-attach.js) */
+.announcement-files { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.announcement-files__picked { display: flex; flex-wrap: wrap; gap: 6px; }
+.announcement-files__picked[hidden] { display: none; }
+.announcement-files__chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 4px 3px 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-muted); font-size: 13px; }
+.announcement-files__chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Up next: + Add → From your calendar (upnext-add.js) */
+.upnext-pick { display: flex; flex-direction: column; gap: 10px; width: min(480px, 100%); }
+.upnext-pick__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.upnext-pick__title { margin: 0; font-size: 18px; }
+.upnext-pick__list { display: flex; flex-direction: column; gap: 4px; max-height: min(60vh, 420px); overflow-y: auto; }
+.upnext-pick__row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: 1px solid var(--color-border-faint); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.upnext-pick__row:hover { border-color: var(--color-border-strong); background: var(--color-surface-muted); }
+.upnext-pick__date { flex: 0 0 auto; min-width: 84px; font-size: 13px; font-weight: 600; color: var(--color-accent); }
+.upnext-pick__text { display: flex; flex: 1; flex-direction: column; min-width: 0; }

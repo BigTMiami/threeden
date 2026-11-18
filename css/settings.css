@@ -314,6 +314,31 @@ body.is-signed-out .page__note {
   accent-color: var(--color-accent);
 }
 
+/* The picked choice is plain to see, not just a dot. */
+.settings-choice:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.settings-choice:has(input:checked) strong {
+  color: var(--color-accent);
+}
+
+.settings-choice:has(input:disabled) {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.access-note {
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.access-note:empty {
+  display: none;
+}
+
 .settings-locked {
   display: flex;
   align-items: center;

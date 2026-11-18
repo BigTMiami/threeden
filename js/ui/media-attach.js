@@ -51,9 +51,10 @@ export async function readMedia(files) {
   return results;
 }
 
-/** Open the device's picker for photos ('image') or a video ('video'). */
+/** Open the device's picker for photos ('image'), a video ('video'), or both ('any': the camera roll). */
 export function pickMedia(kind, onPicked) {
-  const input = h('input', { type: 'file', accept: kind === 'video' ? 'video/*' : 'image/*', multiple: kind !== 'video', hidden: true });
+  const accept = { video: 'video/*', image: 'image/*', any: 'image/*,video/*' }[kind] ?? 'image/*';
+  const input = h('input', { type: 'file', accept, multiple: kind !== 'video', hidden: true });
   input.addEventListener('change', async () => {
     const media = await readMedia(input.files);
     input.remove();
@@ -64,10 +65,60 @@ export function pickMedia(kind, onPicked) {
 }
 
 /**
- * A "+ Photo or video" menu and the chosen items (each with ×), for a
- * form. `label` changes the button text.
+ * Place an open menu where all of it can be seen: under its button when it
+ * fits, otherwise above it, kept inside the screen sideways. It's fixed to
+ * the screen, so a card that cuts off what overflows it can't hide it.
+ * @param {HTMLElement} menu
+ * @param {HTMLElement} anchor
  */
-export function mediaAttacher({ label = 'Photo or video', initial = [] } = {}) {
+export function placeMenuOnScreen(menu, anchor) {
+  const gap = 4;
+  const margin = 8;
+  const box = anchor.getBoundingClientRect();
+  // On phones the tab bar covers the bottom of the screen: that's not room.
+  const bar = document.querySelector('.tab-bar');
+  const barTop = bar && bar.getClientRects().length ? bar.getBoundingClientRect().top : Infinity;
+  const screenBottom = Math.min(window.innerHeight, barTop);
+  // Its button scrolled away: nothing to follow.
+  if (box.bottom < 0 || box.top > screenBottom) return false;
+  Object.assign(menu.style, { position: 'fixed', top: '0px', left: '0px', bottom: 'auto', right: 'auto', maxHeight: '' });
+  const width = menu.offsetWidth;
+  const height = menu.offsetHeight;
+  const below = screenBottom - box.bottom - gap - margin;
+  const above = box.top - gap - margin;
+  const top = height <= below || below >= above ? box.bottom + gap : Math.max(margin, box.top - gap - height);
+  const room = height <= below || below >= above ? below : above;
+  if (height > room) { menu.style.maxHeight = `${Math.max(room, 120)}px`; menu.style.overflowY = 'auto'; }
+  menu.style.top = `${top}px`;
+  menu.style.left = `${Math.min(Math.max(margin, box.left), Math.max(margin, window.innerWidth - width - margin))}px`;
+  return true;
+}
+
+/**
+ * Keep an open menu with its button while the page scrolls or resizes;
+ * close it once the button is off the screen. Returns the stop function.
+ * @param {HTMLElement} menu
+ * @param {HTMLElement} anchor
+ * @param {() => void} close
+ */
+export function followAnchor(menu, anchor, close) {
+  const onMove = (event) => {
+    if (event?.target instanceof Node && menu.contains(event.target)) return;
+    if (!placeMenuOnScreen(menu, anchor)) close();
+  };
+  document.addEventListener('scroll', onMove, true);
+  window.addEventListener('resize', onMove);
+  placeMenuOnScreen(menu, anchor);
+  return () => { document.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove); };
+}
+
+/**
+ * A "+ Photo or video" menu and the chosen items (each with ×), for a
+ * form. `label` changes the button text. `before` adds choices above the
+ * device ones ({ icon, text, hint, onPick }), and `cameraRoll` makes the
+ * device ones a single "Upload from camera roll" for photos and videos.
+ */
+export function mediaAttacher({ label = 'Photo or video', initial = [], before = [], cameraRoll = false } = {}) {
   let items = [...initial];
   const slot = h('div', { class: 'media-attach__items', hidden: !items.length });
   const menu = h('div', { class: 'media-attach__menu', role: 'menu', hidden: true });
@@ -77,11 +128,16 @@ export function mediaAttacher({ label = 'Photo or video', initial = [] } = {}) {
   }, icon('plus', 14), ` ${label}`);
 
   const closeIfOutside = (event) => { if (!button.contains(event.target)) setOpen(false); };
+  const closeOnKey = (event) => { if (event.key === 'Escape') { setOpen(false); toggle.focus(); } };
+  let stopFollowing = () => {};
   function setOpen(open) {
     menu.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
-    if (open) document.addEventListener('pointerdown', closeIfOutside);
-    else document.removeEventListener('pointerdown', closeIfOutside);
+    const listen = open ? 'addEventListener' : 'removeEventListener';
+    document[listen]('pointerdown', closeIfOutside);
+    document[listen]('keydown', closeOnKey);
+    stopFollowing();
+    stopFollowing = open ? followAnchor(menu, toggle, () => setOpen(false)) : () => {};
   }
   const choice = (kind, iconName, text, hint) => h('button', {
     type: 'button', role: 'menuitem', class: 'media-attach__choice',
@@ -90,9 +146,16 @@ export function mediaAttacher({ label = 'Photo or video', initial = [] } = {}) {
       pickMedia(kind, (media) => { items = [...items, ...media]; draw(); });
     },
   }, icon(iconName, 16), h('span', {}, h('strong', {}, text), h('span', { class: 'media-attach__hint' }, hint)));
+  const extra = (option) => h('button', {
+    type: 'button', role: 'menuitem', class: 'media-attach__choice',
+    onClick: () => { setOpen(false); option.onPick(); },
+  }, icon(option.icon, 16), h('span', {}, h('strong', {}, option.text), option.hint ? h('span', { class: 'media-attach__hint' }, option.hint) : null));
   replaceChildren(menu,
-    choice('image', 'image', 'Photo', 'From your device or camera'),
-    choice('video', 'video', 'Video', 'Record one, or pick from your device (up to 3 MB)'));
+    before.map(extra),
+    cameraRoll
+      ? choice('any', 'image', 'Upload from camera roll', 'Photos and videos from your device (videos up to 3 MB)')
+      : [choice('image', 'image', 'Photo', 'From your device or camera'),
+        choice('video', 'video', 'Video', 'Record one, or pick from your device (up to 3 MB)')]);
 
   function draw() {
     slot.hidden = !items.length;

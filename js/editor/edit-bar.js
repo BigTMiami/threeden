@@ -11,7 +11,8 @@
  * small drawing; it applies to the tab you're on. Under them, a layout with
  * a featured column has its Featured picker (and "Fit to content" once its
  * height was set), and "Reset phone order" once someone has set the order
- * modules come in on phones.
+ * modules come in on phones. Last, "Copy this page's layout" writes the
+ * page's shape out as text to share (copy-layout.js).
  *
  * Preview shows the page without the editing controls. In a group it turns
  * your admin role off for the group until you come back (store.setMemberView),
@@ -28,6 +29,7 @@ import { h } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { getCurrentSpace, getVisibleModules, isEditMode, isMemberView, setEditMode, setMemberView, subscribe, getPageLayout, setPageLayout, setFeaturedModule, setFeaturedRows, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
 import { LAYOUTS, layoutById } from './page-layouts.js';
+import { openCopyLayout } from './copy-layout.js';
 import { getRoute, onRouteChange } from '../router.js';
 
 /** The space being previewed (personal pages and blogs; groups use the member view). */
@@ -164,20 +166,21 @@ function layoutsControl() {
   return wrapper;
 }
 
-/** Under the layouts: Featured (and Fit to content), and Reset phone order, when they apply. */
+/** Under the layouts: Featured (and Fit to content), and Reset phone order, when they apply; then Copy this page's layout. */
 function layoutExtras() {
   const layout = getPageLayout();
   const modules = getVisibleModules();
   const featured = layoutById(layout.kind).featured && modules.length >= 2;
   const phone = hasPhoneOrder();
-  if (!featured && !phone) return null;
   return h('div', { class: 'layout-menu__extras' },
     featured ? h('label', { class: 'layout-menu__featured' }, 'Featured ',
       h('select', { class: 'input input--compact', 'aria-label': 'Featured module', onChange: (event) => setFeaturedModule(event.target.value) },
         modules.map((m) => h('option', { value: m.id, selected: m.id === layout.featuredId }, m.title)))) : null,
     // Its height was set with the resize handle: back to growing with its content.
     featured && layout.featuredRows ? h('button', { type: 'button', class: 'link-button layout-menu__fit', onClick: () => setFeaturedRows(null) }, 'Fit to content') : null,
-    phone ? h('button', { type: 'button', class: 'link-button layout-menu__phone-reset', title: 'Phones show modules in the page’s own order again', onClick: resetPhoneOrder }, icon('phone', 13), ' Reset phone order') : null);
+    phone ? h('button', { type: 'button', class: 'link-button layout-menu__phone-reset', title: 'Phones show modules in the page’s own order again', onClick: resetPhoneOrder }, icon('phone', 13), ' Reset phone order') : null,
+    // The prototype keeps pages in this browser: this writes one out as text to share (copy-layout.js).
+    h('button', { type: 'button', class: 'link-button layout-menu__copy', onClick: () => { layoutMenuOpen = false; openCopyLayout(); } }, icon('layers', 13), ' Copy this page’s layout'));
 }
 
 /**

@@ -483,10 +483,9 @@
 }
 
 .media-attach__menu {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 0;
-  z-index: 20;
+  /* Placed on the screen by placeMenuOnScreen (media-attach.js), above everything but sheets. */
+  position: fixed;
+  z-index: 150;
   display: flex;
   flex-direction: column;
   min-width: 240px;

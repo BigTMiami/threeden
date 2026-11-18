@@ -24,7 +24,8 @@
  * Unread / Mine filters are hidden (it's just you).
  */
 
-import { mediaAttacher, renderMediaList } from '../../ui/media-attach.js';
+import { renderMediaList } from '../../ui/media-attach.js';
+import { announcementAttacher, renderAnnouncementFiles } from './announcement-attach.js';
 import { audienceChipForModule } from '../../ui/audience-chip.js';
 import { composeToggle } from '../../ui/compose-toggle.js';
 import { h, replaceChildren, debounce } from '../../ui/dom.js';
@@ -35,7 +36,7 @@ import { avatar, avatarStack } from '../../ui/avatar.js';
 import { showToast } from '../../ui/toast.js';
 import { timeAgo } from '../../utils/dates.js';
 import { renderText } from '../../ui/text.js';
-import { renderPoll, pollAttacher } from '../../ui/poll-view.js';
+import { renderPoll } from '../../ui/poll-view.js';
 import { askAttacher, renderAsks } from '../../ui/asks.js';
 import { attachMentionPicker } from '../../ui/mention-picker.js';
 import { notifyMentions, notify } from '../../state/notifications.js';
@@ -139,9 +140,8 @@ export function renderAnnouncementsPage(container, context) {
   const withMentions = (field) => { attachMentionPicker(field, { getCandidates: () => context.members, excludeId: me.id }); return field; };
   withMentions(bodyInput);
   const pinInput = h('input', { type: 'checkbox' });
-  const pollField = pollAttacher({ me });
+  const add = announcementAttacher({ me, moduleId: context.moduleId });
   const asks = askAttacher();
-  const media = mediaAttacher();
   const composerError = h('p', { class: 'form-error', role: 'alert' });
   titleInput.addEventListener('input', () => { composerError.textContent = ''; });
 
@@ -155,29 +155,27 @@ export function renderAnnouncementsPage(container, context) {
         titleInput.focus();
         return;
       }
-      const { poll, error } = pollField.read();
+      const { poll, media, files, error } = add.read();
       if (error) { composerError.textContent = error; return; }
-      const post = createPost({ authorId: me.id, title, body: bodyInput.value.trim(), pinned: pinInput.checked, poll, media: media.read(), ...asks.read() });
+      const post = createPost({ authorId: me.id, title, body: bodyInput.value.trim(), pinned: pinInput.checked, poll, media, files, ...asks.read() });
       update((data) => data.posts.push(post));
       notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: post.body, where: `the announcement “${title}”` });
       composer.reset();
-      pollField.reset();
+      add.reset();
       asks.reset();
-      media.clear();
       composeOpen.close();
       showToast(`Posted "${title}".`);
     },
   },
     h('h2', { class: 'announcements-page__composer-title' }, 'New announcement'),
     titleInput,
-    // What's attached (photos, a poll, RSVP or sign-up asks) above the words.
-    media.slot,
-    pollField.slot,
+    // What's attached (photos, files, a poll, RSVP or sign-up asks) above the words.
+    add.slots,
     asks.slot,
     bodyInput,
     composerError,
     h('div', { class: 'form-row form-row--spread' },
-      h('span', { class: 'form-row' }, media.button, pollField.button, isSolo ? null : asks.rsvpButton, isSolo ? null : asks.signupButton, canPin ? h('label', { class: 'page-control' }, pinInput, h('span', {}, 'Pin to the top')) : null),
+      h('span', { class: 'form-row' }, add.button, isSolo ? null : asks.rsvpButton, isSolo ? null : asks.signupButton, canPin ? h('label', { class: 'page-control' }, pinInput, h('span', {}, 'Pin to the top')) : null),
       h('span', { class: 'form-row' }, audienceChipForModule(context.moduleId), h('button', { type: 'submit', class: 'button button--primary' }, 'Post')),
     ),
   );
@@ -238,6 +236,7 @@ export function renderAnnouncementsPage(container, context) {
       h('h2', { class: 'announcement-post__title' }, post.title),
       post.body ? h('p', { class: 'announcement-post__body' }, renderText(post.body)) : null,
       renderMediaList(post.media),
+      renderAnnouncementFiles(post.files),
       post.poll ? renderPoll({
         getPoll: () => posts().find((p) => p.id === post.id)?.poll,
         savePoll: (poll) => updatePost(post.id, (p) => { p.poll = poll; }),
@@ -284,6 +283,7 @@ export function renderAnnouncementsPage(container, context) {
       // Editing: the title, then what's attached (as it shows), then the words underneath it.
       title,
       renderMediaList(post.media),
+      renderAnnouncementFiles(post.files),
       post.poll ? renderPoll({
         getPoll: () => posts().find((p) => p.id === post.id)?.poll,
         savePoll: (poll) => updatePost(post.id, (p) => { p.poll = poll; }),

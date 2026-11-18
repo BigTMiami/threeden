@@ -10,7 +10,8 @@
 
 import { firstFew } from '../../ui/more-link.js';
 import { emptyState } from '../../ui/empty-state.js';
-import { mediaAttacher, renderMediaList } from '../../ui/media-attach.js';
+import { renderMediaList } from '../../ui/media-attach.js';
+import { announcementAttacher, renderAnnouncementFiles } from './announcement-attach.js';
 import { composeToggle } from '../../ui/compose-toggle.js';
 import { h, replaceChildren, appendChildren } from '../../ui/dom.js';
 import { audienceChipForModule } from '../../ui/audience-chip.js';
@@ -76,6 +77,7 @@ export function renderAnnouncementsCard(container, context) {
       h('h3', { class: 'announcement__title' }, post.title),
       post.body ? h('p', { class: 'announcement__body' }, renderText(post.body)) : null,
       renderMediaList(post.media),
+      renderAnnouncementFiles(post.files),
       post.poll ? renderPoll({
         getPoll: () => context.getData().posts.find((p) => p.id === post.id)?.poll,
         savePoll: (poll) => update((data) => { data.posts.find((p) => p.id === post.id).poll = poll; }),
@@ -114,7 +116,7 @@ export function renderAnnouncementsCard(container, context) {
   const bodyInput = h('textarea', { class: 'input', rows: '2', placeholder: isSolo ? 'A note to yourself' : 'Write an update for the group', 'aria-label': 'Announcement text' });
   attachMentionPicker(bodyInput, { getCandidates: () => context.members, excludeId: me.id });
   const errorText = h('p', { class: 'form-error', role: 'alert' });
-  const media = mediaAttacher({ label: 'Add' });
+  const add = announcementAttacher({ me, moduleId: context.moduleId });
 
   const form = h('form', {
     class: 'announcements__form',
@@ -126,21 +128,24 @@ export function renderAnnouncementsCard(container, context) {
         titleInput.focus();
         return;
       }
-      const post = createPost({ authorId: me.id, title, body: bodyInput.value.trim(), media: media.read() });
+      const { poll, media, files, error } = add.read();
+      if (error) { errorText.textContent = error; return; }
+      const post = createPost({ authorId: me.id, title, body: bodyInput.value.trim(), poll, media, files });
       update((data) => data.posts.push(post));
       notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: post.body, where: `the announcement “${title}”` });
       form.reset();
-      media.clear();
+      add.reset();
       errorText.textContent = '';
       toggle.close();
     },
   },
     titleInput,
+    // What's attached (photos, files, a poll) above the words.
+    add.slots,
     bodyInput,
-    media.slot,
     errorText,
     h('div', { class: 'form-row form-row--end' },
-      media.button,
+      add.button,
       audienceChipForModule(context.moduleId),
       h('button', { type: 'submit', class: 'button button--primary button--small' }, 'Post'),
     ),

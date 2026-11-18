@@ -146,6 +146,28 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
+- **Group setup, Add menus, and Copy layout (Nov 18, later):**
+  - Create a group: no access choice is disabled any more; `reconcileAccess`
+    (settings-page.js) moves the other choice and says so in `.access-note`
+    (also on Group settings → General). Checked choices are highlighted
+    (`.settings-choice:has(input:checked)`). `joiningAllowed` is unused now.
+  - Announcements' "+ Add" (card and full page) is `announcementAttacher`
+    (announcement-attach.js): Poll, File from your vault, Upload from camera
+    roll. `post.files` holds `snapshotVaultItem` copies, shown with
+    `renderFilePreview`. `pollAttacher` gained `open()`.
+  - `mediaAttacher({ before, cameraRoll })`; `pickMedia('any')`. Its menu is
+    `position: fixed`, placed by `placeMenuOnScreen` and kept with its
+    button by `followAnchor` (both in media-attach.js); the phone tab bar's
+    top counts as the bottom of the screen.
+  - Up next's "+ Post" became "+ Add" (upnext-add.js): New event, From your
+    calendar (`myUpcoming()` reads your homepage's calendars; the copy goes to
+    the group's first calendar, else events module, else Up next's own
+    `data.events`, as kind 'event', visibility 'group', you going).
+  - Layouts → Copy this page's layout (copy-layout.js, `layoutOf(space)`).
+    Leo's Schwartz group was made in his browser; he can paste its layout
+    from there so it can become the Friends and family template.
+  - Tests: `test_group_setup_access.py`, `test_add_menus.py`.
+
 - **Vault sharing, publishing, and selecting (Nov 18):**
   - The Photo & video feed is gone; MIGRATIONS v70 turns photofeed modules
     into General feeds and old carousel slides into posts (DATA_VERSION 70).

@@ -83,7 +83,35 @@ export function accessChoices({ visibility, joining }, { disabled = false, prefi
     radios('visibility', 'Who can see it', VISIBILITY_OPTIONS, visibility,
       'In a public group, you choose which tabs are public with the Public tab button above each page. Everything else stays members-only.'),
     radios('joining', 'How people join', JOINING_OPTIONS, joining),
+    h('p', { class: 'access-note', role: 'status', 'aria-live': 'polite' }),
   ];
+}
+
+/**
+ * Keeps the two access choices a pair that works, without disabling any of
+ * them: a private group can't be found, so picking "Anyone can join" or "Ask
+ * to join" makes it public, and picking Private on an open group makes it
+ * invite only. Says what moved in the note under the choices.
+ * @param {HTMLElement} form
+ * @param {string} prefix
+ * @param {string} changed  the name of the input that changed
+ */
+export function reconcileAccess(form, prefix, changed) {
+  const pick = (name, value) => { const input = /** @type {HTMLInputElement | null} */ (form.querySelector(`input[name=${prefix}${name}][value=${value}]`)); if (input) input.checked = true; };
+  const { visibility, joining } = readAccessChoices(form, prefix);
+  const findable = joining === 'open' || joining === 'request';
+  let message = '';
+  if (visibility === 'private' && findable) {
+    if (changed === `${prefix}joining`) {
+      pick('visibility', 'public');
+      message = `People can only find a group to ${joining === 'open' ? 'join' : 'ask'} if it’s public, so it’s Public now.`;
+    } else {
+      pick('joining', 'invite');
+      message = 'Nobody can find a private group to join, so people join by invite now.';
+    }
+  }
+  const note = form.querySelector('.access-note');
+  if (note && (message || changed.startsWith(prefix))) note.textContent = message;
 }
 
 export function readAccessChoices(form, prefix = '') {
@@ -299,7 +327,7 @@ function renderGeneralTab(space, me, onDraftChange) {
     class: 'settings-form',
     onSubmit: (event) => event.preventDefault(),
     onInput: updateDraft,
-    onChange: updateDraft,
+    onChange: (event) => { reconcileAccess(form, '', event.target.name ?? ''); updateDraft(); },
   },
     field({ personal: 'Homepage name', blog: 'Blog name' }[space.kind] ?? 'Group name', nameInput),
     isPersonal || isBlog ? null : h('label', { class: 'settings-field' },

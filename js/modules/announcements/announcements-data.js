@@ -12,6 +12,8 @@
  *       createdAt,               ← ms timestamp
  *       editedAt: null,          ← ms timestamp of the last edit, if any
  *       poll: null | { … },     ← an optional poll (js/utils/polls.js)
+ *       media: [ … ],            ← photos and videos (js/ui/media-attach.js)
+ *       files: [ … ],            ← copies of vault files (announcement-attach.js), when there are any
  *       rsvp: null | { when, answers },  signups: [ … ]   ← asks (js/ui/asks.js)
  *       seenBy: ['m-maya'],      ← members who marked it as seen (the author counts as seen)
  *       comments: [ { id, authorId, body, createdAt } ],
@@ -42,8 +44,8 @@ export function normalizePost(post) {
   };
 }
 
-export function createPost({ authorId, title, body, pinned = false, poll = null, media = [], rsvp = null, signups = [] }) {
-  return normalizePost({ id: makeId('post'), authorId, title, body, pinned, poll, media, rsvp, signups, createdAt: Date.now() });
+export function createPost({ authorId, title, body, pinned = false, poll = null, media = [], files = [], rsvp = null, signups = [] }) {
+  return normalizePost({ id: makeId('post'), authorId, title, body, pinned, poll, media, ...(files.length ? { files } : {}), rsvp, signups, createdAt: Date.now() });
 }
 
 export function createComment(authorId, body) {

@@ -53,6 +53,13 @@ should follow them, or the exception should be a deliberate choice.
   would make them.
 - **Every drag has a keyboard or form alternative**, and every icon-only
   button has a label.
+- **Every menu is fully on screen.** Small menus place themselves under or
+  above their button, inside the screen and above the phone tab bar
+  (`placeMenuOnScreen` in js/ui/media-attach.js); bigger ones are sheets
+  on phones.
+- **Every choice you can see, you can pick.** A choice that doesn't fit
+  with another one changes that other one and says so, rather than being
+  quietly disabled (`reconcileAccess` in js/groups/settings-page.js).
 - **Plain code.** No framework, no build step, a comment header on every
   file, short functions named for what they do, and the Oxford comma in
   on-screen text, docs, and comments.
