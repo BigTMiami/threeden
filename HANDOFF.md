@@ -146,6 +146,13 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
+- **Blog shown or hidden per group (Nov 18, morning):** `member.blogHiddenIn`
+  and `member.blogChosenIn` (groups.js). Applied in directory-page, thread-view
+  (group chat author link), feed-post bylines (when `spaceId` is a group), and
+  the blog About's In list. The question shows in space-header for groups whose
+  `joinedAt[me]` is on or after Nov 18 2026 and unanswered. Test:
+  `test_blog_in_groups.py`.
+
 - **Aliases (Nov 18, late night):** Leo asked for "an option for aliases in
   groups"; I asked whether he meant a per-member name or other names for the
   group, got no answer, and built the per-member name. `space.allowAliases`

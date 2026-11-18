@@ -217,6 +217,8 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
 - **Events and calendars:** RSVPs, waitlists, co-hosts, series, reminders,
   regulars, "You're free" or "Clashes with…" checked against connected
   calendars, and a calendar feed for other apps.
+- **Your blog in a group:** each member chooses whether a group's members get
+  links to their blog (asked once after joining; Group settings after).
 - **Names in groups:** a group can let members go by an alias there
   (store.memberIn); profiles and everything outside the group keep their
   own names.

@@ -15,6 +15,7 @@
  * the public ones they're in.
  */
 
+import { blogShownIn } from '../../state/groups.js';
 import { h, replaceChildren } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { avatar } from '../../ui/avatar.js';
@@ -36,7 +37,7 @@ function render(container, context) {
     const d = context.getData();
     const area = owner ? areaOf(owner)?.label : null;
     // Only if they chose to list them (it tells strangers which groups they're in).
-    const groups = d.showGroups ? getSpaces().filter((s) => s.kind === 'group' && s.memberIds.includes(owner?.id) && isPublicGroup(s)) : [];
+    const groups = d.showGroups ? getSpaces().filter((s) => s.kind === 'group' && s.memberIds.includes(owner?.id) && isPublicGroup(s) && blogShownIn(s, owner.id)) : [];
     const empty = !d.headline && !d.text && !(d.askMeAbout ?? []).length && !(d.links ?? []).length;
     return [
       h('div', { class: 'about-block__who' },

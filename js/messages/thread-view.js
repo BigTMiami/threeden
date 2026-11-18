@@ -34,6 +34,7 @@
  * count).
  */
 
+import { blogShownIn } from '../state/groups.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { avatar } from '../ui/avatar.js';
 import { getCurrentUser, getMember as getAnyMember, memberIn, getSpace, subscribe } from '../state/store.js';
@@ -276,7 +277,8 @@ export function createThreadView(conversationId, { compact = false, placeholder 
         startsGroup ? avatar(author, compact ? 28 : 34) : h('span', { class: 'message__time-hint' }, time)),
       h('div', { class: 'message__main' },
         startsGroup ? h('div', { class: 'message__meta' },
-          author && usesSocial(author.id) ? h('a', { href: blogHref(author), class: 'message__author' }, h('strong', {}, author.name)) : h('strong', {}, author?.name ?? 'Former member'),
+          // A link to their blog, unless they hid it from this group (groups.js).
+          author && usesSocial(author.id) && blogShownIn(chatSpace(), author.id) ? h('a', { href: blogHref(author), class: 'message__author' }, h('strong', {}, author.name)) : h('strong', {}, author?.name ?? 'Former member'),
           h('span', { class: 'message__time', title: new Date(message.createdAt).toLocaleString() }, time),
           message.expiresAt ? h('span', { class: 'message__expires', title: `Disappears ${new Date(message.expiresAt).toLocaleString()}` }, icon('clock', 11), ` ${timeLeftLabel(message)}`) : null) : null,
         quoted ? h('button', {

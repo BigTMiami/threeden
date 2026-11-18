@@ -2359,3 +2359,10 @@ body.is-guest .app-bar__search {
 .children__groups { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .children__groups li { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .groups-page__child-note { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; }
+
+/* After joining: show your blog to the members? (js/groups/blog-choice.js) */
+.blog-question { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--color-border-faint); border-radius: var(--radius); background: var(--color-accent-soft); color: var(--color-accent); }
+.blog-question__text { flex: 1 1 220px; min-width: 0; color: var(--color-text); font-size: 14px; line-height: 1.4; }
+.blog-question__text span { color: var(--color-text-muted); }
+.blog-question__buttons { display: flex; gap: 6px; }
+.join-page__blog { margin: 4px 0 12px; }

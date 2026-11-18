@@ -14,6 +14,7 @@
  * group's name. People you've blocked aren't listed (blocks.js).
  */
 
+import { blogShownIn } from '../state/groups.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { avatar } from '../ui/avatar.js';
@@ -86,7 +87,7 @@ export function renderDirectoryPage(container, spaceId) {
           : isMe ? h('p', { class: 'directory__help directory__help--none' }, h('a', { href: '#account-profile' }, 'Add what you can help with')) : null),
       isMe ? null : h('div', { class: 'directory__actions' },
         h('button', { type: 'button', class: 'button button--small', onClick: () => goTo(`#messages-${openDirectConversation(me.id, p.member.id).id}`) }, icon('chat', 14), ' Message'),
-        p.member.username && p.member.features?.blog !== false ? h('a', { class: 'button button--small button--quiet', href: blogHref(p.member) }, 'Blog') : null));
+        p.member.username && p.member.features?.blog !== false && blogShownIn(space, p.member.id) ? h('a', { class: 'button button--small button--quiet', href: blogHref(p.member) }, 'Blog') : null));
   }
 
   function introEditor(current) {

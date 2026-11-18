@@ -14,12 +14,13 @@
  * account (username, password) later, when they want a blog or the Feed.
  */
 
+import { blogJoinCheckbox } from './blog-choice.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { groupInitials } from '../utils/initials.js';
 import { getCurrentUser, getSpaceMembers } from '../state/store.js';
-import { findGroupByInviteCode, addMember } from '../state/groups.js';
+import { findGroupByInviteCode, addMember, setBlogShownIn } from '../state/groups.js';
 import { goTo, spaceHref } from '../router.js';
 import { requireAccount } from '../onboarding/guest.js';
 
@@ -42,6 +43,7 @@ export function renderJoinPage(container, inviteCode) {
   }
 
   const count = getSpaceMembers(group).length;
+  const blogChoice = blogJoinCheckbox(me); // show your blog to the members? (blog-choice.js)
   replaceChildren(container, h('div', { class: 'settings-section join-page' },
     h('p', { class: 'join-page__kicker' }, 'You’re invited to join'),
     h('div', { class: 'join-page__group' },
@@ -50,6 +52,7 @@ export function renderJoinPage(container, inviteCode) {
         h('h1', { class: 'join-page__name' }, group.name),
         h('p', { class: 'join-page__meta' }, `${group.groupType ? `${group.groupType} · ` : ''}${count} ${count === 1 ? 'member' : 'members'}`),
         group.description ? h('p', { class: 'join-page__description' }, group.description) : null)),
+    blogChoice.element,
     h('div', { class: 'form-row' },
       h('button', {
         type: 'button',
@@ -68,6 +71,7 @@ export function renderJoinPage(container, inviteCode) {
             goTo('#groups');
             return;
           }
+          setBlogShownIn(group.id, me.id, blogChoice.shown());
           showToast(`Welcome to ${group.name}!`);
           goTo(spaceHref(group.id));
         },

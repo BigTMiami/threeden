@@ -309,3 +309,39 @@ export function deleteGroup(spaceId) {
     state.spaces = state.spaces.filter((space) => space.id !== spaceId);
   }, 'space', 'layout');
 }
+
+// ─── Your blog, shown or hidden from a group's members (Nov 18) ─────────────
+//
+// member.blogHiddenIn = [spaceId, …]: groups whose members don't get links to
+// your blog from inside the group (its directory, its chat, its feeds' bylines),
+// and that your blog's About doesn't list. Posts you made public stay public:
+// this is about the group pointing at your blog. member.blogChosenIn records
+// groups where you've answered the "Show your blog?" question after joining.
+
+/** When the question started being asked: groups joined before don't ask. */
+const BLOG_CHOICE_SINCE = Date.UTC(2026, 10, 18);
+
+/** Do this group's members get links to this person's blog? */
+export function blogShownIn(space, memberId) {
+  if (!space || space.kind !== 'group') return true;
+  return !(getMember(memberId)?.blogHiddenIn ?? []).includes(space.id);
+}
+
+/** Show or hide your blog from a group's members (also answers the question after joining). */
+export function setBlogShownIn(spaceId, memberId, shown) {
+  changeState((state) => {
+    const member = state.members.find((m) => m.id === memberId);
+    if (!member) return;
+    const hidden = new Set(member.blogHiddenIn ?? []);
+    if (shown) hidden.delete(spaceId); else hidden.add(spaceId);
+    member.blogHiddenIn = [...hidden];
+    member.blogChosenIn = [...new Set([...(member.blogChosenIn ?? []), spaceId])];
+  }, 'account', 'space', 'layout');
+}
+
+/** Should the group ask whether to show your blog? (Joined lately, haven't said, have a blog.) */
+export function shouldAskAboutBlog(space, member) {
+  if (!space || space.kind !== 'group' || !member?.username || member.features?.blog === false) return false;
+  if ((member.blogChosenIn ?? []).includes(space.id)) return false;
+  return (space.joinedAt?.[member.id] ?? 0) >= BLOG_CHOICE_SINCE;
+}

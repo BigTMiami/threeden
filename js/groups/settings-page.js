@@ -21,6 +21,7 @@
  * deleting the group) happen when you confirm them.
  */
 
+import { renderBlogSetting } from './blog-choice.js';
 import { renderModerationTab, openReportsFor } from './moderation-tab.js';
 import { VISIBILITY_OPTIONS, JOINING_OPTIONS, visibilityOf, joiningOf } from '../state/group-access.js';
 import { h, replaceChildren } from '../ui/dom.js';
@@ -344,6 +345,7 @@ function renderGeneralTab(space, me, onDraftChange) {
     section({ personal: 'Your homepage', blog: 'Your blog' }[space.kind] ?? 'About this group', null, form),
     isPersonal || isBlog ? null : renderOnExplore(space, canEdit),
     isPersonal || isBlog ? null : renderNames(space, me, canEdit),
+    isPersonal || isBlog ? null : renderBlogSetting(space, me), // show or hide your blog from members (blog-choice.js)
     isPersonal || isBlog ? null : renderDangerZone(space, me),
   ];
 }

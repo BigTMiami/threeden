@@ -24,6 +24,7 @@
  * shows for people whose role allows it (js/state/permissions.js).
  */
 
+import { renderBlogQuestion } from '../groups/blog-choice.js';
 import { isChild, isWaitingFor } from '../state/children.js';
 import { personMenu } from '../feed/post-menu.js';
 import { renderWelcomeChecklist } from '../groups/welcome-checklist.js';
@@ -146,6 +147,7 @@ export function renderSpaceHeader() {
       ),
     ),
     editMode ? null : renderWelcomeChecklist(space, me),
+    editMode || !isMine ? null : renderBlogQuestion(space, me, () => renderSpaceHeader()), // after joining: show your blog here? (blog-choice.js)
     editMode ? null : renderGroupSuggestion(space, me), // a new group grows when it needs to
     h('div', { class: 'space-header__actions' },
       editMode ? renderResetButton() : null,
