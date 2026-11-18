@@ -25,6 +25,7 @@
 
 import { getModule, getSpace, updateModuleData } from '../../state/store.js';
 import { normalizeEvent, canSeeEvent, isEvent } from '../calendar/calendar-data.js';
+import { getLinkedItems, updateLinkedItem } from '../../editor/linked-items.js';
 
 /** The calendar module this events module shows, or null if it keeps its own. */
 export function linkedCalendarOf(context) {
@@ -60,7 +61,9 @@ export function eventsSource(context) {
       const publicOnly = context.isVisitor && context.spaceKind === 'group' && !context.sharedFrom;
       const own = (home()?.data.events ?? []).map(normalizeEvent).filter((event) => isEvent(event) && canSeeEvent(event, me.id, { publicOnly }));
       const ownIds = new Set(own.map((e) => e.id));
-      const linked = context.getLinkedItems()
+      // In a group: what its calendar shows from elsewhere (hosted with it, or shared with it).
+      const links = calendar && context.spaceKind === 'group' ? getLinkedItems(calendar.id) : context.getLinkedItems();
+      const linked = links
         .filter((link) => !ownIds.has(link.itemId))
         .map((link) => ({ ...normalizeEvent(link.item), _link: link }))
         .filter(isEvent);
@@ -69,7 +72,7 @@ export function eventsSource(context) {
 
     change(event, changeFn) {
       if (event._link) {
-        context.updateLinkedItem(event._link, changeFn);
+        updateLinkedItem(event._link, changeFn);
         return;
       }
       saveHome((data) => {
@@ -88,7 +91,7 @@ export function eventsSource(context) {
     replace(event) {
       const { _link: link, ...fields } = event;
       if (link) {
-        context.updateLinkedItem(link, (saved) => Object.assign(saved, fields));
+        updateLinkedItem(link, (saved) => Object.assign(saved, fields));
         return;
       }
       saveHome((data) => {

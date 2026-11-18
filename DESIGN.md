@@ -100,7 +100,7 @@ Member ──links to──────► Friends, and their blogs (the Feed)
 | **Tab** | A page within a space. A group can make a tab public while the rest stays members-only | store.js |
 | **Module** | A block on a page: a type, a size (`span` × `rows`), and its own data | `js/modules/` |
 | **Item** | Something inside a module: a post, a thread, a task, an event, a vault file | each module's `*-data.js` |
-| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page. Its hosts (people, and groups whose members can all edit it) are listed in its Hosts field | `js/events/`, `js/state/events.js` |
+| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page. Its hosts (people, and groups whose members can all edit it) are listed in its Hosts field. Sharing it with a group puts it on that group's calendar without copying it | `js/events/`, `js/state/events.js` |
 | **Conversation** | Messages between people. A Chat module shows a conversation; Messages shows the same one | `js/state/messages.js` |
 | **Notification** | Something that needs your attention, grouped when several are about the same thing | `js/state/notifications.js` |
 | **Linked item** | Something assigned to you in a group (or a calendar item you added there), shown live on your personal homepage (not a copy); an event co-hosted by a group shows on that group's calendar the same way | `js/editor/linked-items.js` |

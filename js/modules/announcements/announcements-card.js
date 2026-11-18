@@ -27,6 +27,7 @@ import { emptyState } from '../../ui/empty-state.js';
 import { renderMediaList } from '../../ui/media-attach.js';
 import { renderAnnouncementFiles } from './announcement-attach.js';
 import { composeToggle } from '../../ui/compose-toggle.js';
+import { renderEventStrip } from '../blog-feeds/feed-post.js';
 import { h, replaceChildren, appendChildren } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { avatar } from '../../ui/avatar.js';
@@ -102,6 +103,8 @@ export function renderAnnouncementsCard(container, context) {
       savePost: (fn) => changePost(post.id, fn),
       me, canAnswer: !context.isVisitor, collapse: true,
     }),
+    // A calendar event made with the post: its date, and RSVP right here.
+    post.eventId ? renderEventStrip(post.eventId, () => draw()) : null,
   ];
 
   /** The pinned post on top, in the accent box. */
@@ -157,12 +160,15 @@ export function renderAnnouncementsCard(container, context) {
       more);
   }
 
-  // "+ Post" opens the form (js/ui/compose-toggle.js).
+  // "+ Post" opens the form (js/ui/compose-toggle.js), at the bottom of the board.
   const composer = boardComposer({
     context, me, canPin,
     onPosted: (post) => { update((data) => { data.posts = [...(data.posts ?? []), post]; }); toggle.close(); showToast(post.pin ? 'Posted and pinned.' : 'Posted.'); },
   });
-  const toggle = composeToggle(composer.form, { label: 'Post', className: 'board__compose' });
-  appendChildren(container, [canPost ? toggle.element : null, body]);
+  // "+ Post" sits at the bottom right, staying in view while the board scrolls (Nov 18).
+  const toggle = composeToggle(composer.form, { label: 'Post', className: 'board__compose board__compose--bottom' });
+  toggle.element.querySelector('.compose-toggle__open')?.addEventListener('click', () => requestAnimationFrame(() => toggle.element.scrollIntoView({ block: 'nearest' })));
+  container.classList.add('board-card-body'); // a column, so "+ Post" can sit at the bottom
+  appendChildren(container, [body, canPost ? toggle.element : null]);
   draw();
 }

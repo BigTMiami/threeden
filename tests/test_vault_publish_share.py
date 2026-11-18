@@ -100,14 +100,14 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape'); pg.wait_for_timeout(150)
 
     # Photos say Post.
-    page.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
+    page.locator('.vault__back, .vault-editor__back').first.click(); pg.wait_for_timeout(400)
     page.locator('.vault-media__open').first.click(); pg.wait_for_timeout(400)
     page.locator('.doc-share__button').click(); pg.wait_for_timeout(200)
     if page.locator('.doc-share__publish').count() == 0:
         page.locator('.doc-share__row-toggle', has_text='Published').click(); pg.wait_for_timeout(200)
     check(page.locator('.doc-share__publish button').inner_text().strip() == 'Post', 'a photo says Post')
     pg.keyboard.press('Escape'); pg.wait_for_timeout(150)
-    page.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
+    page.locator('.vault__back, .vault-editor__back').first.click(); pg.wait_for_timeout(400)
 
     # 5. A folder: tile by the path, cover photo, post.
     page.locator('.vault-item__name', has_text='Show photos').click(); pg.wait_for_timeout(400)

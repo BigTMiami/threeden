@@ -68,7 +68,7 @@ with sync_playwright() as p:
     check(picker.is_visible() and picker.locator('.vault-picker__title').inner_text() == 'File from vault', 'the picker opens')
     details = picker.locator('.vault-picker__detail').all_inner_texts()
     check(details and not any(d.startswith('Folder') for d in details), 'no folders to choose')
-    note = picker.locator('.vault-picker__item', has=pg.locator('.vault-picker__detail', has_text='Note')).first
+    note = picker.locator('.vault-picker__item', has=pg.locator('.vault-picker__detail', has_text='Document')).first
     note_name = note.locator('.vault-picker__name').inner_text()
     note.click(); pg.wait_for_timeout(600)
     st(pg, 's.setEditMode(false)'); pg.wait_for_timeout(500)

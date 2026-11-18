@@ -48,6 +48,7 @@ import { todayKey, formatShortDate } from '../../utils/dates.js';
 import { makeId, debounce } from '../../ui/dom.js';
 import { renderVaultPicker, renderSubmittedItem } from '../submissions/submission-items.js';
 import { pollAttacher } from '../../ui/poll-view.js';
+import { askAttacher } from '../../ui/asks.js';
 import { audienceChip } from '../../ui/audience-chip.js';
 import { autoGrow } from '../../ui/auto-grow.js';
 import { VARIANTS, MAX_VIDEO_BYTES, canPost } from './feed-data.js';
@@ -75,6 +76,8 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
   const preview = h('div', { class: 'feed-composer__preview', hidden: true });
   const panel = h('div', { class: 'feed-composer__panel' });
   const pollField = rules.allowsPolls ? pollAttacher({ me, onToggle: () => drawDraft() }) : null;
+  // Sign-ups (Nov 18): things people sign up to bring or do, saved on the post like a poll.
+  const signupField = rules.allowsPolls ? askAttacher() : null;
 
   const fileInput = h('input', {
     type: 'file',
@@ -270,10 +273,12 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
       draft.text = textField.value;
       const { poll, error } = pollField?.read() ?? { poll: null };
       if (error) { showToast(error); return; }
-      const attachments = [...draft.attachments.map(cleanAttachment), ...(poll ? [{ kind: 'poll', poll }] : [])];
+      const { signups } = signupField?.read() ?? { signups: [] };
+      const attachments = [...draft.attachments.map(cleanAttachment), ...(poll ? [{ kind: 'poll', poll }] : []), ...(signups.length ? [{ kind: 'signups', signups }] : [])];
       if (!canPost(variant, { ...draft, attachments })) return;
       onPost({ text: draft.text, media: draft.media, attachments, audience: draft.audience });
       pollField?.reset();
+      signupField?.reset();
       textField.value = '';
       fitText();
       draft.media = [];
@@ -291,6 +296,7 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
     preview,
     previews,
     pollField?.slot,
+    signupField?.slot,
     textField,
     panel,
     h('div', { class: 'feed-composer__bar' },
@@ -299,6 +305,7 @@ export function renderComposer({ variant, spaceId, audience = null, onPost, onCr
       rules.allowsAttachments || rules.allowsEvent ? h('button', { type: 'button', class: 'button button--small', title: 'Connect an event: it shows under the pictures, and people can RSVP from the post', onClick: openEventPicker }, icon('ticket', 14), rules.allowsAttachments ? ' Event' : ' Connect an event') : null,
       rules.allowsAttachments ? h('button', { type: 'button', class: 'button button--small', onClick: openLinkForm }, icon('link', 14), ' Link') : null,
       pollField?.button,
+      signupField?.signupButton,
       fileInput,
       h('span', { class: 'feed-composer__spacer' }),
       counter,

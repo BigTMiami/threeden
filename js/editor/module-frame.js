@@ -35,7 +35,7 @@ import { backupRemovedModule, dropBackup, BACKUP_FOLDER } from '../state/module-
 import { openModulePage } from '../router.js';
 import { beginPointerDrag } from './pointer-drag.js';
 import { attachResizeHandle } from './resize.js';
-import { createModuleContext } from './module-context.js';
+import { createModuleContext, expandTargetOf, requestModuleFocus } from './module-context.js';
 import { sharingOf, setSharing } from '../state/shared-modules.js';
 import { openShareModuleDialog } from './share-module.js';
 
@@ -143,7 +143,11 @@ function renderOpenButton(module, moduleType) {
     'aria-label': label,
     title: label,
     onClick: () => {
+      // A card with something open (a vault document, say) opens it in the full page.
+      // (Read first: leaving edit mode redraws the card, which forgets it.)
+      const target = expandTargetOf(module.id);
       setEditMode(false);
+      if (target) requestModuleFocus(module.id, target);
       openModulePage(module.id);
     },
   }, icon('expand', 16));

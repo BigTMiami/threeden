@@ -8,7 +8,8 @@
  *
  * Each function returns an element and talks back through callbacks:
  *   onOpenEvent(occurrence)     a click on an event
- *   onCreateAt(date, time)      a click on empty space (time is '' for all-day)
+ *   onCreateAt(date, time)      a double-click on empty space (time is '' for all-day): add something there
+ *   onTapEmpty(date, time)      a single click or tap on empty space (phones: go to that day); optional
  *   onShowDay(date)             a click on a day's number (month view)
  *
  * And, when given, the drag callbacks (like Google Calendar):
@@ -111,7 +112,7 @@ function formatStartTime(time) {
 
 // ─── Month view ──────────────────────────────────────────────────────────────
 
-export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onMoveEvent, onLongPressAt = null }) {
+export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onMoveEvent, onLongPressAt = null, onTapEmpty = null }) {
   const monthStart = startOfMonth(anchorDate);
   const gridStart = startOfWeek(monthStart);
   const gridEnd = addDays(gridStart, 6 * 7 - 1); // Always 6 weeks, so the grid doesn't jump.
@@ -137,8 +138,9 @@ export function renderMonthView({ anchorDate, events, selectedEventId, onOpenEve
     const dayCell = h('div', {
       class: `month-view__day${isOtherMonth ? ' is-other-month' : ''}${date === todayKey() ? ' is-today' : ''}`,
       dataset: { date },
-      title: 'Click empty space to add an event',
-      onClick: () => onCreateAt(date, ''),
+      title: 'Double-click to add an event',
+      onClick: () => onTapEmpty?.(date, ''),
+      onDblclick: (e) => { if (!e.target.closest?.('.event-chip, .month-view__more')) onCreateAt(date, ''); },
     },
       h('button', {
         type: 'button',
@@ -217,7 +219,7 @@ function daysBetweenKeys(from, to) {
  * below. Timed events are placed by start time and sized by length;
  * overlapping events share the width (see assignLanes in calendar-data.js).
  */
-export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onCreateRange, onMoveEvent, onLongPressAt = null }) {
+export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onCreateAt, onShowDay, onCreateRange, onMoveEvent, onLongPressAt = null, onTapEmpty = null }) {
   const columnTemplate = `56px repeat(${days.length}, minmax(0, 1fr))`;
 
   // Header: weekday + date for each column.
@@ -239,7 +241,9 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
     days.map((date) => {
       const cell = h('div', {
         class: 'time-grid__all-day-cell',
-        onClick: () => onCreateAt(date, ''),
+        title: 'Double-click to add an all-day entry',
+        onClick: () => onTapEmpty?.(date, ''),
+        onDblclick: (e) => { if (!e.target.closest?.('.event-chip')) onCreateAt(date, ''); },
       }, occurrencesOn(events, date)
         .filter(belongsInAllDayRow)
         .map((occurrence) => eventChip(occurrence, { onOpenEvent, selectedEventId })));
@@ -254,7 +258,7 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
       hour === 0 ? '' : hourLabel(hour))));
 
   // One column per day with its timed events.
-  const dayColumns = days.map((date) => renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt }));
+  const dayColumns = days.map((date) => renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt, onTapEmpty }));
 
   const body = h('div', { class: 'time-grid__body', style: { gridTemplateColumns: columnTemplate } }, hourLabels, dayColumns);
   const scroller = h('div', { class: 'time-grid__scroller' }, body);
@@ -265,21 +269,23 @@ export function renderTimeGrid({ days, events, selectedEventId, onOpenEvent, onC
   return h('div', { class: `time-grid time-grid--${days.length === 1 ? 'day' : 'week'}` }, header, allDayRow, scroller);
 }
 
-function renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt = null }) {
+function renderDayColumn(date, { events, selectedEventId, onOpenEvent, onCreateAt, onCreateRange, onMoveEvent, onLongPressAt = null, onTapEmpty = null }) {
   // Multi-day events are drawn in the all-day row instead (see belongsInAllDayRow).
   const timed = occurrencesOn(events, date).filter((o) => !belongsInAllDayRow(o));
   const column = h('div', {
     class: `time-grid__column${date === todayKey() ? ' is-today' : ''}`,
     style: { height: `${24 * HOUR_HEIGHT_PX}px` },
     dataset: { date },
-    title: onCreateRange ? 'Click to add an event, or drag to choose the time' : 'Click to add an event',
-    onClick: (clickEvent) => {
-      // Turn the click's height into a time, snapped to the nearest half hour.
-      const offsetY = clickEvent.clientY - column.getBoundingClientRect().top;
-      const minutes = Math.floor((offsetY / HOUR_HEIGHT_PX) * 60 / SNAP_MINUTES) * SNAP_MINUTES;
-      onCreateAt(date, minutesToTime(minutes));
-    },
+    title: onCreateRange ? 'Double-click to add an event, or drag to choose the time' : 'Double-click to add an event',
+    // Turn the click's height into a time, snapped to the nearest half hour.
+    onClick: (clickEvent) => { if (clickEvent.target === column) onTapEmpty?.(date, timeAtClick(clickEvent)); },
+    onDblclick: (clickEvent) => { if (clickEvent.target === column) onCreateAt(date, timeAtClick(clickEvent)); },
   });
+
+  function timeAtClick(clickEvent) {
+    const offsetY = clickEvent.clientY - column.getBoundingClientRect().top;
+    return minutesToTime(Math.floor((offsetY / HOUR_HEIGHT_PX) * 60 / SNAP_MINUTES) * SNAP_MINUTES);
+  }
 
   if (onCreateRange) column.addEventListener('pointerdown', (downEvent) => startCreateDrag(downEvent, column, date, onCreateRange));
   // Phones: press and hold a time to add something then (snapped to the half hour).

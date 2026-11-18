@@ -163,6 +163,8 @@ function renderEntryDetails(entry, { me, getMember, onEdit, onDuplicate, onDelet
     entry.notes ? h('p', { class: 'event-details__notes' }, renderText(entry.notes)) : null,
     h('p', { class: 'event-details__muted' }, 'Calendar entry', addedBy ? ` · added by ${addedBy.id === me.id ? 'you' : addedBy.name}` : ''),
     h('div', { class: 'event-details__actions' },
+      // Share an entry: add people (on their calendars) or put it on a group's calendar (event-share.js).
+      me && !me.isGuest && findEvent(entry.id) ? h('button', { type: 'button', class: 'link-button', onClick: () => openEventShare(findEvent(entry.id), me) }, 'Share') : null,
       onEdit ? h('button', { type: 'button', class: 'link-button', onClick: onEdit }, 'Edit') : null,
       onDuplicate ? h('button', { type: 'button', class: 'link-button', onClick: onDuplicate }, 'Duplicate') : null,
       onDelete ? h('button', { type: 'button', class: 'link-button link-button--danger', onClick: onDelete }, 'Delete') : null,

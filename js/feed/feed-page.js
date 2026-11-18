@@ -64,7 +64,7 @@ import { availabilityChip } from '../ui/availability-chip.js';
 import { blogPostReactions, blogPostSend } from '../ui/post-reactions.js';
 import { reactionsBar } from '../ui/reactions-bar.js';
 import { openShareDialog } from '../ui/share-dialog.js';
-import { renderFeedPost, renderMedia } from '../modules/blog-feeds/feed-post.js';
+import { renderFeedPost, renderMedia, renderEventStrip } from '../modules/blog-feeds/feed-post.js';
 import { notify } from '../state/notifications.js';
 import { roleOf } from '../state/permissions.js';
 import {
@@ -495,6 +495,8 @@ function renderBoardItem(item, me, settings) {
     post.title ? h('p', { class: 'feed-board__title' }, post.title) : null,
     text ? h('p', { class: 'feed-board__text' }, text.length > 280 ? `${text.slice(0, 279)}…` : text) : null,
     picture ? h('img', { class: 'feed-board__photo', src: picture.src, alt: picture.caption ?? '' }) : null,
+    // An event made with the post, with its RSVP (feed-post.js).
+    post.eventId ? renderEventStrip(post.eventId, () => {}) : null,
     h('a', { class: 'link-button feed-board__open', href: `#module-${module.id}`, onClick: open },
       `${post.comments?.length ? `${post.comments.length} ${post.comments.length === 1 ? 'comment' : 'comments'} · ` : ''}${post.likes?.length ? `♡ ${post.likes.length} · ` : ''}Open on the board →`));
 }

@@ -32,6 +32,7 @@ import { timeAgo } from '../../utils/dates.js';
 import { getMember, getCurrentUser, getModule, getSpace, updateModuleData } from '../../state/store.js';
 import { getModuleType } from '../registry.js';
 import { renderPoll } from '../../ui/poll-view.js';
+import { renderAsks } from '../../ui/asks.js';
 import { notifyMentions } from '../../state/notifications.js';
 import { renderAttachment } from '../../messages/attachments.js';
 import { blogHref } from '../../router.js';
@@ -99,6 +100,7 @@ export function renderFeedPost(post, { moduleId, ownerId, spaceId = null, where 
       isEditing ? null : post.text ? h('p', { class: 'feed-post__text' }, renderText(post.text)) : null,
       renderAttachments(hasPictures ? post.attachments.filter((a) => a.kind !== 'event') : post.attachments, () => draw()),
       renderPostPolls(post, moduleId),
+      renderPostSignups(post, moduleId),
       // Editing: everything attached stays above, and the words are edited underneath it.
       isEditing ? renderEditor() : null,
       blogPostReactions({
@@ -359,6 +361,32 @@ function renderPostPolls(post, moduleId) {
     canVote: Boolean(me),
     canManage: me?.id === post.authorId,
   }));
+}
+
+/** A post's sign-ups (Nov 18): saved on the post, wherever it lives; anyone signed in can sign up. */
+function renderPostSignups(post, moduleId) {
+  const found = post.attachments.find((a) => a.kind === 'signups');
+  if (!found) return null;
+  const me = getCurrentUser();
+  if (!me) return null;
+  const saved = () => (getModule(moduleId)?.data.posts ?? []).find((p) => p.id === post.id);
+  return renderAsks({
+    getPost: () => ({ signups: (saved()?.attachments ?? post.attachments).find((a) => a.kind === 'signups')?.signups ?? [] }),
+    savePost: (fn) => {
+      const module = getModule(moduleId);
+      if (!module) return;
+      const data = structuredClone(module.data);
+      const target = data.posts.find((p) => p.id === post.id);
+      const attachment = target?.attachments?.find((a) => a.kind === 'signups');
+      if (!attachment) return;
+      const wrapper = { signups: attachment.signups };
+      fn(wrapper);
+      attachment.signups = wrapper.signups;
+      updateModuleData(moduleId, data);
+    },
+    me,
+    canAnswer: !me.isGuest,
+  });
 }
 
 /** " · 👥 Friends" on a post only some people can see, so nobody is surprised. */

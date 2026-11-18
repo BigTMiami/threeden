@@ -20,7 +20,7 @@ import { renderVaultPage } from './vault-page.js';
 export const vaultModule = {
   type: 'vault',
   label: 'Vault',
-  description: 'Files, folders, notes, and links',
+  description: 'Files, folders, documents, and links',
   icon: 'vault',
   defaultSpan: 6,
   defaultRows: 11,

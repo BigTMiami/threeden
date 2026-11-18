@@ -1644,3 +1644,17 @@ kbd {
 .event-editor__add { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 4px 0 8px; }
 .event-editor__add-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .event-editor__add-choice { display: inline-flex; align-items: center; gap: 2px; cursor: pointer; }
+
+/* Share → Add to a group's calendar, and sharing an entry (js/events/event-share.js) */
+.event-share__groups { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.event-share__group {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px;
+  background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+}
+.event-share__group:hover { border-color: var(--color-accent); }
+.event-share__group.is-on { border-color: var(--color-accent); background: var(--color-accent-soft); font-weight: 600; }
+.event-share__groups-wrap { padding: 4px 0; }
+.event-share__section { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 12px; }
+.event-share__section + .event-share__section { border-top: 1px solid var(--color-border); padding-top: 14px; }
+.event-share__section h3 { margin: 0; font-size: 15px; }

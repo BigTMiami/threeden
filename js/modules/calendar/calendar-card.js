@@ -36,6 +36,8 @@ const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const UPCOMING_LIMIT = 4;
 const UPCOMING_LOOKAHEAD_DAYS = 90;
 
+const DOUBLE_CLICK_MS = 450;
+
 export function renderCalendarCard(container, context) {
   const today = new Date();
   let viewYear = today.getFullYear();
@@ -63,6 +65,7 @@ export function renderCalendarCard(container, context) {
     redraw();
   }
 
+  let lastDayClick = { key: '', at: 0 };
   function redraw() {
     drawMonthHeader();
     drawMonthGrid();
@@ -118,13 +121,20 @@ export function renderCalendarCard(container, context) {
         'aria-label': `${monthName(viewMonth)} ${day}${hasEvents ? ', has events' : ''}`,
         'aria-pressed': String(key === selectedDate),
         onClick: () => {
+          // Computers: a second click on the same day (a double-click) opens the add form on it (Nov 18).
+          // (Counted here: the first click redraws the month, so the browser's dblclick never arrives.)
+          const isDouble = lastDayClick.key === key && Date.now() - lastDayClick.at < DOUBLE_CLICK_MS && !isPhone() && !context.isVisitor;
+          lastDayClick = { key, at: Date.now() };
           selectedDate = key;
           dateInput.value = key;
           redraw();
+          if (isDouble) setFormOpen(true);
         },
       }, String(day));
       // Phones: press and hold a day to add an entry or event on it.
+      // Computers: double-click it (Nov 18): the add form opens on that day.
       if (!context.isVisitor) onLongPress(dayButton, () => newOn(key));
+      dayButton.dataset.date = key;
       cells.push(dayButton);
     }
 

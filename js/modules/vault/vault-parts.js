@@ -9,11 +9,12 @@ import { h, replaceChildren } from '../../ui/dom.js';
 import { getSpace } from '../../state/store.js';
 import { icon } from '../../ui/icons.js';
 import { normalizeUrl } from './vault-data.js';
-import { renderNoteView, renderFileView } from './vault-item-views.js';
+import { renderNoteView, renderFileView, renderToArticle } from './vault-item-views.js';
+import { renderFullEditor, hasFullEditor } from './vault-full-editor.js';
 import { documentShareButton } from '../../ui/document-sharing.js';
 import { documentAccess, renderFileComments } from '../../ui/file-access.js';
 import { articleTargets, turnNoteIntoArticle, noteWriters, openNoteDraft } from '../articles/from-note.js';
-import { initialFileData, renderModuleFileView } from './vault-module-files.js';
+import { initialFileData, renderModuleFileView, expandButton } from './vault-module-files.js';
 import { getModuleType } from '../registry.js';
 import { isRemovedModule, putBack } from '../../state/module-backups.js';
 import { showToast } from '../../ui/toast.js';
@@ -27,7 +28,7 @@ export const TOP_LEVEL_NAME = 'Vault';
  * Module files use a short description here instead of the library's.
  */
 export const NEW_MENU_ENTRIES = [
-  { action: 'note', label: 'Note', description: 'A doc the group edits together', icon: 'note' },
+  { action: 'note', label: 'Document', description: 'Write together, with headings, lists, and tables', icon: 'note' },
   { action: 'module:sheet', label: 'Spreadsheet', description: 'Rows, formulas, and charts', icon: 'table' },
   { action: 'module:presentation', label: 'Presentation', description: 'Slides to present full screen', icon: 'slides' },
   { action: 'article', label: 'Article', description: 'Write it here, then publish it to Articles', icon: 'newspaper' },
@@ -106,7 +107,7 @@ export function renderCreateForm(kind, { onCreate, onCancel }) {
   const nameInput = h('input', {
     type: 'text',
     class: 'input',
-    placeholder: moduleType ? `Name for the ${moduleType.label.toLowerCase()}` : kind === 'folder' ? 'Folder name' : kind === 'note' ? 'Note title' : kind === 'article' ? 'Headline' : 'Link name',
+    placeholder: moduleType ? `Name for the ${moduleType.label.toLowerCase()}` : kind === 'folder' ? 'Folder name' : kind === 'note' ? 'Document title' : kind === 'article' ? 'Headline' : 'Link name',
     'aria-label': 'Name',
   });
   const urlInput = kind === 'link'
@@ -175,7 +176,7 @@ export function renderOpenItem(item, options) {
   return view;
 }
 
-function renderOpenItemView(item, { items, folderName, onBack, context, actions }) {
+function renderOpenItemView(item, { items, folderName, onBack, context, actions, compact = false, onExpand = null, full = false, menu = null }) {
   // Every file gets the Sharing button (Nov 17): who can open it, where it's shared, and where it's published.
   const me = context.currentUser;
   const access = context.isVisitor ? 'edit' : documentAccess(context.moduleId, item, me);
@@ -183,6 +184,16 @@ function renderOpenItemView(item, { items, folderName, onBack, context, actions 
   const onTurn = (targetModuleId) => turnNoteIntoArticle(context.getData().items.find((i) => i.id === item.id) ?? item, { vaultModuleId: context.moduleId, targetModuleId, me });
   const shareButton = context.isVisitor || !me || me.isGuest ? null
     : documentShareButton({ vaultModuleId: context.moduleId, itemId: item.id });
+  // The vault's full page: documents, articles, and module files open in their full editor (vault-full-editor.js).
+  if (full && hasFullEditor(item)) {
+    return renderFullEditor(item, {
+      context, actions, onBack, folderName,
+      extras: [shareButton, menu],
+      aboveEditor: item.kind === 'note' && !context.isVisitor && access === 'edit' && (item.article || targets.length || item.articleDraft)
+        ? [renderToArticle({ targets, draft: item.articleDraft ?? null, onTurn, onOpenDraft: openNoteDraft, writers: noteWriters(item).filter((id) => id !== context.currentUser.id).map(context.getMember).filter(Boolean) }, Boolean(item.article))]
+        : [],
+    });
+  }
   if (item.kind === 'module') {
     return renderModuleFileView(item, {
       vaultModuleId: context.moduleId,
@@ -190,6 +201,8 @@ function renderOpenItemView(item, { items, folderName, onBack, context, actions 
       onBack,
       onRename: (name) => { if (name.trim()) actions.saveQuietly(item.id, { name: name.trim() }); },
       shareButton,
+      compact,
+      onExpand,
     }).element;
   }
   if (item.kind === 'note') {
@@ -208,6 +221,7 @@ function renderOpenItemView(item, { items, folderName, onBack, context, actions 
         onOpenDraft: openNoteDraft,
       },
       shareButton,
+      expand: onExpand ? expandButton(onExpand) : null,
       access,
       comments: access === 'comment' ? renderFileComments({ vaultModuleId: context.moduleId, itemId: item.id, canComment: true }) : null,
       onSaveHtml: (html) => {

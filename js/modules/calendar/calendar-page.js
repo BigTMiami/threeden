@@ -490,8 +490,10 @@ export function renderCalendarPage(container, context) {
       selectedEventId,
       // On a phone, tapping an event or entry opens it over the calendar, with × to come back.
       onOpenEvent: ({ event }) => (isPhone() ? openInSheet(event) : openPanel({ mode: 'details', eventId: event.id })),
+      // A double-click on empty space adds something there (Nov 18: a single click used to).
       // On a phone, a tap on an empty day shows that day; press and hold to add something.
-      onCreateAt: isPhone() ? (date) => { if (view.mode !== 'day') goToDate(date, 'day'); } : startNewEvent,
+      onCreateAt: isPhone() ? startNewInSheet : startNewEvent,
+      onTapEmpty: isPhone() ? (date) => { if (view.mode !== 'day') goToDate(date, 'day'); } : null,
       onLongPressAt: isPhone() ? startNewInSheet : null,
       onCreateRange: (date, time, endTime) => startNewEvent(date, time, endTime),
       onShowDay: (date) => goToDate(date, 'day'),

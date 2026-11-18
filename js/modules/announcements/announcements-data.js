@@ -87,8 +87,9 @@ export function pinLabel(post) {
   return until ? `Pinned until ${new Date(until).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}` : 'Pinned';
 }
 
-export function createPost({ authorId, title = '', body, pin = null, toFeed = true, poll = null, media = [], files = [], rsvp = null, signups = [] }) {
-  return normalizePost({ id: makeId('post'), authorId, title, body, pin, toFeed, poll, media, ...(files.length ? { files } : {}), rsvp, signups, createdAt: Date.now() });
+export function createPost({ authorId, title = '', body, pin = null, toFeed = true, poll = null, media = [], files = [], rsvp = null, signups = [], eventId = null }) {
+  // eventId: a calendar event made with the post (js/ui/event-attach.js), shown on it with its RSVP.
+  return normalizePost({ id: makeId('post'), authorId, title, body, pin, toFeed, poll, media, ...(files.length ? { files } : {}), rsvp, signups, ...(eventId ? { eventId } : {}), createdAt: Date.now() });
 }
 
 /** What to call a post in a sentence: its title, else the start of its text. */

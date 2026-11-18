@@ -134,6 +134,8 @@ export function myUpcoming(me, days = 30) {
         const answer = rsvpOf(event, me.id);
         if (answer === 'going' || answer === 'maybe') return true;
         if (event.inviteeIds.includes(me.id) && answer !== 'no') return true;
+        // Shared with one of your groups (Share → Add to a group's calendar).
+        if ((event.sharedGroupIds ?? []).some((id) => getSpaces().find((s) => s.id === id)?.memberIds.includes(me.id)) && answer !== 'no') return true;
         // Your own homepage's calendar: everything on it is yours.
         return space.kind === 'personal' && mine;
       });

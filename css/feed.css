@@ -839,6 +839,13 @@ a.feed-attach__title:hover {
 /* ─── The group's Board (js/modules/announcements/announcements-card.js) ─── */
 
 .board__compose { margin-bottom: 10px; }
+/* At the bottom right, and it stays in view while the board scrolls (Nov 18). */
+.board-card-body { display: flex; flex-direction: column; }
+.board-card-body > * { flex-shrink: 0; }
+.board__compose--bottom { margin: auto 0 0; padding-top: 10px; }
+.board__compose--bottom:not(.is-open) { position: sticky; bottom: 0; z-index: 2; pointer-events: none; }
+.board__compose--bottom .compose-toggle__bar { padding: 6px 0 2px; }
+.board__compose--bottom .compose-toggle__open { pointer-events: auto; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14); }
 .board__compose .compose-toggle__bar { display: flex; justify-content: flex-end; }
 .board__body { display: flex; flex-direction: column; gap: 10px; }
 

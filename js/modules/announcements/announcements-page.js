@@ -29,6 +29,7 @@
  * Unread / Mine filters are hidden (it's just you).
  */
 
+import { renderEventStrip } from '../blog-feeds/feed-post.js';
 import { renderMediaList } from '../../ui/media-attach.js';
 import { renderAnnouncementFiles } from './announcement-attach.js';
 import { composeToggle } from '../../ui/compose-toggle.js';
@@ -234,6 +235,7 @@ export function renderAnnouncementsPage(container, context) {
         canManage: isMine || canModerate,
       }) : null,
       renderAsks({ getPost: () => posts().find((p) => p.id === post.id), savePost: (fn) => updatePost(post.id, fn), me, canAnswer: !context.isVisitor }),
+      post.eventId ? renderEventStrip(post.eventId, () => drawFeed()) : null,
       h('div', { class: 'announcement-post__footer' },
         likeButton(post, me, () => updatePost(post.id, (p) => toggleLike(p, me.id)), { disabled: context.isVisitor }),
         isSolo ? null : h('span', { class: 'announcement-post__seen' },

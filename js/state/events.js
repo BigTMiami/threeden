@@ -79,6 +79,8 @@ export function hostGroupsOf(event) {
 export function canViewEvent({ event, space }, memberId) {
   if (event.visibility === 'public') return true;
   if (canEditEvent(event, memberId)) return true;
+  // Shared with a group you're in (its calendar shows it).
+  if ((event.sharedGroupIds ?? []).some((groupId) => getSpace(groupId)?.memberIds.includes(memberId))) return true;
   if (event.visibility === 'invite') return canSeeEvent(event, memberId);
   return space.memberIds.includes(memberId) || event.inviteeIds.includes(memberId) || Boolean(rsvpOf(event, memberId));
 }

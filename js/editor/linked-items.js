@@ -79,8 +79,9 @@ export function otherCalendarLinks(memberId, exceptSpaceId) {
 }
 
 /**
- * Events hosted somewhere else with this group as one of the hosts
- * (an event's "Hosts" field), for the group's calendar.
+ * Events and entries from somewhere else that this group hosts (an event's
+ * "Hosts" field) or that were shared with it (Share → Add to a group's
+ * calendar), for the group's calendar.
  */
 function coHostedLinks(groupId) {
   const links = [];
@@ -89,7 +90,7 @@ function coHostedLinks(groupId) {
     for (const source of space.modules) {
       if (source.type !== 'calendar' && source.type !== 'events') continue;
       for (const item of source.data?.events ?? []) {
-        if (!(item.hostGroupIds ?? []).includes(groupId)) continue;
+        if (!(item.hostGroupIds ?? []).includes(groupId) && !(item.sharedGroupIds ?? []).includes(groupId)) continue;
         links.push({ item: structuredClone(item), itemId: item.id, moduleId: source.id, moduleTitle: source.title, spaceId: space.id, spaceName: space.name, status: '' });
       }
     }

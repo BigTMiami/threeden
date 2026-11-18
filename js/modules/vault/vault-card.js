@@ -23,6 +23,9 @@ import { createVaultActions } from './vault-actions.js';
 import {
   TOP_LEVEL_NAME, renderNewMenu, createFilePicker, renderCreateForm, renderOpenItem,
 } from './vault-parts.js';
+import { hasFullEditor } from './vault-full-editor.js';
+import { moreMenu } from '../../ui/more-menu.js';
+import { openShareMany } from '../../ui/document-sharing.js';
 
 export function renderVaultCard(container, context) {
   // View settings (not saved).
@@ -56,11 +59,12 @@ export function renderVaultCard(container, context) {
 
   function openItem(item) {
     if (item.kind === 'folder') return openFolder(item.id);
-    // A module file (kanban, map…) needs room: open it on the vault's full page.
-    if (item.kind === 'module') return context.openFullPage(item.id);
+    // Everything opens right here in the card; the module's expand button
+    // (or ↗ beside the name) opens it in its full editor (vault-full-editor.js).
     openItemId = item.id;
     redraw();
   }
+  const openFullEditor = (itemId) => context.openFullPage(itemId);
 
   function closeItem() {
     openItemId = null;
@@ -162,7 +166,7 @@ export function renderVaultCard(container, context) {
     const children = childrenOf(all, currentFolderId);
 
     if (children.length === 0) {
-      replaceChildren(itemList, emptyState({ tag: 'li', icon: 'folder', title: 'This folder is empty', text: 'Use + New to add a note, a link, or a file.' }));
+      replaceChildren(itemList, emptyState({ tag: 'li', icon: 'folder', title: 'This folder is empty', text: 'Use + New to add a document, a spreadsheet, a presentation, or a file.' }));
       return;
     }
     replaceChildren(itemList, children.map((item) => renderItemRow(item, all)));
@@ -200,10 +204,23 @@ export function renderVaultCard(container, context) {
           `${describeItem(item, all)} · ${timeAgo(item.updatedAt)}${editor ? ` by ${editor.name.split(' ')[0]}` : ''}`),
       ),
       h('span', { class: 'vault-item__actions' },
-        h('button', { type: 'button', class: 'link-button', onClick: () => { renamingItemId = item.id; redraw(); } }, 'Rename'),
-        canDelete(item) ? h('button', { type: 'button', class: 'link-button link-button--danger', onClick: () => actions.deleteItem(item) }, 'Delete') : null,
+        itemMenu(item),
       ),
     );
+  }
+
+  /** "…": Share, Rename, Delete (Nov 18; they were links on every row). */
+  function itemMenu(item) {
+    const me = context.currentUser;
+    return moreMenu({
+      label: `More for “${item.name}”`,
+      items: [
+        !context.isVisitor && me && !me.isGuest && item.kind !== 'link' ? { label: 'Share', icon: 'share', onSelect: () => openShareMany({ vaultModuleId: context.moduleId, itemIds: [item.id], onDone: redraw }) } : null,
+        hasFullEditor(item) ? { label: 'Open in the full editor', icon: 'expand', onSelect: () => openFullEditor(item.id) } : null,
+        { label: 'Rename', icon: 'pencil', onSelect: () => { renamingItemId = item.id; redraw(); } },
+        canDelete(item) ? { label: 'Delete', icon: 'trash', danger: true, onSelect: () => actions.deleteItem(item) } : null,
+      ],
+    });
   }
 
   const folderView = h('div', { class: 'vault__folder-view' }, createFormSlot, itemList);
@@ -221,6 +238,8 @@ export function renderVaultCard(container, context) {
       onBack: closeItem,
       context,
       actions,
+      compact: true,
+      onExpand: hasFullEditor(item) ? () => openFullEditor(item.id) : null,
     }));
   }
 
@@ -228,6 +247,8 @@ export function renderVaultCard(container, context) {
 
   function redraw() {
     const isItemOpen = openItemId !== null;
+    // The module's expand button opens what's open here in its full editor.
+    context.setExpandTarget?.(isItemOpen && hasFullEditor(findItem(openItemId)) ? openItemId : null);
     toolbar.hidden = isItemOpen;
     menuSlot.hidden = isItemOpen;
     folderView.hidden = isItemOpen;
@@ -247,5 +268,5 @@ export function renderVaultCard(container, context) {
   container.append(toolbar, menuSlot, folderView, itemView, fileInput);
   redraw();
 
-  return () => document.removeEventListener('click', handleDocumentClick);
+  return () => { document.removeEventListener('click', handleDocumentClick); context.setExpandTarget?.(null); };
 }

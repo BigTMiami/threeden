@@ -11,7 +11,7 @@
  *   │ Location [                 ] │
  *   │ Who can see it ○ Group members ○ Invite only ○ Public │   (events)
  *   │ Invite [Leo][Maya]… [@username] │                          (events)
- *   │ Who's involved [Leo][Maya]   │                             (entries)
+ *   │ People  [Maya ×] add…        │   on their calendars too    (entries)
  *   │ Notes [                    ] │
  *   │ [+ Add ▾] Cover photo · Repeat · Tags · Limit · Which time works?
  *   │ Delete            Cancel Save│
@@ -39,6 +39,8 @@ import { h, appendChildren, replaceChildren } from '../../ui/dom.js';
 import { pollAttacher } from '../../ui/poll-view.js';
 import { icon } from '../../ui/icons.js';
 import { memberToggles } from '../../ui/member-toggles.js';
+import { createPeopleSearch } from '../../ui/people-search.js';
+import { messageablePeople, recipientContext } from '../../messages/recipients.js';
 import { addDays, daysBetween } from '../../utils/dates.js';
 import {
   REPEAT_OPTIONS, VISIBILITY, KINDS, addMinutesToTime, timeToMinutes, minutesToTime, DEFAULT_EVENT_LENGTH_MINUTES,
@@ -217,11 +219,25 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
   function drawGuests() {
     guestsSlot.replaceChildren();
     if (draft.kind === 'entry') {
-      if (!showAttendees) return;
+      // People (Nov 18): anyone you can message, on any calendar, your own
+      // included. It shows on their calendars too (linked items).
+      if (!me) return;
+      const keepMe = draft.attendeeIds.includes(me.id) || !draft.attendeeIds.length;
+      const choosable = [...members, ...messageablePeople(me)]
+        .filter((p, i, all) => p && p.id !== me.id && all.findIndex((x) => x.id === p.id) === i);
+      const people = createPeopleSearch({
+        people: choosable,
+        suggestedIds: members.filter((m) => m.id !== me.id).map((m) => m.id),
+        selectedIds: draft.attendeeIds.filter((id) => id !== me.id),
+        describe: (p) => (members.some((m) => m.id === p.id) ? 'In this group' : recipientContext(me, p)),
+        label: 'Add people',
+        placeholder: 'Add people by name or @username',
+        onChange: (ids) => { draft.attendeeIds = [...(keepMe ? [me.id] : []), ...ids]; },
+      });
       appendChildren(guestsSlot, [
-        h('span', { class: 'event-editor__label' }, 'Who’s involved'),
-        memberToggles(members, draft.attendeeIds, (ids) => { draft.attendeeIds = ids; }, 'Who’s involved'),
-        h('span', { class: 'event-editor__hint' }, 'It shows on their own calendars too.')]);
+        h('span', { class: 'event-editor__label' }, 'People'),
+        people.element,
+        h('span', { class: 'event-editor__hint' }, 'It shows on their calendars too.')]);
       return;
     }
     const invited = draft.inviteeIds.map((id) => getAccounts().find((a) => a.id === id)).filter(Boolean);

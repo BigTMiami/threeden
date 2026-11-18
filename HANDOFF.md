@@ -114,6 +114,33 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Vault editors, calendar sharing, posts with events (Nov 18):**
+  - Vault: ITEM_KINDS note label is "Document" (kind stays 'note'). Rows use
+    `moreMenu()` (js/ui/more-menu.js; floats via followAnchor). The card
+    opens every file inline (module files with their card renderer:
+    `renderModuleFileView({ compact })`) and calls `context.setExpandTarget`;
+    module-frame's expand reads `expandTargetOf()` (before leaving edit mode,
+    which redraws the card) and passes it as a focus request. The vault page
+    renders `renderFullEditor` (vault-full-editor.js) for notes/module files
+    with `.vault-page.is-editing` hiding the tree and toolbar; documents use
+    the Note module's renderFullPage through `documentContext()`.
+  - Calendar views: `onCreateAt` is double-click now; `onTapEmpty` is the
+    single click (phones: go to the day). The card counts two clicks on the
+    same day within 450 ms itself (its redraw detaches the button, so no
+    dblclick event arrives).
+  - Entries: People field = people search (messageablePeople + members) on
+    attendeeIds, any calendar.
+  - Sharing: `event.sharedGroupIds`; coHostedLinks includes them; Upcoming
+    events in a group reads its calendar's linked items; myUpcoming and
+    canViewEvent count them. Send in 3den adds recipients to inviteeIds when
+    `canEditEvent || visibility !== 'invite'`. Entries: openEntryShare.
+  - Board composer: eventAttacher + askAttacher always (RSVP only with
+    withAsks); post.eventId → renderEventStrip (card, page, Feed). Feed
+    composer: sign-ups as attachment `{ kind: 'signups', signups }`,
+    rendered by renderPostSignups with renderAsks. Board "+ Post" is last in
+    `.board-card-body` (a column), sticky at the bottom while closed.
+  - Tests: test_vault_full_editor.py, test_share_events_posts.py.
+
 - **Security tabs (Nov 18):** js/state/security.js holds `member.security`
   (passkeys, twoStep, passkeyUnlock, recoveryKeyAt, previews, disappearing,
   newDeviceAlerts, leaveNoTrace) and `space.security` (encrypt,

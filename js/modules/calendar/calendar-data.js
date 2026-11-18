@@ -41,6 +41,8 @@
  *     cohostIds,       // people hosting with the creator: the "Hosts" field
  *     hostGroupIds,    // groups hosting it: their members can edit it, and it
  *                      // shows on their calendars (js/editor/linked-items.js)
+ *     sharedGroupIds,  // groups it was shared with: on their calendars, Upcoming
+ *                      // events, and members' Dashboards (js/events/event-share.js)
  *     rsvps,           // { [memberId]: 'going' | 'maybe' | 'no' }  (Partiful-style RSVPs)
  *     rsvpAt,          // { [memberId]: when they said Going } (optional; regulars.js)
  *     capacity,        // most people who can say "going", or null for no limit
@@ -143,6 +145,7 @@ export function normalizeEvent(event) {
     capacity: null,
     cohostIds: [], // co-hosts: same powers as the host (hostIdsOf)
     hostGroupIds: [], // groups hosting it with you: their members can edit it (canEditEvent in js/state/events.js)
+    sharedGroupIds: [], // groups it was shared with (Share → Add to a group's calendar): on their calendars, members can see it
     hiddenFrom: [], // people who took it off their own homepage calendar ("Show on my calendar")
     waitlist: [], // in order; the first moves up when a spot opens (applyRsvp)
     area: null, // a place id from js/utils/places.js, for "events near me"
