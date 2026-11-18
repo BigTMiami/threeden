@@ -74,12 +74,12 @@ with sync_playwright() as p:
             pg.locator('#space-header').get_by_role('button', name='Edit').first.click(); pg.wait_for_timeout(300)
             inside(pg.locator('#space-header [role=menu]').first.bounding_box(), width, f'{width}px {space} Edit menu')
             pg.get_by_role('menuitem', name='Edit this page').click(); pg.wait_for_timeout(500)
-            pg.locator('.edit-bar').get_by_role('button', name='Layout').first.click(); pg.wait_for_timeout(400)
+            pg.locator('.layout-menu__button').first.click(); pg.wait_for_timeout(400)
             inside(pg.locator('.layout-menu').bounding_box(), width, f'{width}px {space} Layout menu')
             if width == 390 and space == '#space-juniper':
                 pg.screenshot(path='test-output/out/phone-layout-menu.png')
             pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
-            pg.get_by_role('button', name='Done').first.click(); pg.wait_for_timeout(300)
+            pg.get_by_role('button', name='Done editing').first.click(); pg.wait_for_timeout(300)
 
     # The Layout menu still opens from the button on a computer.
     pg.set_viewport_size({'width': 1300, 'height': 900})
@@ -87,7 +87,7 @@ with sync_playwright() as p:
     pg.locator('#space-header').get_by_role('button', name='Edit').first.click(); pg.wait_for_timeout(300)
     inside(pg.locator('#space-header [role=menu]').first.bounding_box(), 1300, 'desktop Edit menu')
     pg.get_by_role('menuitem', name='Edit this page').click(); pg.wait_for_timeout(500)
-    pg.locator('.edit-bar').get_by_role('button', name='Layout').first.click(); pg.wait_for_timeout(400)
+    pg.locator('.layout-menu__button').first.click(); pg.wait_for_timeout(400)
     btn = pg.locator('.layout-menu__button').bounding_box(); menu = pg.locator('.layout-menu').bounding_box()
     check(abs(menu['x'] - btn['x']) < 2, 'desktop Layout menu lines up with its button')
 

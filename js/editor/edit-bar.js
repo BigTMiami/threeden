@@ -1,90 +1,90 @@
 // @ts-check
 /**
- * The bar at the bottom while you edit a homepage, and the banner while you
- * look at a group the way its members do.
+ * edit-bar.js — the editing controls in a page's header (Nov 17; they used
+ * to sit in a bar at the bottom of the screen).
  *
- *   ┌────────────────────────────────────────────────────────────────────┐
- *   │ ✎ Editing Juniper Book Club. Changes save as you go.               │
- *   │  [▦ Layout: Spotlight ▾] [Featured: Forum ▾]  [👁 See it as a member] [✓ Done editing] │
+ *   Not editing:  [✎ Edit ▾]
+ *   Editing:      [▦ Layouts ▾] [👁 Preview] [✓ Done editing]
+ *   Previewing:   👁 Previewing (as a member)  [Back to editing]
  *
- * Layout opens a menu of the page layouts (js/editor/page-layouts.js), each
- * with a small drawing; it applies to the tab you're on. Layouts with a
- * featured column also get a Featured picker. Once someone has set the
- * order modules come in on phones (the small phone numbers on each module),
- * "Reset phone order" puts it back to the page's own order.
- *   └────────────────────────────────────────────────────────────────────┘
+ * Layouts opens the page layouts (js/editor/page-layouts.js), each with a
+ * small drawing; it applies to the tab you're on. Under them, a layout with
+ * a featured column has its Featured picker (and "Fit to content" once its
+ * height was set), and "Reset phone order" once someone has set the order
+ * modules come in on phones.
  *
- *   ┌────────────────────────────────────────────────────────────────────┐
- *   │ 👁 You’re seeing Juniper Book Club as a member would.  [Back to editing] │
- *   └────────────────────────────────────────────────────────────────────┘
+ * Preview shows the page without the editing controls. In a group it turns
+ * your admin role off for the group until you come back (store.setMemberView),
+ * so tabs, buttons, and settings links that only admins get disappear, just
+ * as members see it. Leaving the page ends the preview.
  *
- * "See it as a member" turns your admin role off for this group until you
- * come back (store.setMemberView), so tabs, buttons, and settings links
- * that only admins get disappear, just as members see it.
+ *   initEditBar()            once, at startup (ends a preview when you leave the page)
+ *   editingControls()        → the three buttons, for space-header.js
+ *   previewControls(space)   → the "Previewing" note and Back to editing
+ *   isPagePreview()          → is the page being previewed?
  */
 
-import { h, replaceChildren } from '../ui/dom.js';
+import { h } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { getCurrentSpace, getVisibleModules, isEditMode, isMemberView, setEditMode, setMemberView, subscribe, getPageLayout, setPageLayout, setFeaturedModule, setFeaturedRows, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
 import { LAYOUTS, layoutById } from './page-layouts.js';
 import { getRoute, onRouteChange } from '../router.js';
 
-let bar = null;
-let cameFromEditing = false;
+/** The space being previewed (personal pages and blogs; groups use the member view). */
+let previewSpaceId = null;
 
-export function initEditBar() {
-  bar = h('div', { class: 'edit-bar', role: 'region', 'aria-label': 'Editing', hidden: true });
-  document.body.append(bar);
-  for (const event of ['mode', 'space', 'layout']) subscribe(event, draw);
-  onRouteChange(() => {
-    // Leaving the homepage (to a module, settings, another page) ends the member view.
-    if (isMemberView() && getRoute().page !== 'home') setMemberView(false);
-    draw();
-  });
-  draw();
+export function isPagePreview() {
+  const space = getCurrentSpace();
+  return Boolean(space) && (isMemberView() || previewSpaceId === space.id);
 }
 
-function draw() {
-  if (!bar) return;
+export function initEditBar() {
+  const update = () => {
+    const space = getCurrentSpace();
+    const onHome = getRoute().page === 'home';
+    // Leaving the page (to a module, settings, another page) ends a preview.
+    if (isMemberView() && !onHome) setMemberView(false);
+    if (previewSpaceId && (!onHome || space?.id !== previewSpaceId)) previewSpaceId = null;
+    if (isEditMode()) previewSpaceId = null;
+    document.body.classList.toggle('is-editing-page', onHome && (isEditMode() || isPagePreview()));
+  };
+  for (const event of ['mode', 'space']) subscribe(event, update);
+  onRouteChange(update);
+  update();
+}
+
+/** Preview: the page as people see it, without the editing controls. */
+function startPreview() {
   const space = getCurrentSpace();
-  const onHome = getRoute().page === 'home';
-  const editing = onHome && isEditMode();
-  const asMember = onHome && isMemberView();
-  bar.hidden = !(editing || asMember);
-  document.body.classList.toggle('has-edit-bar', !bar.hidden);
-  if (bar.hidden) { replaceChildren(bar); return; }
+  layoutMenuOpen = false;
+  if (space?.kind === 'group') { setMemberView(true); return; }
+  previewSpaceId = space?.id ?? null;
+  setEditMode(false);
+}
 
-  if (asMember) {
-    bar.classList.add('edit-bar--member');
-    replaceChildren(bar,
-      h('p', { class: 'edit-bar__text', role: 'status' }, icon('eye', 15), h('span', {}, 'You’re seeing ', h('strong', {}, space.name), ' as a member would.')),
-      h('div', { class: 'edit-bar__actions' },
-        h('button', {
-          type: 'button',
-          class: 'button button--primary button--small',
-          onClick: () => setMemberView(false, { backToEditing: cameFromEditing }),
-        }, cameFromEditing ? 'Back to editing' : 'Back to my view')));
-    return;
-  }
+function backToEditing() {
+  if (isMemberView()) { setMemberView(false, { backToEditing: true }); return; }
+  previewSpaceId = null;
+  setEditMode(true);
+}
 
-  bar.classList.remove('edit-bar--member');
-  const isGroup = space.kind === 'group';
-  replaceChildren(bar,
-    h('p', { class: 'edit-bar__text' }, icon('pencil', 15), h('span', {}, 'Editing ', h('strong', {}, space.name), '. Changes save as you go.')),
-    h('div', { class: 'edit-bar__actions' },
-      layoutPicker(),
-      featuredPicker(),
-      hasPhoneOrder() ? h('button', { type: 'button', class: 'link-button edit-bar__phone-reset', title: 'Phones show modules in the page’s own order again', onClick: resetPhoneOrder }, icon('phone', 13), ' Reset phone order') : null,
-      isGroup ? h('button', {
-        type: 'button',
-        class: 'button button--small',
-        onClick: () => { cameFromEditing = true; setMemberView(true); },
-      }, icon('eye', 14), ' See it as a member') : null,
-      h('button', {
-        type: 'button',
-        class: 'button button--primary button--small',
-        onClick: () => { cameFromEditing = false; setEditMode(false); },
-      }, icon('check', 14), ' Done editing')));
+export function editingControls() {
+  return [
+    layoutsControl(),
+    h('button', { type: 'button', class: 'button space-header__preview', onClick: startPreview }, icon('eye', 16), ' Preview'),
+    h('button', {
+      type: 'button',
+      class: 'button button--primary space-header__done',
+      onClick: () => { layoutMenuOpen = false; setEditMode(false); },
+    }, icon('check', 16), ' Done editing'),
+  ];
+}
+
+export function previewControls(space) {
+  return [
+    h('span', { class: 'space-header__previewing', role: 'status' }, icon('eye', 15), space.kind === 'group' ? ' Previewing as a member' : ' Previewing'),
+    h('button', { type: 'button', class: 'button button--primary', onClick: backToEditing }, icon('pencil', 16), ' Back to editing'),
+  ];
 }
 
 /** A small drawing of a layout, for its menu item. */
@@ -119,61 +119,79 @@ function sketch(id) {
   return svg;
 }
 
+/** Whether the Layouts menu is open (kept while the header redraws). */
 let layoutMenuOpen = false;
-function layoutPicker() {
+
+/** "Layouts": the layouts, then the featured column's picker and the phone order. */
+function layoutsControl() {
   const current = getPageLayout();
-  const menu = h('div', { class: 'layout-menu', role: 'menu', 'aria-label': 'Page layouts', hidden: !layoutMenuOpen },
-    LAYOUTS.map((layout) => h('button', {
+  const menu = h('div', { class: 'layout-menu layout-menu--down', role: 'menu', 'aria-label': 'Page layouts', hidden: !layoutMenuOpen },
+    h('div', { class: 'layout-menu__layouts' }, LAYOUTS.map((layout) => h('button', {
       type: 'button',
       role: 'menuitemradio',
       'aria-checked': String(layout.id === current.kind),
       class: `layout-menu__item${layout.id === current.kind ? ' is-current' : ''}`,
       onClick: () => { layoutMenuOpen = false; setPageLayout(layout.id); },
-    }, sketch(layout.id), h('span', { class: 'layout-menu__text' }, h('strong', {}, layout.label), h('span', {}, layout.description)))));
+    }, sketch(layout.id), h('span', { class: 'layout-menu__text' }, h('strong', {}, layout.label), h('span', {}, layout.description))))),
+    layoutExtras());
   const button = h('button', {
     type: 'button',
-    class: 'button button--small layout-menu__button',
+    class: 'button layout-menu__button',
     'aria-haspopup': 'true',
     'aria-expanded': String(layoutMenuOpen),
-    onClick: () => { layoutMenuOpen = !layoutMenuOpen; draw(); },
-  }, sketch(current.kind), ` Layout: ${layoutById(current.kind).label}`, icon('chevronUp', 12));
-  if (layoutMenuOpen) {
-    const close = (event) => {
-      if (event.type === 'keydown' && event.key !== 'Escape') return;
-      if (event.type === 'pointerdown' && wrapper.contains(event.target)) return;
-      document.removeEventListener('pointerdown', close, true);
-      document.removeEventListener('keydown', close, true);
-      if (layoutMenuOpen) { layoutMenuOpen = false; draw(); }
-    };
-    setTimeout(() => { document.addEventListener('pointerdown', close, true); document.addEventListener('keydown', close, true); });
+    title: `Layout: ${layoutById(current.kind).label}`,
+    onClick: () => setOpen(!layoutMenuOpen),
+  }, sketch(current.kind), ' Layouts', icon('chevronDown', 12));
+  const wrapper = h('div', { class: 'layout-menu__wrap' }, button, menu);
+
+  function onOutside(event) {
+    if (event.type === 'keydown' && event.key !== 'Escape') return;
+    if (event.type === 'pointerdown' && wrapper.contains(event.target)) return;
+    setOpen(false);
   }
-  const wrapper = h('div', { class: 'layout-menu__wrap' }, menu, button);
-  if (layoutMenuOpen) requestAnimationFrame(() => keepMenuOnScreen(menu, wrapper));
+  function setOpen(open) {
+    layoutMenuOpen = open;
+    menu.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    document.removeEventListener('pointerdown', onOutside, true);
+    document.removeEventListener('keydown', onOutside, true);
+    if (open) {
+      setTimeout(() => { document.addEventListener('pointerdown', onOutside, true); document.addEventListener('keydown', onOutside, true); });
+      requestAnimationFrame(() => keepMenuOnScreen(menu, wrapper));
+    }
+  }
+  if (layoutMenuOpen) setOpen(true);
   return wrapper;
 }
 
+/** Under the layouts: Featured (and Fit to content), and Reset phone order, when they apply. */
+function layoutExtras() {
+  const layout = getPageLayout();
+  const modules = getVisibleModules();
+  const featured = layoutById(layout.kind).featured && modules.length >= 2;
+  const phone = hasPhoneOrder();
+  if (!featured && !phone) return null;
+  return h('div', { class: 'layout-menu__extras' },
+    featured ? h('label', { class: 'layout-menu__featured' }, 'Featured ',
+      h('select', { class: 'input input--compact', 'aria-label': 'Featured module', onChange: (event) => setFeaturedModule(event.target.value) },
+        modules.map((m) => h('option', { value: m.id, selected: m.id === layout.featuredId }, m.title)))) : null,
+    // Its height was set with the resize handle: back to growing with its content.
+    featured && layout.featuredRows ? h('button', { type: 'button', class: 'link-button layout-menu__fit', onClick: () => setFeaturedRows(null) }, 'Fit to content') : null,
+    phone ? h('button', { type: 'button', class: 'link-button layout-menu__phone-reset', title: 'Phones show modules in the page’s own order again', onClick: resetPhoneOrder }, icon('phone', 13), ' Reset phone order') : null);
+}
+
 /**
- * Slide the open Layout menu sideways so all of it is on screen. It opens
- * from the button's left edge, which on a phone can push it off either side.
+ * Slide the open Layouts menu sideways so all of it is on screen. It opens
+ * under the button's left edge, which can push it off either side.
  */
 function keepMenuOnScreen(menu, wrapper) {
   if (!menu.isConnected) return;
+  menu.style.left = '';
+  menu.style.right = '';
   const margin = 8;
   const anchor = wrapper.getBoundingClientRect().left;
   const width = menu.getBoundingClientRect().width;
   const left = Math.max(margin, Math.min(anchor, window.innerWidth - margin - width));
   menu.style.left = `${left - anchor}px`;
   menu.style.right = 'auto';
-}
-
-function featuredPicker() {
-  const layout = getPageLayout();
-  if (!layoutById(layout.kind).featured) return null;
-  const modules = getVisibleModules();
-  if (modules.length < 2) return null;
-  return [h('label', { class: 'edit-bar__featured' }, 'Featured ',
-    h('select', { class: 'input input--compact', 'aria-label': 'Featured module', onChange: (event) => setFeaturedModule(event.target.value) },
-      modules.map((m) => h('option', { value: m.id, selected: m.id === layout.featuredId }, m.title)))),
-    // Its height was set with the resize handle: back to growing with its content.
-    layout.featuredRows ? h('button', { type: 'button', class: 'link-button edit-bar__fit', onClick: () => setFeaturedRows(null) }, 'Fit to content') : null];
 }

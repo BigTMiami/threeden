@@ -669,63 +669,8 @@ select option {
   font-size: var(--font-size-body);
 }
 
-/* ─── Done-editing bar and "See it as a member" (js/editor/edit-bar.js) ─── */
-.edit-bar {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--tab-bar-height, 0px) + var(--safe-bottom, 0px) + 14px);
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: max-content;
-  min-width: min(760px, calc(100vw - 24px));
-  max-width: min(1100px, calc(100vw - 24px));
-  flex-wrap: wrap;
-  padding: 10px 12px 10px 16px;
-  transform: translateX(-50%);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  background: var(--color-surface);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.16);
-}
-
-.edit-bar[hidden] { display: none; }
-
-.edit-bar--member {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 9%, var(--color-surface));
-}
-
-.edit-bar__text {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: var(--font-size-small, 14px);
-}
-
-.edit-bar__text svg { flex: none; color: var(--color-accent); }
-.edit-bar__text { min-width: 220px; }
-.edit-bar__fit { white-space: nowrap; }
-
-.edit-bar__actions {
-  display: flex;
-  flex: none;
-  gap: 8px;
-}
-
-body.has-edit-bar main,
-body.has-edit-bar #app { padding-bottom: 90px; }
-
-/* The + button would sit on top of the bar. */
-body.has-edit-bar .quick-create__button--float { display: none; }
-
-@media (max-width: 640px) {
-  .edit-bar { flex-direction: column; align-items: stretch; gap: 8px; }
-  .edit-bar__actions { justify-content: flex-end; }
-}
+/* While editing or previewing a page, the floating + is out of the way. */
+body.is-editing-page .quick-create__button--float { display: none; }
 
 /* ─── Ctrl+K: jump anywhere (js/editor/jump.js) ─────────────────────────── */
 .jump-backdrop {

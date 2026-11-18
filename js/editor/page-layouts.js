@@ -1,8 +1,8 @@
 // @ts-check
 /**
  * page-layouts.js — the ways a page (one tab of a group, blog, or homepage)
- * can be laid out. Chosen in edit mode with "Layout" in the bar at the
- * bottom (edit-bar.js); saved per tab (store.getPageLayout); drawn by grid.js.
+ * can be laid out. Chosen in edit mode with "Layouts" in the page header
+ * (edit-bar.js); saved per tab (store.getPageLayout); drawn by grid.js.
  *
  *   grid        the 12-column grid: drag, drop, and resize anything (the default)
  *   spotlight   one module down the middle, growing with its content; the rest

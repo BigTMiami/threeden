@@ -19,7 +19,7 @@ with sync_playwright() as p:
     if nums != [str(i+1) for i in range(len(ids))]: errs.append('numbers should start in page order')
     last=ids[-1]
     pg.locator(f'.module-frame[data-module-id="{last}"] .module-frame__phone-select').select_option('1'); pg.wait_for_timeout(500)
-    print('after moving the last to 1:', pg.locator(f'.module-frame[data-module-id="{last}"] .module-frame__phone-select').input_value(), '| first module now:', pg.locator(f'.module-frame[data-module-id="{ids[0]}"] .module-frame__phone-select').input_value(), '| reset shown:', pg.locator('.edit-bar__phone-reset').count())
+    print('after moving the last to 1:', pg.locator(f'.module-frame[data-module-id="{last}"] .module-frame__phone-select').input_value(), '| first module now:', pg.locator(f'.module-frame[data-module-id="{ids[0]}"] .module-frame__phone-select').input_value(), '| reset shown:', st(pg, 'return s.hasPhoneOrder()'))
     pg.screenshot(path='test-output/phone-order-edit.png')
     st(pg, "s.setEditMode(false); return 1")
     pg.set_viewport_size({'width':390,'height':844}); pg.wait_for_timeout(700)
@@ -27,8 +27,9 @@ with sync_playwright() as p:
     print('phone order first:', phone[0]==last, '| desktop page order unchanged:', st(pg, "return s.getVisibleModules().map(m=>m.id)")==ids)
     if phone[0]!=last: errs.append('phone should show the moved module first')
     pg.set_viewport_size({'width':1300,'height':900}); st(pg, "s.setEditMode(true); return 1"); pg.wait_for_timeout(600)
-    pg.locator('.edit-bar__phone-reset').click(); pg.wait_for_timeout(400)
-    print('reset: numbers', pg.locator('.module-grid > .module-frame .module-frame__phone-select').evaluate_all("els=>els.map(e=>e.value)"), '| reset gone:', pg.locator('.edit-bar__phone-reset').count()==0)
+    pg.locator('.layout-menu__button').click(); pg.wait_for_timeout(200)
+    pg.locator('.layout-menu__phone-reset').click(); pg.wait_for_timeout(400)
+    print('reset: numbers', pg.locator('.module-grid > .module-frame .module-frame__phone-select').evaluate_all("els=>els.map(e=>e.value)"), '| reset gone:', pg.locator('.layout-menu__phone-reset').count()==0)
     # works with a layout too: spotlight puts the featured module first by default
     st(pg, "s.setPageLayout('spotlight'); return 1"); pg.wait_for_timeout(500)
     fid=st(pg, "return s.getPageLayout().featuredId")

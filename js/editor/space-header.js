@@ -29,6 +29,7 @@ import { personMenu } from '../feed/post-menu.js';
 import { renderWelcomeChecklist } from '../groups/welcome-checklist.js';
 import { renderGroupSuggestion } from '../groups/group-suggestions.js';
 import { openLibrarySheet } from './library.js';
+import { editingControls, previewControls, isPagePreview } from './edit-bar.js';
 import { formatShortDate } from '../utils/dates.js';
 import { openShareCard } from '../ui/share-card.js';
 import { canHaveLinksPage, linksHref } from '../groups/links-page.js';
@@ -68,6 +69,7 @@ export function initSpaceHeader(container) {
   headerElement = container;
   subscribe('mode', renderSpaceHeader);
   subscribe('space', renderSpaceHeader);
+  subscribe('layout', () => { if (isEditMode()) renderSpaceHeader(); }); // the Layouts menu follows the layout
   subscribe('account', renderSpaceHeader); // friend requests change the blog's buttons
   subscribe('person', renderSpaceHeader); // so do follows
   renderSpaceHeader();
@@ -185,10 +187,13 @@ export function renderSpaceHeader() {
         onClick: () => openLibrarySheet(),
       }, icon('plus', 16), ' Add modules') : null,
       // One way in: Edit opens the page itself, its layout, or its settings.
-      // While editing, "Done editing" lives in the bar at the bottom (edit-bar.js).
-      // A blog's Edit goes straight into edit mode; its layout and settings are in the edit bar.
-      canEdit && !editMode && isBlog ? h('button', { type: 'button', class: 'button', onClick: () => setEditMode(true) }, icon('pencil', 16), ' Edit') : null,
-      canEdit && !editMode && !isBlog ? friendMenu('Edit', 'pencil', 'Edit this page, its layout, or its settings', [
+      // While editing, Edit becomes Layouts, Preview, and Done editing (edit-bar.js);
+      // while previewing, "Previewing" and Back to editing.
+      canEdit && editMode ? editingControls() : null,
+      isPagePreview() ? previewControls(space) : null,
+      // A blog's Edit goes straight into edit mode.
+      canEdit && !editMode && !isPagePreview() && isBlog ? h('button', { type: 'button', class: 'button', onClick: () => setEditMode(true) }, icon('pencil', 16), ' Edit') : null,
+      canEdit && !editMode && !isPagePreview() && !isBlog ? friendMenu('Edit', 'pencil', 'Edit this page, its layout, or its settings', [
         [isBlog ? 'Edit this blog' : 'Edit this page', () => setEditMode(true)],
         space.kind === 'personal' ? ['Layout and templates', () => goTo(settingsHref(space.id, 'layout'))] : null,
         [space.kind === 'group' ? 'Group settings' : 'Settings', () => goTo(settingsHref(space.id))],

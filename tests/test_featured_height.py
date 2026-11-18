@@ -1,5 +1,5 @@
 # The featured module in Spotlight (and Main and sidebar) grows with its content until someone drags its resize handle;
-# then it keeps that height (saved as the layout's featuredRows, not the module's grid size). "Fit to content" in the bar undoes it.
+# then it keeps that height (saved as the layout's featuredRows, not the module's grid size). "Fit to content" in the Layouts menu undoes it.
 from playwright.sync_api import sync_playwright
 import os; os.makedirs('test-output', exist_ok=True)
 errs=[]
@@ -32,6 +32,7 @@ with sync_playwright() as p:
     # Main and sidebar keeps it; Fit to content undoes it
     st(pg, "s.setPageLayout('sidebar'); return 1"); pg.wait_for_timeout(600)
     print('sidebar main fixed too:', 'module-frame--fixed' in pg.locator('.layout-col--main .module-frame').first.get_attribute('class'))
+    pg.locator('.layout-menu__button').click(); pg.wait_for_timeout(200)
     pg.get_by_role('button', name='Fit to content').click(); pg.wait_for_timeout(600)
     print('after Fit to content:', st(pg, "return s.getPageLayout().featuredRows"), '| grows:', 'module-frame--grow' in pg.locator('.layout-col--main .module-frame').first.get_attribute('class'))
     if st(pg, "return s.getPageLayout().featuredRows") is not None: errs.append('Fit to content did not reset')

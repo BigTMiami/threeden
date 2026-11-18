@@ -114,6 +114,19 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Editing controls in the header (Nov 17):** while editing, the page
+  header shows `editingControls()` (Layouts, Preview, Done editing) from
+  js/editor/edit-bar.js instead of Edit; the bottom bar is gone (the file
+  keeps its name). Layouts is the old layout menu opening downward
+  (`.layout-menu--down`), with Featured / Fit to content / Reset phone order
+  under the layouts (`layoutExtras()`). Preview: groups use
+  `setMemberView(true)`; other pages set `previewSpaceId` and leave edit
+  mode; `isPagePreview()` makes the header show `previewControls()`.
+  `initEditBar()` ends previews when you leave the page and toggles
+  `body.is-editing-page` (hides the floating +). The header redraws on
+  'layout' while editing. Test: `test_edit_controls.py`; five tests moved
+  off `.edit-bar`.
+
 - **File from vault; Canvas deleted; My Homepage's list (Nov 17):** Document,
   Spreadsheet, and Presentation are `hiddenFromLibrary` everywhere; the
   vaultfile module is now labeled "File from vault" and in the list. Its
@@ -135,9 +148,8 @@ functions, no build step.
   folders with editable who-can-open / shared in / published, a Publish
   button (Post for photos and videos) opening a "where to publish" overlay
   (blog feeds first, then groups, expandable), photo and video tiles in
-  vaults, selecting several vault files at once; (2) in edit mode, Edit
-  becomes "Done editing" with "Layouts" and "Preview" buttons to its left,
-  replacing the bottom bar.
+  vaults, selecting several vault files at once (still to do); (2) the
+  header editing controls (done, see below).
 
 - **New message: search people (Nov 17):** the To box on `#messages-new` and
   in the + menu's Message is `createPeopleSearch()` (js/ui/people-search.js):

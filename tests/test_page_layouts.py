@@ -11,7 +11,7 @@ with sync_playwright() as p:
     pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
     st(pg, "s.addModule('forum'); s.addModule('chat'); s.setEditMode(true); return 1"); pg.wait_for_timeout(600)
-    bar=pg.locator('.edit-bar')
+    bar=pg.locator('#space-header')
     bar.locator('.layout-menu__button').click(); pg.wait_for_timeout(200)
     items=pg.locator('.layout-menu__item strong').all_inner_texts(); print('layouts:', len(items), items)
     if len(items)!=12: errs.append('12 layouts')
@@ -28,7 +28,8 @@ with sync_playwright() as p:
     bar.locator('.layout-menu__button').click(); pg.locator('.layout-menu__item', has_text='Spotlight').click(); pg.wait_for_timeout(500)
     center=pg.locator('.layout-col--center .module-frame'); print('spotlight middle:', center.get_attribute('data-module-type'), '| grows:', 'module-frame--grow' in center.get_attribute('class'))
     sides=[pg.locator('.layout-col--side').nth(i).locator('.module-frame').count() for i in range(2)]; print('sides:', sides)
-    sel=bar.locator('.edit-bar__featured select'); opts=sel.locator('option').all_inner_texts(); target=[o for o in opts if o!=sel.locator('option:checked').inner_text()][0]
+    bar.locator('.layout-menu__button').click(); pg.wait_for_timeout(200)
+    sel=bar.locator('.layout-menu__featured select'); opts=sel.locator('option').all_inner_texts(); target=[o for o in opts if o!=sel.locator('option:checked').inner_text()][0]
     sel.select_option(label=target); pg.wait_for_timeout(400)
     print('featured picked:', target, '->', pg.locator('.layout-col--center .module-frame .module-frame__title, .layout-col--center .module-frame__title-input').first.evaluate("e=>e.value||e.textContent"))
     # drag a side module onto the middle
