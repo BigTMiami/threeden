@@ -4,9 +4,8 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':390,'height':844}, has_touch=True, is_mobile=True)
     errs=[]
     pg=ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e))); pg.goto('http://localhost:8765/index.html'); pg.evaluate("localStorage.clear(); localStorage.setItem('3den.phone-homepage-layout','list')"); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
-    # Groups open on widgets on phones (Nov 18), so the List mode is checked on the personal homepage.
-    pid=pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getPersonalSpace().id})()")
-    pg.evaluate(f"location.hash='#space-{pid}'"); pg.wait_for_timeout(900)
+    # Groups and homepages open on widgets on phones (Nov 18); blogs keep the List mode, so it's checked there.
+    pg.evaluate("location.hash='#blog-leo'"); pg.wait_for_timeout(900)
     pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(200)
     cdp=ctx.new_cdp_session(pg)
     def drag(x,y,dy):
@@ -19,9 +18,9 @@ with sync_playwright() as p:
         return b4, pg.evaluate('scrollY')
     find="""()=>{const b=[...document.querySelectorAll('.module-frame__body')].find(b=>b.scrollHeight>b.clientHeight+20); if(!b) return null; window.scrollTo(0, Math.max(0, window.scrollY + b.getBoundingClientRect().top - 220)); b.scrollTop=0; b.id='tb'; const r=b.getBoundingClientRect(); return [r.left+r.width/2, r.top+40, b.scrollHeight-b.clientHeight]}"""
     t=pg.evaluate(find)
-    for sp in ['tenants', 'porchlights', 'mutualaid']:  # the first sample page with a module that scrolls (a wider grid gap made Juniper's fit)
+    for sp in ['blog-jamal', 'blog-grace', 'blog-maya']:  # the first blog with a module that scrolls
         if t: break
-        pg.evaluate(f"location.hash='#space-{sp}'"); pg.wait_for_timeout(900); pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(200); t=pg.evaluate(find)
+        pg.evaluate(f"location.hash='#{sp}'"); pg.wait_for_timeout(900); pg.evaluate("window.scrollTo(0, 400)"); pg.wait_for_timeout(200); t=pg.evaluate(find)
     print('module', t)
     r=drag(int(t[0]), int(t[1]), 200); print('finger down inside module at top: page', r, '| chained:', r[1] < r[0], '| module top', pg.evaluate('tb.scrollTop'))
     pg.evaluate('window.scrollTo(0, 100)'); pg.evaluate('tb.scrollTop=tb.scrollHeight'); pg.wait_for_timeout(200)

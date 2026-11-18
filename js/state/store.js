@@ -711,7 +711,7 @@ export function resetPhoneOrder() {
 // space.mobileWidgets[tabId] = { [moduleId]: 'small' | 'wide' }.
 
 /** Modules whose widget starts wide: what's going on, lists, and streams. */
-const WIDE_WIDGETS = new Set(['upnext', 'generalfeed', 'textfeed', 'carousel', 'grocery', 'forum', 'events', 'kanban', 'gantt', 'budget']);
+const WIDE_WIDGETS = new Set(['upnext', 'dashboard', 'generalfeed', 'textfeed', 'carousel', 'grocery', 'forum', 'events', 'kanban', 'gantt', 'budget']);
 
 /** A module's widget size on the current tab: what was set, else its kind's default. */
 export function widgetSize(module, space = getCurrentSpace(), tabId = getCurrentTabId()) {

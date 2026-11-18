@@ -5,7 +5,7 @@
  *
  *   Not editing:  [✎ Edit ▾]
  *   Editing:      [▦ Layouts ▾] [📱 Edit mobile] [👁 Preview] [✓ Done editing]
- *                 (Edit mobile only in groups: their phone widgets, mobile-editor.js)
+ *                 (Edit mobile in groups and on your homepage: their phone widgets, mobile-editor.js)
  *   Previewing:   👁 Previewing (as a member)  [Back to editing]
  *
  * Layouts opens the page layouts (js/editor/page-layouts.js), each with a
@@ -76,7 +76,7 @@ function backToEditing() {
 export function editingControls() {
   return [
     layoutsControl(),
-    mobileEditToggle(), // groups: arrange the phone's widgets (mobile-editor.js)
+    mobileEditToggle(), // groups and your homepage: arrange the phone's widgets (mobile-editor.js)
     h('button', { type: 'button', class: 'button space-header__preview', onClick: startPreview }, icon('eye', 16), ' Preview'),
     h('button', {
       type: 'button',

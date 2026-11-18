@@ -163,8 +163,11 @@ functions, no build step.
     (own pointer code), ‹ › via `setPhonePosition`, Small/Wide.
   - Widgets use `data-widget-id` (not `data-module-id`, which other code
     looks up). Chat widgets open Messages, like the swipe view's Chat button.
+  - Later the same night: homepages too (`WIDGET_KINDS` in
+    mobile-widgets.js; Dashboard, Recent groups, board, File from vault,
+    and personal Upcoming events summaries). Blogs keep swipe and List.
   - Tests: `test_mobile_widgets.py`; `test_phone_chat_button.py`,
-    `test_phone_scroll_chain.py` (now on the personal homepage), and
+    `test_phone_scroll_chain.py` (now on blogs), and
     `test_add_menus.py` updated. `tests/sweep_menus_and_choices.py` is
     written but paused (Leo asked for the mockups first); run it next.
 

@@ -8,10 +8,10 @@ Phone:
    view); the Widgets button comes back; so does the phone's back gesture.
 3. Back from a module's own page keeps the swipe view; leaving the group and
    coming back starts on the widgets again.
-4. A chat's widget opens the chat full screen. A personal homepage has no
-   widgets (it swipes as before).
+4. A chat's widget opens the chat full screen. Your homepage opens on
+   widgets too; a blog doesn't.
 Computer:
-5. Edit → Edit mobile (groups only) shows the widgets in a phone frame
+5. Edit → Edit mobile (groups and your homepage) shows the widgets in a phone frame
    instead of the page; Wide/Small, ‹ ›, and dragging by the grip save at
    once; a phone sees the same order and sizes; Reset phone layout clears
    them; Preview and Done editing turn it off.
@@ -93,7 +93,13 @@ with sync_playwright() as p:
     check(phone.evaluate('location.hash').startswith('#messages-'), f'phone: the chat widget opens the chat ({phone.evaluate("location.hash")})')
     pid = st(phone, "return s.getPersonalSpace().id")
     phone.evaluate(f"location.hash='#space-{pid}'"); phone.wait_for_timeout(900)
-    check(not phone.locator('#mobile-widgets').is_visible() and phone.locator('#homepage-grid').is_visible(), 'phone: a personal homepage has no widgets')
+    check(phone.locator('#mobile-widgets').is_visible() and phone.locator('#mobile-widgets .mwidget').count() >= 3, 'phone: your homepage opens on widgets too')
+    check('Dashboard' in phone.evaluate("[...document.querySelectorAll('.mwidgets__cell--wide .mwidget__name')].map(e=>e.innerText)"), 'phone: the Dashboard widget is wide')
+    phone.locator('.mwidget', has_text='My vault').first.click(); phone.wait_for_timeout(700)
+    check(phone.locator('.module-strip__chip.is-current').inner_text().strip() == 'My vault', 'phone: a homepage widget opens the swipe view there')
+    phone.screenshot(path='test-output/out/mobile-widgets-homepage.png', full_page=True)
+    phone.evaluate("location.hash='#blog-leo'"); phone.wait_for_timeout(900)
+    check(not phone.locator('#mobile-widgets').is_visible(), 'phone: a blog has no widgets')
 
     # 5 Computer
     desk = ctx.new_page()
@@ -157,7 +163,9 @@ with sync_playwright() as p:
     pid = st(desk, "return s.getPersonalSpace().id")
     desk.evaluate(f"location.hash='#space-{pid}'"); desk.wait_for_timeout(800)
     start_editing(desk)
-    check(desk.get_by_role('button', name='Edit mobile').count() == 0, 'computer: no Edit mobile on a personal homepage')
+    check(desk.get_by_role('button', name='Edit mobile').count() == 1, 'computer: Edit mobile on your homepage too')
+    desk.get_by_role('button', name='Edit mobile').click(); desk.wait_for_timeout(400)
+    check('your homepage opens on these widgets' in desk.locator('#mobile-editor').inner_text(), 'computer: it says it is your homepage')
 
     check(not errs, f'no page errors {errs}')
     b.close()

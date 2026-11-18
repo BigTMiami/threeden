@@ -1,6 +1,7 @@
 // @ts-check
 /**
- * mobile-widgets.js — a group's first screen on phones (Nov 18): a grid of
+ * mobile-widgets.js — a group's (and your homepage's) first screen on phones
+ * (Nov 18): a grid of
  * widgets, one per module, each saying what's going on in it at a glance.
  *
  *   ┌──────────────────────────────┐
@@ -46,7 +47,9 @@ let container = null;
 
 const keyNow = () => `${getCurrentSpace()?.id}:${getCurrentTabId()}`;
 const onHomepage = () => !document.getElementById('homepage-view')?.hidden;
-const isGroupPhone = () => PHONE.matches && !isEditMode() && getCurrentSpace()?.kind === 'group' && getVisibleModules().length > 0;
+/** Groups and your homepage open on widgets on a phone (blogs keep swiping). */
+export const WIDGET_KINDS = ['group', 'personal'];
+const isGroupPhone = () => PHONE.matches && !isEditMode() && WIDGET_KINDS.includes(getCurrentSpace()?.kind) && getVisibleModules().length > 0;
 
 /** Is the widget screen showing right now? */
 export const widgetsActive = () => isGroupPhone() && onHomepage() && view === 'widgets';

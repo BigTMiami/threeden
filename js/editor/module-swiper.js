@@ -22,7 +22,7 @@
  * reach, with how many messages you haven't read, and opens the chat full
  * screen in Messages. (On a computer the chat stays a module on the page,
  * where it's easier to keep an eye on than in Messages.)
- * In a group, phones open on widgets first (mobile-widgets.js): tapping one
+ * In a group or on your homepage, phones open on widgets first (mobile-widgets.js): tapping one
  * opens this view at that module, and a Widgets button at the start of the
  * chips goes back (there's no List there).
  * Elsewhere, the last chip, "List", switches back to one long column; that choice is
@@ -101,8 +101,8 @@ const chatFrames = () => [...grid.querySelectorAll(':scope > .module-frame[data-
 const phoneChat = () => PHONE.matches && !isEditMode();
 const positionKey = () => `${getCurrentSpace()?.id}:${getCurrentTabId()}`;
 
-/** A group on a phone: widgets first (mobile-widgets.js), then this swipe view; no list. */
-const groupPhone = () => PHONE.matches && getCurrentSpace()?.kind === 'group';
+/** A group or your homepage on a phone: widgets first (mobile-widgets.js), then this swipe view; no list. */
+const groupPhone = () => PHONE.matches && ['group', 'personal'].includes(getCurrentSpace()?.kind);
 
 function update() {
   const modules = frames();

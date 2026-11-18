@@ -17,7 +17,8 @@
  * show their description. Nothing here changes data.
  */
 
-import { getMember } from '../state/store.js';
+import { getMember, getModule } from '../state/store.js';
+import { needsYou, myUpcoming, groupUpdates } from '../modules/dashboard/dashboard-data.js';
 import { getModuleType } from '../modules/registry.js';
 import { getConversation, unreadCount, lastMessage, messagePreview } from '../state/messages.js';
 import { hasSeen } from '../modules/announcements/announcements-data.js';
@@ -74,9 +75,6 @@ const SUMMARIES = {
     const block = dateBlock(next.date);
     return { date: block, title: next.event.title, lines: [[occurrenceTimeLabel(next), count > 1 ? `${count} this week` : ''].filter(Boolean).join(' · ')] };
   },
-  events(module, space, me) {
-    return module.data?.events?.length ? SUMMARIES.calendar(module) : SUMMARIES.upnext(module, space, me);
-  },
   grocery(module) {
     const items = listsOf(module.data).flatMap((l) => l.items ?? []).filter((i) => !i.bought);
     if (!items.length) return { lines: ['Nothing to get'] };
@@ -106,6 +104,46 @@ const SUMMARIES = {
     const text = plain(module.data?.html ?? module.data?.text ?? '');
     return { lines: [text ? text.slice(0, 90) : 'Empty'] };
   },
+};
+// ─── Homepage modules ───
+SUMMARIES.dashboard = (module, space, me) => {
+  const needs = needsYou(me);
+  const asks = needs.invites.length + needs.rsvps.length + needs.joinRequests.reduce((n, j) => n + j.count, 0);
+  const next = myUpcoming(me, 14)[0];
+  const block = next ? dateBlock(next.date) : null;
+  return {
+    badge: asks ? `${asks} for you` : '',
+    date: block,
+    kicker: block ? `Coming up · ${block.weekday}` : '',
+    title: next ? next.event.title : (asks ? `${asks} thing${asks === 1 ? '' : 's'} waiting on you` : 'You’re all caught up'),
+    lines: next ? [[next.space?.kind === 'group' ? next.space.name : '', occurrenceTimeLabel(next)].filter(Boolean).join(' · ')] : [],
+  };
+};
+SUMMARIES.recentgroups = (module, space, me) => {
+  const groups = groupUpdates(me).slice(0, 3);
+  if (!groups.length) return { lines: ['No groups yet'] };
+  return { lines: groups.map((g) => { const fresh = (g.newPosts ?? 0) + (g.newThreads ?? 0) + (g.unreadChat ?? 0); return fresh ? `${g.space.name} · ${fresh} new` : g.space.name; }) };
+};
+SUMMARIES.events = (module, space, me) => {
+  if (module.data?.events?.length) return SUMMARIES.calendar(module);
+  if (space.kind !== 'personal') return SUMMARIES.upnext(module, space, me);
+  const next = myUpcoming(me, 60)[0];
+  if (!next) return { lines: ['Nothing coming up'] };
+  const block = dateBlock(next.date);
+  return { date: block, title: next.event.title, lines: [[occurrenceTimeLabel(next), next.space?.kind === 'group' ? next.space.name : ''].filter(Boolean).join(' · ')] };
+};
+SUMMARIES.kanban = (module) => {
+  const columns = module.data?.columns ?? [];
+  const cards = module.data?.cards ?? [];
+  if (!columns.length) return { lines: ['An empty board'] };
+  return { chips: columns.slice(0, 4).map((c) => `${c.title} ${cards.filter((card) => card.columnId === c.id).length}`), lines: [] };
+};
+SUMMARIES.vaultfile = (module) => {
+  const vault = module.data?.vaultModuleId ? getModule(module.data.vaultModuleId) : null;
+  const item = vault?.data?.items?.find((i) => i.id === module.data.itemId);
+  if (!item) return { lines: ['Pick a file from your vault'] };
+  const text = item.kind === 'note' ? plain(item.html).slice(0, 90) : '';
+  return { title: item.name, lines: [text || ({ note: 'Note', link: 'Link', module: 'File', file: 'File' }[item.kind] ?? 'File')] };
 };
 SUMMARIES.textfeed = SUMMARIES.generalfeed;
 SUMMARIES.carousel = SUMMARIES.generalfeed;

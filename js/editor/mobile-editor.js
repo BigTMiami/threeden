@@ -30,15 +30,15 @@ import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { getCurrentSpace, getCurrentTabId, getCurrentUser, isEditMode, subscribe, setPhoneOrder, setPhonePosition, setWidgetSize, widgetSize, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
-import { renderWidget, widgetModules } from './mobile-widgets.js';
+import { renderWidget, widgetModules, WIDGET_KINDS } from './mobile-widgets.js';
 
 const PHONE = window.matchMedia('(max-width: 640px)');
 let on = false;
 let container = null;
 let lastKey = '';
 
-/** Only groups open on widgets on a phone, and only a computer has room for this. */
-const available = () => !PHONE.matches && isEditMode() && getCurrentSpace()?.kind === 'group';
+/** Groups and homepages open on widgets on a phone, and only a computer has room for this. */
+const available = () => !PHONE.matches && isEditMode() && WIDGET_KINDS.includes(getCurrentSpace()?.kind);
 
 export const isMobileEditing = () => on && available();
 
@@ -53,12 +53,12 @@ export function setMobileEditing(value) {
 
 /** The "Edit mobile" toggle in the page header while editing a group. */
 export function mobileEditToggle() {
-  if (getCurrentSpace()?.kind !== 'group') return null;
+  if (!WIDGET_KINDS.includes(getCurrentSpace()?.kind)) return null;
   return h('button', {
     type: 'button',
     class: `button space-header__mobile${isMobileEditing() ? ' is-on' : ''}`,
     'aria-pressed': String(isMobileEditing()),
-    title: 'Arrange what this group looks like on a phone',
+    title: 'Arrange what this page looks like on a phone',
     onClick: () => setMobileEditing(!on),
   }, icon('phone', 16), ' Edit mobile');
 }
@@ -136,7 +136,7 @@ function draw() {
         modules.length ? gridEl : h('p', { class: 'module-empty' }, 'Add modules to this page first: each one gets a widget.'))),
     h('aside', { class: 'mobile-editor__side' },
       h('h2', { class: 'mobile-editor__title' }, 'Phone layout', tab ? h('span', { class: 'mobile-editor__tab' }, ` · ${tab.name} tab`) : null),
-      h('p', {}, `On a phone, ${space.name} opens on these widgets. Tapping one opens its module, and people swipe between modules in this same order.`),
+      h('p', {}, `On a phone, ${space.kind === 'personal' ? 'your homepage' : space.name} opens on these widgets. Tapping one opens its module, and people swipe between modules in this same order.`),
       h('ul', { class: 'mobile-editor__tips' },
         h('li', {}, 'Drag a widget by ', icon('grip', 13), ' to move it, or use ‹ ›.'),
         h('li', {}, 'Small takes half the width; Wide takes all of it.'),
