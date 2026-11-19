@@ -1,6 +1,11 @@
 // @ts-check
 /**
- * announcements-page.js — announcements as a full page.
+ * announcements-page.js — the group's Board as a full page (it was
+ * Announcements until Nov 18; see announcements-card.js for the card).
+ *
+ * Admins also get "Who can post: Everyone / Admins and owners" here (the
+ * "Post on the board" permission). The … menu pins a post for 1 day, 3 days,
+ * 1 week, 2 weeks, or until unpinned; titles are optional; ♡ likes.
  *
  * Layout:
  *
@@ -24,9 +29,9 @@
  * Unread / Mine filters are hidden (it's just you).
  */
 
+import { renderEventStrip } from '../blog-feeds/feed-post.js';
 import { renderMediaList } from '../../ui/media-attach.js';
-import { announcementAttacher, renderAnnouncementFiles } from './announcement-attach.js';
-import { audienceChipForModule } from '../../ui/audience-chip.js';
+import { renderAnnouncementFiles } from './announcement-attach.js';
 import { composeToggle } from '../../ui/compose-toggle.js';
 import { h, replaceChildren, debounce } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
@@ -37,12 +42,15 @@ import { showToast } from '../../ui/toast.js';
 import { timeAgo } from '../../utils/dates.js';
 import { renderText } from '../../ui/text.js';
 import { renderPoll } from '../../ui/poll-view.js';
-import { askAttacher, renderAsks } from '../../ui/asks.js';
+import { renderAsks } from '../../ui/asks.js';
 import { attachMentionPicker } from '../../ui/mention-picker.js';
 import { notifyMentions, notify } from '../../state/notifications.js';
 import {
-  FILTERS, normalizePost, createPost, createComment, sortPosts, filterPosts, hasSeen,
+  FILTERS, normalizePost, createComment, sortPosts, filterPosts, hasSeen, isPinned, pinLabel, makePin, postName, PIN_DURATIONS,
 } from './announcements-data.js';
+import { boardComposer, likeButton, toggleLike } from './board-parts.js';
+import { canManageRoles, requiredRole } from '../../state/permissions.js';
+import { setPermission } from '../../state/groups.js';
 
 const SEARCH_DELAY_MS = 200;
 
@@ -93,7 +101,7 @@ export function renderAnnouncementsPage(container, context) {
   function deletePost(post) {
     const before = structuredClone(context.getData());
     update((data) => { data.posts = data.posts.filter((p) => p.id !== post.id); });
-    showToast(`Deleted "${post.title}".`, {
+    showToast(`Deleted “${postName(post)}”.`, {
       actionLabel: 'Undo',
       onAction: () => { context.saveData(before); drawAll(); },
     });
@@ -120,65 +128,45 @@ export function renderAnnouncementsPage(container, context) {
     ]);
   }
 
+  // Admins: who can post on the board (the "Post on the board" permission, permissions.js).
+  const space = getSpaceOfModule(context.moduleId);
+  const whoCanPost = space?.kind === 'group' && canManageRoles(space, me.id) ? h('label', { class: 'page-control board-who' },
+    h('span', {}, 'Who can post'),
+    h('select', {
+      class: 'input input--compact',
+      onChange: (event) => {
+        setPermission(space.id, 'postAnnouncements', event.target.value);
+        showToast(event.target.value === 'member' ? 'Everyone in the group can post on the board.' : 'Only admins and the owner can post on the board now.');
+      },
+    },
+      h('option', { value: 'member', selected: requiredRole(space, 'postAnnouncements') === 'member' }, 'Everyone'),
+      h('option', { value: 'admin', selected: requiredRole(space, 'postAnnouncements') !== 'member' }, 'Admins and owners'))) : null;
+
   const toolbar = h('div', { class: 'page-toolbar' },
     h('label', { class: 'page-search' }, icon('search', 16), h('input', {
       type: 'search',
       class: 'input page-search__input',
       placeholder: 'Search posts and comments',
-      'aria-label': 'Search announcements',
+      'aria-label': 'Search the board',
       onInput: debounce((event) => { view.search = event.target.value; drawFeed(); }, SEARCH_DELAY_MS),
     })),
     filterBar,
     h('span', { class: 'page-toolbar__spacer' }),
     unreadNote,
+    whoCanPost,
   );
 
-  // ─── Composer (behind "+ New announcement": js/ui/compose-toggle.js) ─────────
+  // ─── Composer (behind "+ Post": js/ui/compose-toggle.js; board-parts.js) ───
 
-  const titleInput = h('input', { type: 'text', class: 'input', placeholder: 'Title', 'aria-label': 'Announcement title' });
-  const bodyInput = h('textarea', { class: 'input', rows: '3', placeholder: isSolo ? 'A note to yourself' : 'Write an update for the group', 'aria-label': 'Announcement text' });
   const withMentions = (field) => { attachMentionPicker(field, { getCandidates: () => context.members, excludeId: me.id }); return field; };
-  withMentions(bodyInput);
-  const pinInput = h('input', { type: 'checkbox' });
-  const add = announcementAttacher({ me, moduleId: context.moduleId });
-  const asks = askAttacher();
-  const composerError = h('p', { class: 'form-error', role: 'alert' });
-  titleInput.addEventListener('input', () => { composerError.textContent = ''; });
-
-  const composer = h('form', {
-    class: 'announcements-page__composer',
-    onSubmit: (event) => {
-      event.preventDefault();
-      const title = titleInput.value.trim();
-      if (!title) {
-        composerError.textContent = 'Add a title first.';
-        titleInput.focus();
-        return;
-      }
-      const { poll, media, files, error } = add.read();
-      if (error) { composerError.textContent = error; return; }
-      const post = createPost({ authorId: me.id, title, body: bodyInput.value.trim(), pinned: pinInput.checked, poll, media, files, ...asks.read() });
-      update((data) => data.posts.push(post));
-      notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: post.body, where: `the announcement “${title}”` });
-      composer.reset();
-      add.reset();
-      asks.reset();
+  const { form: composer } = boardComposer({
+    context, me, canPin, withAsks: true,
+    onPosted: (post) => {
+      update((data) => { data.posts = [...(data.posts ?? []), post]; });
       composeOpen.close();
-      showToast(`Posted "${title}".`);
+      showToast(post.pin ? 'Posted and pinned.' : 'Posted.');
     },
-  },
-    h('h2', { class: 'announcements-page__composer-title' }, 'New announcement'),
-    titleInput,
-    // What's attached (photos, files, a poll, RSVP or sign-up asks) above the words.
-    add.slots,
-    asks.slot,
-    bodyInput,
-    composerError,
-    h('div', { class: 'form-row form-row--spread' },
-      h('span', { class: 'form-row' }, add.button, isSolo ? null : asks.rsvpButton, isSolo ? null : asks.signupButton, canPin ? h('label', { class: 'page-control' }, pinInput, h('span', {}, 'Pin to the top')) : null),
-      h('span', { class: 'form-row' }, audienceChipForModule(context.moduleId), h('button', { type: 'submit', class: 'button button--primary' }, 'Post')),
-    ),
-  );
+  });
 
   // ─── Feed ──────────────────────────────────────────────────────────────────
 
@@ -204,7 +192,7 @@ export function renderAnnouncementsPage(container, context) {
     return h('article', {
       class: [
         'announcement-post',
-        post.pinned ? 'announcement-post--pinned' : '',
+        isPinned(post) ? 'announcement-post--pinned' : '',
         post.id === view.focusedPostId ? 'is-focused' : '',
       ].filter(Boolean).join(' '),
       dataset: { postId: post.id },
@@ -216,15 +204,18 @@ export function renderAnnouncementsPage(container, context) {
           ` · ${timeAgo(post.createdAt)}`,
           post.editedAt ? h('span', { title: `Edited ${timeAgo(post.editedAt)}` }, ' · edited') : null),
         h('span', { class: 'announcement__tags' },
-          post.pinned ? h('span', { class: 'tag' }, icon('pin', 12), ' Pinned') : null,
+          isPinned(post) ? h('span', { class: 'tag' }, icon('pin', 12), ` ${pinLabel(post)}`) : null,
           !isSolo && !seen ? h('span', { class: 'tag tag--new' }, 'New') : null,
         ),
         // Pin, Edit, Delete, Save, and Report live in the … menu (post-menu.js).
         context.isVisitor ? null : postMenu({
-          title: 'this announcement',
-          save: { key: `announcement:${post.id}`, kind: 'post', title: post.title, href: `#module-${context.moduleId}`, where: getSpaceOfModule(context.moduleId)?.name ?? '' },
+          title: 'this post',
+          save: { key: `announcement:${post.id}`, kind: 'post', title: postName(post), href: `#module-${context.moduleId}`, where: getSpaceOfModule(context.moduleId)?.name ?? '' },
           actions: [
-            canPin ? ['pin', post.pinned ? 'Unpin' : 'Pin to the top', () => updatePost(post.id, (p) => { p.pinned = !p.pinned; })] : null,
+            // Pin for a while, or until unpinned (announcements-data.js PIN_DURATIONS).
+            ...(canPin ? (isPinned(post)
+              ? [['pin', 'Unpin', () => updatePost(post.id, (p) => { p.pin = null; })]]
+              : PIN_DURATIONS.map((d) => ['pin', d.ms == null ? 'Pin until unpinned' : `Pin for ${d.label}`, () => updatePost(post.id, (p) => { p.pin = makePin(d.id, me.id); })])) : []),
             isMine ? ['pencil', 'Edit', () => { view.editingPostId = post.id; drawFeed(); }] : null,
             isMine || canModerate ? ['trash', 'Delete', () => deletePost(post), true] : null,
           ],
@@ -233,7 +224,7 @@ export function renderAnnouncementsPage(container, context) {
           report: isMine ? null : { key: `announcement:${post.id}`, kind: 'announcement', spaceId: getSpaceOfModule(context.moduleId)?.id ?? null, moduleId: context.moduleId, itemId: post.id, authorId: post.authorId },
         }),
       ),
-      h('h2', { class: 'announcement-post__title' }, post.title),
+      post.title ? h('h2', { class: 'announcement-post__title' }, post.title) : null,
       post.body ? h('p', { class: 'announcement-post__body' }, renderText(post.body)) : null,
       renderMediaList(post.media),
       renderAnnouncementFiles(post.files),
@@ -244,7 +235,9 @@ export function renderAnnouncementsPage(container, context) {
         canManage: isMine || canModerate,
       }) : null,
       renderAsks({ getPost: () => posts().find((p) => p.id === post.id), savePost: (fn) => updatePost(post.id, fn), me, canAnswer: !context.isVisitor }),
+      post.eventId ? renderEventStrip(post.eventId, () => drawFeed()) : null,
       h('div', { class: 'announcement-post__footer' },
+        likeButton(post, me, () => updatePost(post.id, (p) => toggleLike(p, me.id)), { disabled: context.isVisitor }),
         isSolo ? null : h('span', { class: 'announcement-post__seen' },
           h('span', { class: 'announcement-post__seen-label' }, `Seen by ${seenBy.length} of ${context.members.length}`),
           avatarStack(seenBy, 22, 5),
@@ -257,7 +250,7 @@ export function renderAnnouncementsPage(container, context) {
 
   /** Editing a post in place: title, text, Save / Cancel. */
   function renderEditor(post) {
-    const title = h('input', { type: 'text', class: 'input', value: post.title, 'aria-label': 'Title' });
+    const title = h('input', { type: 'text', class: 'input', value: post.title, placeholder: 'Title (optional)', 'aria-label': 'Title (optional)' });
     const body = withMentions(h('textarea', { class: 'input', rows: '4', 'aria-label': 'Text' }));
     body.value = post.body;
     const error = h('p', { class: 'form-error', role: 'alert' });
@@ -267,12 +260,12 @@ export function renderAnnouncementsPage(container, context) {
       class: 'announcement-post announcement-post--editing',
       onSubmit: (event) => {
         event.preventDefault();
-        if (!title.value.trim()) {
-          error.textContent = 'The title can’t be empty.';
+        if (!title.value.trim() && !body.value.trim() && !post.media?.length && !post.files?.length && !post.poll) {
+          error.textContent = 'Write something first.';
           return;
         }
         view.editingPostId = null;
-        notifyMentions({ moduleId: context.moduleId, itemId: post.id, before: post.body, after: body.value, where: `the announcement “${title.value.trim()}”` });
+        notifyMentions({ moduleId: context.moduleId, itemId: post.id, before: post.body, after: body.value, where: `the board post “${title.value.trim() || postName(post)}”` });
         updatePost(post.id, (p) => {
           p.title = title.value.trim();
           p.body = body.value.trim();
@@ -299,7 +292,7 @@ export function renderAnnouncementsPage(container, context) {
   }
 
   function renderComments(post) {
-    const input = withMentions(h('input', { type: 'text', class: 'input', placeholder: 'Write a comment', 'aria-label': `Comment on "${post.title}"` }));
+    const input = withMentions(h('input', { type: 'text', class: 'input', placeholder: 'Write a comment', 'aria-label': `Comment on “${postName(post)}”` }));
 
     return h('section', { class: 'announcement-comments', 'aria-label': 'Comments' },
       post.comments.length
@@ -336,7 +329,7 @@ export function renderAnnouncementsPage(container, context) {
             // Commenting on a post means you've seen it.
             if (!hasSeen(p, me.id)) p.seenBy = [...p.seenBy, me.id];
           });
-          notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: text, where: `a comment on “${post.title}”` });
+          notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: text, where: `a comment on “${postName(post)}”` });
           notifyAboutReply(post, text);
           feed.querySelector(`[data-post-id="${post.id}"] .announcement-comments__form input`)?.focus();
         },
@@ -351,9 +344,9 @@ export function renderAnnouncementsPage(container, context) {
   function notifyAboutReply(post, text) {
     const preview = text.length > 60 ? `${text.slice(0, 59)}…` : text;
     const common = { actorId: me.id, kind: 'comment', moduleId: context.moduleId, itemId: post.id };
-    notify({ ...common, recipientIds: [post.authorId], text: `${me.name} replied to your announcement “${post.title}”: “${preview}”` });
+    notify({ ...common, recipientIds: [post.authorId], text: `${me.name} replied to your post “${postName(post)}”: “${preview}”` });
     const others = post.comments.map((c) => c.authorId).filter((id) => id !== post.authorId);
-    notify({ ...common, recipientIds: others, text: `${me.name} also replied to “${post.title}”: “${preview}”` });
+    notify({ ...common, recipientIds: others, text: `${me.name} also replied to “${postName(post)}”: “${preview}”` });
   }
 
   // ─── Layout ────────────────────────────────────────────────────────────────
@@ -363,9 +356,9 @@ export function renderAnnouncementsPage(container, context) {
     drawFeed();
   }
 
-  const composeOpen = composeToggle(composer, { label: 'New announcement', className: 'announcements-page__compose' });
+  const composeOpen = composeToggle(composer, { label: 'Post', className: 'announcements-page__compose' });
   container.append(toolbar, h('div', { class: 'announcements-page' },
-    canPost ? composeOpen.element : h('p', { class: 'settings-locked' }, 'Your role in this group can’t post announcements, but you can comment on them.'),
+    canPost ? composeOpen.element : h('p', { class: 'settings-locked' }, 'Only admins can post on this board, but you can like and comment.'),
     feed));
   drawAll();
 

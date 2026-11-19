@@ -28,7 +28,7 @@
 
 import { h } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { getCurrentSpace, getVisibleModules, isEditMode, isMemberView, setEditMode, setMemberView, subscribe, getPageLayout, setPageLayout, setFeaturedModule, setFeaturedRows, hasPhoneOrder, resetPhoneOrder } from '../state/store.js';
+import { getCurrentSpace, getVisibleModules, isEditMode, isMemberView, setEditMode, setMemberView, subscribe, getPageLayout, setPageLayout, setFeaturedModule, setFeaturedRows } from '../state/store.js';
 import { LAYOUTS, layoutById } from './page-layouts.js';
 import { openCopyLayout } from './copy-layout.js';
 import { mobileEditToggle, setMobileEditing } from './mobile-editor.js';
@@ -179,14 +179,12 @@ function layoutExtras() {
   const layout = getPageLayout();
   const modules = getVisibleModules();
   const featured = layoutById(layout.kind).featured && modules.length >= 2;
-  const phone = hasPhoneOrder();
   return h('div', { class: 'layout-menu__extras' },
     featured ? h('label', { class: 'layout-menu__featured' }, 'Featured ',
       h('select', { class: 'input input--compact', 'aria-label': 'Featured module', onChange: (event) => setFeaturedModule(event.target.value) },
         modules.map((m) => h('option', { value: m.id, selected: m.id === layout.featuredId }, m.title)))) : null,
     // Its height was set with the resize handle: back to growing with its content.
     featured && layout.featuredRows ? h('button', { type: 'button', class: 'link-button layout-menu__fit', onClick: () => setFeaturedRows(null) }, 'Fit to content') : null,
-    phone ? h('button', { type: 'button', class: 'link-button layout-menu__phone-reset', title: 'Phones show modules in the page’s own order again', onClick: resetPhoneOrder }, icon('phone', 13), ' Reset phone order') : null,
     // The prototype keeps pages in this browser: this writes one out as text to share (copy-layout.js).
     h('button', { type: 'button', class: 'link-button layout-menu__copy', onClick: () => { layoutMenuOpen = false; openCopyLayout(); } }, icon('layers', 13), ' Copy this page’s layout'));
 }

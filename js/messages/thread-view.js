@@ -34,9 +34,11 @@
  * count).
  */
 
+import { chatStartFor } from '../state/security.js';
+import { blogShownIn } from '../state/groups.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { avatar } from '../ui/avatar.js';
-import { getCurrentUser, getMember as getAnyMember, memberIn, getSpace, subscribe } from '../state/store.js';
+import { getCurrentUser, getMember, getSpace, subscribe } from '../state/store.js';
 import {
   QUICK_REACTIONS, getConversation, isInConversation, sendMessage, editMessage, deleteMessage, restoreMessage, toggleReaction, markRead,
   DISAPPEAR_OPTIONS, disappearLabel, setDisappearing, timeLeftLabel, togglePin, pinnedMessages, threadReplies, messagePreview,
@@ -59,9 +61,8 @@ const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const STICK_TO_BOTTOM_PX = 80;
 
 export function createThreadView(conversationId, { compact = false, placeholder = 'Write a message' } = {}) {
-  // In a group's chat, people show by the name they go by there (store.memberIn).
+  // A group's chat: its group (to leave out links to blogs hidden from it, groups.js).
   const chatSpace = () => { const c = getConversation(conversationId); return c?.spaceId ? getSpace(c.spaceId) : null; };
-  const getMember = (memberId) => (chatSpace() ? memberIn(chatSpace(), memberId) : getAnyMember(memberId));
   const me = getCurrentUser();
   let editingMessageId = null;
   let isOnScreen = false; // kept up to date by the IntersectionObserver below
@@ -216,8 +217,14 @@ export function createThreadView(conversationId, { compact = false, placeholder 
     let previous = null;
     let lastDay = null;
     if (conversation.messages.some((m) => m.sealed && !openMessage(m))) unsealConversation(conversation);
+    // A group can keep earlier messages from new members (its Security settings).
+    const startsAt = conversation.spaceId ? chatStartFor(chatSpace(), me.id) : null;
+    if (startsAt && conversation.messages.some((m) => !m.threadOf && m.createdAt < startsAt)) {
+      rows.push(h('div', { class: 'thread__notice thread__notice--history', role: 'note' }, icon('lock', 12), ' Messages from before you joined are hidden. The group’s admins chose this.'));
+    }
     for (const message of conversation.messages) {
       if (message.threadOf) continue; // shown in its thread's panel
+      if (startsAt && message.createdAt < startsAt) continue;
       const day = toDateKey(new Date(message.createdAt));
       if (day !== lastDay) {
         rows.push(h('div', { class: 'thread__day', role: 'separator' }, h('span', {}, dayLabel(day))));
@@ -276,7 +283,8 @@ export function createThreadView(conversationId, { compact = false, placeholder 
         startsGroup ? avatar(author, compact ? 28 : 34) : h('span', { class: 'message__time-hint' }, time)),
       h('div', { class: 'message__main' },
         startsGroup ? h('div', { class: 'message__meta' },
-          author && usesSocial(author.id) ? h('a', { href: blogHref(author), class: 'message__author' }, h('strong', {}, author.name)) : h('strong', {}, author?.name ?? 'Former member'),
+          // A link to their blog, unless they hid it from this group (groups.js).
+          author && usesSocial(author.id) && blogShownIn(chatSpace(), author.id) ? h('a', { href: blogHref(author), class: 'message__author' }, h('strong', {}, author.name)) : h('strong', {}, author?.name ?? 'Former member'),
           h('span', { class: 'message__time', title: new Date(message.createdAt).toLocaleString() }, time),
           message.expiresAt ? h('span', { class: 'message__expires', title: `Disappears ${new Date(message.expiresAt).toLocaleString()}` }, icon('clock', 11), ` ${timeLeftLabel(message)}`) : null) : null,
         quoted ? h('button', {

@@ -37,6 +37,7 @@ import { renderBlogSettingsSection } from './blog-settings-section.js';
 import { THEMES, themeOf, setTheme } from '../ui/themes.js';
 import { renderCalendarsSection } from './calendars-section.js';
 import { renderCalendarFeedSection } from './calendar-feed-section.js';
+import { renderSecuritySections } from './security-section.js';
 
 /**
  * Account settings come in sections, one at a time, with tabs across the
@@ -49,6 +50,7 @@ const HELP_IDEAS = ['driving', 'cooking', 'childcare', 'moving', 'translation', 
 export const ACCOUNT_SECTIONS = [
   { id: 'profile', label: 'Profile' },
   { id: 'privacy', label: 'Privacy' },
+  { id: 'security', label: 'Security' }, // security-section.js: passkeys, sign-in, encryption, recovery key
   { id: 'notifications', label: 'Notifications' },
   { id: 'calendars', label: 'Calendars' },
   { id: 'look', label: 'Theme' },
@@ -57,7 +59,7 @@ export const ACCOUNT_SECTIONS = [
   { id: 'children', label: 'Children' }, // child accounts you look after (child-account.js); a child sees "Family"
 ];
 /** Which section each older link lands in. */
-const SECTION_OF = { parts: 'feed', blog: 'feed', instagram: 'feed', location: 'privacy', blocked: 'privacy', data: 'privacy', theme: 'look', texts: 'notifications' };
+const SECTION_OF = { password: 'security', passkeys: 'security', parts: 'feed', blog: 'feed', instagram: 'feed', location: 'privacy', blocked: 'privacy', data: 'privacy', theme: 'look', texts: 'notifications' };
 export const accountSectionOf = (tab) => (ACCOUNT_SECTIONS.some((s) => s.id === tab) ? tab : SECTION_OF[tab] ?? 'profile');
 
 export function renderAccountPage(container) {
@@ -68,7 +70,8 @@ export function renderAccountPage(container) {
   const social = !user.quick && uses(user, 'blogs');
 
   const sections = {
-    profile: () => [user.quick ? renderQuickAccountSection(user) : null, renderProfileSection(user, container), user.quick ? null : renderPasswordSection(user), renderSignOutSection()],
+    profile: () => [user.quick ? renderQuickAccountSection(user) : null, renderProfileSection(user, container), renderSignOutSection()],
+    security: () => renderSecuritySections(user, redraw, user.quick ? null : renderPasswordSection(user)),
     privacy: () => [user.quick ? null : renderPrivacyCheckup(user), renderLocationSection(user, redraw), renderBlockedSection(user, redraw), renderDataSection(user), renderDeleteSection(user)],
     notifications: () => [renderNotificationSection(user, redraw), user.phone ? renderTextsSection(user, redraw) : null],
     calendars: () => [renderCalendarFeedSection(user, redraw), renderCalendarsSection(user, redraw)],

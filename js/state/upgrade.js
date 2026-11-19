@@ -25,7 +25,7 @@
  */
 
 /** Bump this when the sample data or the saved shape changes (it used to be the storage key's version). */
-export const DATA_VERSION = 70;
+export const DATA_VERSION = 71;
 
 /**
  * Steps for saves from before a version, oldest first.
@@ -69,6 +69,17 @@ const MIGRATIONS = [
       }
     },
   },
+  {
+    version: 71,
+    note: 'Announcements is the group Board: modules still called "Announcements" are renamed "Board" (old pinned posts become pins as they load)',
+    run: (state) => {
+      for (const space of state.spaces ?? []) {
+        for (const module of space.modules ?? []) {
+          if (module.type === 'announcements' && module.title === 'Announcements') module.title = 'Board';
+        }
+      }
+    },
+  }
 ];
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);

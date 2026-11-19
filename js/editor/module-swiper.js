@@ -68,6 +68,7 @@ export function initModuleSwiper(gridElement, stripElement) {
  */
 function fitToScreen() {
   if (!grid?.classList.contains('is-swiping')) { grid?.style.removeProperty('--swipe-height'); return; }
+  if (groupPhone()) { fillScreen(); return; }
   const top = grid.getBoundingClientRect().top + window.scrollY; // where the modules start on the page
   const css = getComputedStyle(document.documentElement);
   const px = (name) => parseFloat(css.getPropertyValue(name)) || 0;
@@ -82,6 +83,39 @@ function fitToScreen() {
   if (grid.style.getPropertyValue('--swipe-height') !== `${height}px`) grid.style.setProperty('--swipe-height', `${height}px`);
 }
 const MIN_HEIGHT_PX = 320;
+
+/**
+ * In a group or on your homepage (Nov 18): the module fills the screen
+ * between the top bar and the chips, and the group's name and description
+ * sit just above it, out of view. The page snaps between the two with the
+ * browser's own scroll snapping (html.phone-module-snap in css/mobile.css),
+ * so the snap is part of the scroll itself, carried by its momentum, not a
+ * second motion after it: flick down past the top of the module and the
+ * header comes into view; a small pull springs back; flick back up and it
+ * lands on the module.
+ */
+function fillScreen() {
+  const css = getComputedStyle(document.documentElement);
+  const px = (name) => parseFloat(css.getPropertyValue(name)) || 0;
+  const below = px('--module-strip-height') + px('--tab-bar-height') + px('--safe-bottom');
+  const appBar = Math.round(document.querySelector('.app-bar')?.getBoundingClientRect().height ?? 52);
+  const height = Math.floor(Math.max(MIN_HEIGHT_PX, window.innerHeight - appBar - below - SNAP_GAP_PX - DOTS_PX));
+  if (grid.style.getPropertyValue('--swipe-height') !== `${height}px`) grid.style.setProperty('--swipe-height', `${height}px`);
+  document.documentElement.style.setProperty('--snap-top', `${appBar + SNAP_GAP_PX}px`);
+}
+const SNAP_GAP_PX = 6; // air between the top bar and the module
+const DOTS_PX = 22; // the dots under the module
+
+/** Scroll the page so the module sits right under the top bar (the header just out of view). */
+function snapToModule() {
+  if (!grid?.classList.contains('is-swiping') || !groupPhone()) return;
+  const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--snap-top')) || 58;
+  const top = grid.getBoundingClientRect().top + window.scrollY - gap;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+}
+let snapPending = false;
+let wasSwiping = false;
+
 
 function prefersList() {
   try { return localStorage.getItem(PREFERENCE_KEY) === 'list'; } catch { return false; }
@@ -105,6 +139,12 @@ function update() {
   const canSwipe = PHONE.matches && !isEditMode() && (modules.length > 1 || (inGroup && modules.length > 0));
   const swiping = canSwipe && (inGroup || !prefersList());
   grid.classList.toggle('is-swiping', swiping);
+  // A group or homepage: the module fills the screen, and the page snaps between it and the header.
+  document.documentElement.classList.toggle('phone-module-snap', swiping && inGroup);
+  if (swiping && inGroup && !wasSwiping) snapPending = true;
+  // Back to the widgets: start at the top, with the group's name.
+  if (wasSwiping && !(swiping && inGroup) && PHONE.matches && document.documentElement.classList.contains('phone-widgets')) window.scrollTo({ top: 0, behavior: 'instant' });
+  wasSwiping = swiping && inGroup;
   if (!swiping) grid.style.removeProperty('--swipe-height');
   if (!swiping) grid.parentElement.querySelector('.module-dots')?.remove();
   strip.hidden = !canSwipe;
@@ -142,6 +182,7 @@ function update() {
       fitToScreen();
       grid.scrollTo({ left: current * grid.clientWidth, behavior: 'instant' });
       drawDots(current);
+      if (snapPending) { snapPending = false; snapToModule(); }
     });
   }
 }
@@ -158,6 +199,7 @@ function chatUnread(frame) {
 export function showModuleAt(moduleId) {
   const index = frames().findIndex((f) => f.dataset.moduleId === moduleId);
   positions[positionKey()] = Math.max(0, index);
+  snapPending = true; // open on the module, the header just above it
   update();
 }
 

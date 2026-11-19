@@ -84,16 +84,20 @@ export function createItemContext(vaultModuleId, itemId, { openFullPage = () => 
  * An open module file in the vault: a back link, its name, and the module
  * type's full page (or its card, if it has no full page). Returns
  * { element, cleanup }.
+ *
+ *   compact: the module type's card instead (a vault card on a page), with
+ *            onExpand (the full editor) beside the name
+ *   bare:    no back link (the full editor has its own: vault-full-editor.js)
  */
-export function renderModuleFileView(item, { vaultModuleId, folderName, onBack, onRename, shareButton = null }) {
+export function renderModuleFileView(item, { vaultModuleId, folderName, onBack, onRename, shareButton = null, compact = false, bare = false, onExpand = null }) {
   const moduleType = getModuleType(item.moduleType);
-  const body = h('div', { class: `vault-module-file vault-module-file--${item.moduleType}` });
-  const context = createItemContext(vaultModuleId, item.id);
-  const render = moduleType.renderFullPage ?? moduleType.render;
+  const body = h('div', { class: `vault-module-file vault-module-file--${item.moduleType}${compact ? ' is-compact' : ''}` });
+  const context = createItemContext(vaultModuleId, item.id, { openFullPage: () => onExpand?.() });
+  const render = compact ? moduleType.render : moduleType.renderFullPage ?? moduleType.render;
   const cleanup = render(body, context) || (() => {});
 
   const element = h('div', { class: 'vault-module-file__wrapper' },
-    h('button', { type: 'button', class: 'link-button vault__back', onClick: () => { cleanup(); onBack(); } }, icon('arrowLeft', 14), ` Back to ${folderName}`),
+    bare ? null : h('button', { type: 'button', class: 'link-button vault__back', onClick: () => { cleanup(); onBack(); } }, icon('arrowLeft', 14), ` Back to ${folderName}`),
     h('div', { class: 'vault-module-file__header' },
       h('span', { class: 'vault-module-file__icon' }, icon(moduleType.icon, 18)),
       h('input', {
@@ -105,7 +109,13 @@ export function renderModuleFileView(item, { vaultModuleId, folderName, onBack, 
         onChange: (event) => onRename(event.target.value),
       }),
       h('span', { class: 'vault-module-file__kind' }, `${moduleType.label} · in the vault`),
-      shareButton),
+      shareButton,
+      onExpand ? expandButton(onExpand) : null),
     body);
   return { element, cleanup };
+}
+
+/** "Open the full editor" (↗), for a file open in a vault card. */
+export function expandButton(onExpand) {
+  return h('button', { type: 'button', class: 'icon-button vault__expand', 'aria-label': 'Open in the full editor', title: 'Open in the full editor', onClick: onExpand }, icon('expand', 15));
 }

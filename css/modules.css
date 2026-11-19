@@ -1286,18 +1286,8 @@
   flex: none;
 }
 
-/* On devices with a mouse, show Rename/Delete only for the row you're on,
-   so long names have room. Touch screens always show them. */
-@media (hover: hover) {
-  .vault-item__actions {
-    opacity: 0;
-  }
-
-  .vault-item:hover .vault-item__actions,
-  .vault-item:focus-within .vault-item__actions {
-    opacity: 1;
-  }
-}
+/* The "…" menu (Share, Rename, Delete) is small, so it always shows (Nov 18). */
+.vault-item__actions .more-menu__button { width: 30px; height: 30px; color: var(--color-text-muted); }
 
 .vault-item__rename {
   min-height: 28px;
@@ -4789,3 +4779,26 @@ ul.pres-slide__body { margin: 0; padding-left: 1.2em; color: var(--color-text); 
 .upnext-pick__row:hover { border-color: var(--color-border-strong); background: var(--color-surface-muted); }
 .upnext-pick__date { flex: 0 0 auto; min-width: 84px; font-size: 13px; font-weight: 600; color: var(--color-accent); }
 .upnext-pick__text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+
+/* ─── A vault file in its full editor (js/modules/vault/vault-full-editor.js) ─ */
+
+.vault-page.is-editing { grid-template-columns: minmax(0, 1fr); }
+.vault-page.is-editing > .vault-tree { display: none; }
+.vault-editor { display: flex; flex-direction: column; gap: 12px; }
+.vault-editor__bar {
+  position: sticky;
+  top: var(--app-bar-height, 56px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  background: var(--color-page);
+  border-bottom: 1px solid var(--color-border);
+}
+.vault-editor__back { font-weight: 600; }
+.vault-editor__kind { display: inline-flex; align-items: center; gap: 4px; color: var(--color-text-muted); font-size: var(--font-size-small); }
+.vault-editor__extras { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+.vault__expand { margin-left: 4px; }
+.vault-module-file.is-compact { min-height: 0; }

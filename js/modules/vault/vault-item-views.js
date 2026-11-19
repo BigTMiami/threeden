@@ -35,8 +35,9 @@ function backLink(folderName, onBack) {
  * @param {Element}  [options.shareButton]  the Sharing button (js/ui/document-sharing.js), beside "Last edited"
  * @param {string}   [options.access]       'edit' (the editor), or 'comment' / 'view' (read-only, set by its maker)
  * @param {Element}  [options.comments]     comments under a read-only note ('comment')
+ * @param {Element}  [options.expand]       "Open in the full editor" (a vault card), beside Sharing
  */
-export function renderNoteView(item, { folderName, onBack, onRename, onSaveHtml, getMember, mentions = null, toArticle = null, shareButton = null, access = 'edit', comments = null }) {
+export function renderNoteView(item, { folderName, onBack, onRename, onSaveHtml, getMember, mentions = null, toArticle = null, shareButton = null, access = 'edit', comments = null, expand = null }) {
   const lastEdited = h('p', { class: 'vault-note__meta' });
 
   function drawLastEdited(memberId, timestamp) {
@@ -58,7 +59,7 @@ export function renderNoteView(item, { folderName, onBack, onRename, onSaveHtml,
 
   return h('div', { class: 'vault-note' },
     backLink(folderName, onBack),
-    h('label', { class: 'visually-hidden', for: `note-title-${item.id}` }, item.article ? 'Headline' : 'Note title'),
+    h('label', { class: 'visually-hidden', for: `note-title-${item.id}` }, item.article ? 'Headline' : 'Document title'),
     item.article ? h('p', { class: 'vault-note__kind' }, icon('newspaper', 13), ' Article draft') : null,
     h('input', {
       id: `note-title-${item.id}`,
@@ -69,7 +70,7 @@ export function renderNoteView(item, { folderName, onBack, onRename, onSaveHtml,
       disabled: readOnly,
       onChange: (event) => onRename(event.target.value),
     }),
-    h('div', { class: 'vault-note__meta-row' }, lastEdited, shareButton),
+    h('div', { class: 'vault-note__meta-row' }, lastEdited, shareButton, expand),
     toArticle && !readOnly ? renderToArticle(toArticle, Boolean(item.article)) : null,
     readOnly ? [
       h('p', { class: 'file-access__note' }, icon(access === 'comment' ? 'chat' : 'eye', 12), access === 'comment' ? ' You can read and comment on this. Whoever made it chose who can edit.' : ' You can read this. Whoever made it chose who can edit.'),
@@ -86,9 +87,9 @@ export function renderNoteView(item, { folderName, onBack, onRename, onSaveHtml,
 /** "Maya", "Maya and Iris", "Maya, Iris, and 2 more". */
 const listNames = (names) => (names.length === 1 ? names[0] : names.length === 2 ? `${names[0]} and ${names[1]}` : names.length === 3 ? `${names[0]}, ${names[1]}, and ${names[2]}` : `${names.slice(0, 2).join(', ')}, and ${names.length - 2} more`);
 
-function renderToArticle({ targets, draft, writers, onTurn, onOpenDraft }, isArticle = false) {
+export function renderToArticle({ targets, draft, writers, onTurn, onOpenDraft }, isArticle = false) {
   if (draft) {
-    return h('p', { class: 'vault-note__article' }, icon('newspaper', 13), isArticle ? ' Published to Articles as a draft. ' : ' This note became an article draft. ',
+    return h('p', { class: 'vault-note__article' }, icon('newspaper', 13), isArticle ? ' Published to Articles as a draft. ' : ' This document became an article draft. ',
       h('button', { type: 'button', class: 'link-button', onClick: () => onOpenDraft(draft) }, 'Open the draft'));
   }
   if (!targets.length) {

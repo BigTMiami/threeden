@@ -15,8 +15,10 @@
  * opens it in the group's calendar.
  */
 
-import { onSwipe, slideIn } from '../../ui/swipe.js';
-import { h, replaceChildren } from '../../ui/dom.js';
+import { onSwipe, slideIn, isPhone } from '../../ui/swipe.js';
+import { onLongPress } from '../../ui/long-press.js';
+import { openEventSheet, openNewItemSheet } from '../../events/event-sheet.js';
+import { h, replaceChildren, makeId } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { showToast } from '../../ui/toast.js';
 import { toDateKey, todayKey, monthName, formatShortDate, addDays } from '../../utils/dates.js';
@@ -33,6 +35,8 @@ import { rsvpButtons } from '../../events/rsvp.js';
 const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const UPCOMING_LIMIT = 4;
 const UPCOMING_LOOKAHEAD_DAYS = 90;
+
+const DOUBLE_CLICK_MS = 450;
 
 export function renderCalendarCard(container, context) {
   const today = new Date();
@@ -61,6 +65,7 @@ export function renderCalendarCard(container, context) {
     redraw();
   }
 
+  let lastDayClick = { key: '', at: 0 };
   function redraw() {
     drawMonthHeader();
     drawMonthGrid();
@@ -110,17 +115,27 @@ export function renderCalendarCard(container, context) {
       if (key === selectedDate) classes.push('is-selected');
       if (hasEvents) classes.push('has-events');
 
-      cells.push(h('button', {
+      const dayButton = h('button', {
         type: 'button',
         class: classes.join(' '),
         'aria-label': `${monthName(viewMonth)} ${day}${hasEvents ? ', has events' : ''}`,
         'aria-pressed': String(key === selectedDate),
         onClick: () => {
+          // Computers: a second click on the same day (a double-click) opens the add form on it (Nov 18).
+          // (Counted here: the first click redraws the month, so the browser's dblclick never arrives.)
+          const isDouble = lastDayClick.key === key && Date.now() - lastDayClick.at < DOUBLE_CLICK_MS && !isPhone() && !context.isVisitor;
+          lastDayClick = { key, at: Date.now() };
           selectedDate = key;
           dateInput.value = key;
           redraw();
+          if (isDouble) setFormOpen(true);
         },
-      }, String(day)));
+      }, String(day));
+      // Phones: press and hold a day to add an entry or event on it.
+      // Computers: double-click it (Nov 18): the add form opens on that day.
+      if (!context.isVisitor) onLongPress(dayButton, () => newOn(key));
+      dayButton.dataset.date = key;
+      cells.push(dayButton);
     }
 
     replaceChildren(monthGrid, cells);
@@ -152,14 +167,15 @@ export function renderCalendarCard(container, context) {
     // Clicking an event opens it over the page: details, RSVP, and a way to
     // the full calendar (a group's, for a linked event). item-overlay.js
     const me = context.currentUser;
-    const open = () => openEventOverlay(event, {
+    // On a phone it opens over the calendar, full screen, with × to come back (event-sheet.js).
+    const open = () => (isPhone() && findEvent(event.id) ? openEventSheet(event.id, { canEdit: !context.isVisitor, onClosed: () => { if (container.isConnected) redraw(); } }) : openEventOverlay(event, {
       getEvent: () => findEvent(event.id)?.event ?? event,
       me, getMember: context.getMember, date,
       onRsvp: (answer) => { updateEvent(event.id, (saved) => applyRsvp(saved, me.id, answer)); if (answer === 'going') showToast(`You're going to "${event.title}".`); redraw(); },
       onEdit: !event._link && !context.isVisitor ? () => context.openFullPage(event.id) : null,
       onOpenFull: event._link ? () => context.openLinkedItem(event._link) : () => context.openFullPage(event.id),
       where: event._link ? event._link.spaceName : 'the full calendar',
-    });
+    }));
     const row = h('button', { type: 'button', class: 'calendar-event', title: 'Open this event', onClick: open },
       h('span', { class: 'calendar-event__date' },
         h('span', { class: 'calendar-event__dot', style: { background: colorValue(event.color) }, 'aria-hidden': 'true' }),
@@ -180,6 +196,23 @@ export function renderCalendarCard(container, context) {
         if (answer === 'going') showToast(`You're going to "${event.title}".`);
         redraw();
       }, { compact: true }));
+  }
+
+  /** A new entry (or event) on a day, in a sheet over the calendar (a long press on the day). */
+  function newOn(date) {
+    selectedDate = date;
+    redraw();
+    openNewItemSheet({
+      draft: { kind: 'entry', title: '', date, allDay: true, time: '', attendeeIds: [context.currentUser.id], createdBy: context.currentUser.id, id: makeId('ev'), createdAt: Date.now() },
+      members: context.members,
+      homeGroupId: context.spaceKind === 'group' ? context.spaceId : null,
+      mineToggle: context.spaceKind === 'group',
+      onSave: (fields) => {
+        update((data) => { data.events.push(fields); });
+        const alsoMine = context.spaceKind === 'group' && !(fields.hiddenFrom ?? []).includes(context.currentUser.id);
+        showToast(`Added "${fields.title}"${alsoMine ? '. It’s on your calendar too' : ''}.`);
+      },
+    });
   }
 
   // ─── Quick add form ────────────────────────────────────────────────────────

@@ -15,6 +15,7 @@
  *   (hideMedia: the photo viewer shows the pictures itself, large, next to the post)
  */
 
+import { blogShownIn } from '../../state/groups.js';
 import { liveItem, effectiveAccess, accessLabel, accessNote, renderFileComments } from '../../ui/file-access.js';
 import { createItemContext } from '../vault/vault-module-files.js';
 import { createRichTextEditor } from '../../ui/rich-text-editor.js';
@@ -28,9 +29,10 @@ import { blogPostReactions, blogPostSend } from '../../ui/post-reactions.js';
 import { autoGrow } from '../../ui/auto-grow.js';
 import { postMenu } from '../../feed/post-menu.js';
 import { timeAgo } from '../../utils/dates.js';
-import { getMember, getCurrentUser, getModule, updateModuleData } from '../../state/store.js';
+import { getMember, getCurrentUser, getModule, getSpace, updateModuleData } from '../../state/store.js';
 import { getModuleType } from '../registry.js';
 import { renderPoll } from '../../ui/poll-view.js';
+import { renderAsks } from '../../ui/asks.js';
 import { notifyMentions } from '../../state/notifications.js';
 import { renderAttachment } from '../../messages/attachments.js';
 import { blogHref } from '../../router.js';
@@ -74,17 +76,20 @@ export function renderFeedPost(post, { moduleId, ownerId, spaceId = null, where 
     return extras.send || extras.actions.some(Boolean) ? postMenu({ title: 'this post', ...extras }) : null;
   }
 
+  // In a group's feed, no link to the author's blog if they hid it from the group (groups.js).
+  const blogLink = !author || !spaceId || blogShownIn(getSpace(spaceId), author.id);
+
   function draw(isEditing = false) {
     const hasPictures = post.media.length > 0 && !hideMedia;
     replaceChildren(article,
       h('header', { class: `feed-post__header${context ? ' feed-post__header--context' : ''}` },
-        author ? h('a', { href: blogHref(author), class: 'feed-post__avatar', tabindex: '-1', 'aria-hidden': 'true' }, avatar(author, context ? 36 : 32)) : null,
+        author && blogLink ? h('a', { href: blogHref(author), class: 'feed-post__avatar', tabindex: '-1', 'aria-hidden': 'true' }, avatar(author, context ? 36 : 32)) : author ? h('span', { class: 'feed-post__avatar', 'aria-hidden': 'true' }, avatar(author, context ? 36 : 32)) : null,
         context
           ? h('span', { class: 'feed-post__who feed-item__who' },
-            h('span', { class: 'feed-item__headline' }, author ? h('a', { href: blogHref(author), class: 'feed-post__name' }, author.name) : 'Someone'),
+            h('span', { class: 'feed-item__headline' }, author ? (blogLink ? h('a', { href: blogHref(author), class: 'feed-post__name' }, author.name) : h('strong', { class: 'feed-post__name' }, author.name)) : 'Someone'),
             h('span', { class: 'feed-item__meta', title: new Date(post.createdAt).toLocaleString() }, context, ` · ${timeAgo(post.createdAt)}${post.editedAt ? ' · edited' : ''}`, audienceNote(post)))
           : h('span', { class: 'feed-post__who' },
-            author ? h('a', { href: blogHref(author), class: 'feed-post__name' }, author.name) : 'Someone',
+            author ? (blogLink ? h('a', { href: blogHref(author), class: 'feed-post__name' }, author.name) : h('strong', { class: 'feed-post__name' }, author.name)) : 'Someone',
             h('span', { class: 'feed-post__time', title: new Date(post.createdAt).toLocaleString() }, ` · ${timeAgo(post.createdAt)}${post.editedAt ? ' · edited' : ''}`, audienceNote(post)),
             post.source?.kind === 'instagram' ? h('span', { class: 'feed-post__source', title: 'Copied from Instagram' }, ' · from Instagram') : null),
         isEditing ? null : menuButton()),
@@ -95,6 +100,7 @@ export function renderFeedPost(post, { moduleId, ownerId, spaceId = null, where 
       isEditing ? null : post.text ? h('p', { class: 'feed-post__text' }, renderText(post.text)) : null,
       renderAttachments(hasPictures ? post.attachments.filter((a) => a.kind !== 'event') : post.attachments, () => draw()),
       renderPostPolls(post, moduleId),
+      renderPostSignups(post, moduleId),
       // Editing: everything attached stays above, and the words are edited underneath it.
       isEditing ? renderEditor() : null,
       blogPostReactions({
@@ -355,6 +361,32 @@ function renderPostPolls(post, moduleId) {
     canVote: Boolean(me),
     canManage: me?.id === post.authorId,
   }));
+}
+
+/** A post's sign-ups (Nov 18): saved on the post, wherever it lives; anyone signed in can sign up. */
+function renderPostSignups(post, moduleId) {
+  const found = post.attachments.find((a) => a.kind === 'signups');
+  if (!found) return null;
+  const me = getCurrentUser();
+  if (!me) return null;
+  const saved = () => (getModule(moduleId)?.data.posts ?? []).find((p) => p.id === post.id);
+  return renderAsks({
+    getPost: () => ({ signups: (saved()?.attachments ?? post.attachments).find((a) => a.kind === 'signups')?.signups ?? [] }),
+    savePost: (fn) => {
+      const module = getModule(moduleId);
+      if (!module) return;
+      const data = structuredClone(module.data);
+      const target = data.posts.find((p) => p.id === post.id);
+      const attachment = target?.attachments?.find((a) => a.kind === 'signups');
+      if (!attachment) return;
+      const wrapper = { signups: attachment.signups };
+      fn(wrapper);
+      attachment.signups = wrapper.signups;
+      updateModuleData(moduleId, data);
+    },
+    me,
+    canAnswer: !me.isGuest,
+  });
 }
 
 /** " · 👥 Friends" on a post only some people can see, so nobody is surprised. */

@@ -50,7 +50,15 @@ should follow them, or the exception should be a deliberate choice.
   A group or your homepage on a phone opens on widgets (one glance per module); tapping one
   opens the swipe view at that module. Its widget order and sizes are set
   from a computer with Edit → Edit mobile, or on the phone itself with
-  Edit, which edits the widgets. It's the only layout on phones for now.
+  Edit, which edits the widgets (Small, Wide, or Big). Swiping goes through the
+  modules in the widgets' order, top left to bottom right. It's the only layout on phones for now.
+  A module fills the screen under the top bar, with the group's name just
+  above it (a flick shows it; the snap rides the scroll). Calendar items open
+  over the calendar with an ×, and a long press on a day or time adds one.
+- **Security settings people can see.** Your account and each group have a
+  Security tab: passkeys (never text-message codes), what's encrypted, a
+  recovery key only you keep, and, for groups, who must use a passkey and
+  what new members can read from before they joined.
 - **Private by default.** Rough area instead of exact location; only you see
   your connected calendars; direct messages are end-to-end encrypted; photo
   edits drop embedded metadata; permission checks are written as a server
@@ -92,10 +100,10 @@ Member ──links to──────► Friends, and their blogs (the Feed)
 | **Tab** | A page within a space. A group can make a tab public while the rest stays members-only | store.js |
 | **Module** | A block on a page: a type, a size (`span` × `rows`), and its own data | `js/modules/` |
 | **Item** | Something inside a module: a post, a thread, a task, an event, a vault file | each module's `*-data.js` |
-| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page | `js/events/`, `js/state/events.js` |
+| **Event** | A dated thing with RSVPs, guest lists, reminders, and sign-ups. Lives in calendar and Upcoming events modules, and has its own page. Its hosts (people, and groups whose members can all edit it) are listed in its Hosts field. Sharing it with a group puts it on that group's calendar without copying it | `js/events/`, `js/state/events.js` |
 | **Conversation** | Messages between people. A Chat module shows a conversation; Messages shows the same one | `js/state/messages.js` |
 | **Notification** | Something that needs your attention, grouped when several are about the same thing | `js/state/notifications.js` |
-| **Linked item** | Something assigned to you in a group, shown live on your personal homepage (not a copy) | `js/editor/linked-items.js` |
+| **Linked item** | Something assigned to you in a group (or a calendar item you added there), shown live on your personal homepage (not a copy); an event co-hosted by a group shows on that group's calendar the same way | `js/editor/linked-items.js` |
 | **Vault file** | A kind of item: what a Vault holds (a folder, note, link, uploaded file, or module file such as a spreadsheet). Any but a folder can be shown on a page with File from vault, live from the vault | `js/modules/vault/`, `js/modules/vaultfile/` |
 
 ### The three kinds of space
@@ -132,7 +140,7 @@ jumps anywhere.
 | Purpose | Modules | Fits in |
 | --- | --- | --- |
 | **Getting your bearings** | Dashboard, Recents, Recent groups (personal); Up next (every group's first module) | personal or group |
-| **Talking** | Announcements, Forum, Chat | group (Chat on personal too) |
+| **Talking** | Board (was Announcements), Forum, Chat | group (Chat on personal too) |
 | **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
 | **Getting things done** | Tasks (list and board views), List, Budget, Gantt chart, Survey | group, personal |
 | **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
@@ -214,12 +222,11 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
 - **Linked items:** assigned tasks, events you're going to, and Gantt tasks
   appear on your homepage live from the group.
 - **Search:** Ctrl+K and advanced search across what you can see.
-- **Events and calendars:** RSVPs, waitlists, co-hosts, series, reminders,
+- **Events and calendars:** RSVPs, waitlists, hosts (people and groups), series, reminders,
   regulars, "You're free" or "Clashes with…" checked against connected
   calendars, and a calendar feed for other apps.
-- **Names in groups:** a group can let members go by an alias there
-  (store.memberIn); profiles and everything outside the group keep their
-  own names.
+- **Your blog in a group:** each member chooses whether a group's members get
+  links to their blog (asked once after joining; Group settings after).
 - **Sharing and publishing:** "Who sees this" on every composer, public tabs,
   documents published as articles, and follows for groups you can't join.
   Every vault file and folder has one sharing tile with three parts: who can
@@ -260,7 +267,8 @@ The prototype was built so each piece has a clear server counterpart. The
 Things to settle as the design grows. Some are flagged in the goals review
 and the simulated user test.
 
-- **Too many ways to post?** A group can have Announcements, a Forum, feeds,
+- **Too many ways to post?** (Partly answered Nov 18: the Board is the group's
+  feed, with pins for what were announcements.) A group can have a Board, a Forum, feeds,
   Articles, and Chat. Each has a reason, but newcomers may not know which to
   use. Should a group's template pick for them, or should some merge?
 - **Too many "needs you" lists?** The Dashboard's For you, the Feed's From

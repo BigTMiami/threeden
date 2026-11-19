@@ -34,7 +34,7 @@ function moduleTypeOf(item) {
 /** How each kind of item is labeled and drawn. */
 export const ITEM_KINDS = {
   folder: { label: 'Folder', icon: 'folder' },
-  note: { label: 'Note', icon: 'note' },
+  note: { label: 'Document', icon: 'note' }, // called a note in the code (kind 'note'); people see Document (Nov 18)
   link: { label: 'Link', icon: 'link' },
   file: { label: 'File', icon: 'file' },
   module: { label: 'Module file', icon: 'file' }, // the real icon and label come from its module type
@@ -55,7 +55,7 @@ export function iconForItem(item) {
   return ITEM_KINDS[item.kind].icon;
 }
 
-/** What kind of item it is, in words: "Note", "Article", "Spreadsheet"… */
+/** What kind of item it is, in words: "Document", "Article", "Spreadsheet"… */
 export function labelForItem(item) {
   if (item.kind === 'module') return moduleTypeOf(item)?.label ?? ITEM_KINDS.module.label;
   if (item.kind === 'note' && item.article) return 'Article';

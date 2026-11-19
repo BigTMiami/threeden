@@ -36,9 +36,13 @@ export const calendarModule = {
   // own calendar, even from groups you're not in (see linked-items.js).
   assignments: {
     items: (data) => data.events,
-    isAssignedTo: (event, memberId) => (event.attendeeIds ?? []).includes(memberId)
+    // Yours if you added it (unless you unticked "Show on my calendar"),
+    // host it, are involved, invited, or going.
+    isAssignedTo: (event, memberId) => !(event.hiddenFrom ?? []).includes(memberId) && (event.createdBy === memberId
+      || (event.cohostIds ?? []).includes(memberId)
+      || (event.attendeeIds ?? []).includes(memberId)
       || (event.inviteeIds ?? []).includes(memberId)
-      || ['going', 'maybe'].includes(event.rsvps?.[memberId]),
+      || ['going', 'maybe'].includes(event.rsvps?.[memberId])),
     includeOutsideGroups: true,
     // Events saved in an Upcoming events module count too (js/modules/events/).
     sourceTypes: ['calendar', 'events'],

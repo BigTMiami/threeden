@@ -23,7 +23,7 @@ with sync_playwright() as p:
     menu.locator('.vault__menu-more-toggle').click(); pg.wait_for_timeout(100)
     more=[t.split('\n')[0] for t in menu.locator('.vault__menu-more .vault__menu-item').all_inner_texts()]
     print('top:', top); print('more hidden at first:', hidden, '| more:', more, '| toggle:', menu.locator('.vault__menu-more-toggle').inner_text())
-    if top!=['Note','Spreadsheet','Presentation','Article','Upload files','Folder']: errs.append('top order')
+    if top!=['Document','Spreadsheet','Presentation','Article','Upload files','Folder']: errs.append('top order')
     if more[:6]!=['List','Tasks','Relationship map','Gantt chart','Survey','Link']: errs.append('more order')
     if any(x in top+more for x in ['Calendar','Forum','Canvas']): errs.append('calendar/forum/canvas still listed')
     pg.screenshot(path='test-output/vault-new-menu.png'); pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
@@ -33,7 +33,7 @@ with sync_playwright() as p:
     new(v, pg, 'Article', 'Why the boiler keeps failing')
     print('article view:', v.locator('.vault-note__kind').inner_text() if v.locator('.vault-note__kind').count() else None, '| publish:', v.get_by_role('button', name='Publish to Articles').count(), '| hint:', v.locator('.vault-note__article').inner_text()[:80])
     print('saved:', st(pg, "const it=s.getModule('tenants-vault').data.items.find(i=>i.name==='Why the boiler keeps failing'); return [it.kind, it.article]"))
-    v.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
+    v.locator('.vault__back, .vault-editor__back').first.click(); pg.wait_for_timeout(400)
     print('tile label:', v.locator('.vault-tile', has_text='Why the boiler').locator('.vault-tile__meta').inner_text() if v.locator('.vault-tile', has_text='Why the boiler').count() else v.locator('text=Why the boiler').count())
 
     # Survey
@@ -54,7 +54,7 @@ with sync_playwright() as p:
     print('results tab:', sv.locator('.survey__tab[aria-selected=true]').inner_text(), '|', sv.locator('.survey__count').inner_text(), '| bars:', sv.locator('.survey__bar-row').count(), '| text answer:', sv.locator('.survey__answers').inner_text())
     pg.screenshot(path='test-output/survey-results.png')
     print('saved:', st(pg, "const it=s.getModule('tenants-vault').data.items.find(i=>i.name==='Cleanup day'); return [it.moduleType, it.data.questions.length, it.data.responses.length, JSON.stringify(it.data.responses[0].answers).length>10]"))
-    v.locator('.vault__back').first.click(); pg.wait_for_timeout(400)
+    v.locator('.vault__back, .vault-editor__back').first.click(); pg.wait_for_timeout(400)
 
     # Presentation
     new(v, pg, 'Presentation', 'Rent strike basics')

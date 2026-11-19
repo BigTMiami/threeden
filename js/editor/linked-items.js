@@ -44,7 +44,10 @@ import { getModuleType } from '../modules/registry.js';
 export function receivesLinkedItems(moduleId) {
   const module = getModule(moduleId);
   const space = getSpaceOfModule(moduleId);
-  if (!module || space?.kind !== 'personal') return false;
+  if (!module) return false;
+  // A group's first calendar shows events other groups host with it.
+  if (space?.kind === 'group') return module.type === 'calendar' && space.modules.find((m) => m.type === 'calendar')?.id === module.id;
+  if (space?.kind !== 'personal') return false;
   if (!getModuleType(module.type).assignments) return false;
   return space.modules.find((m) => m.type === module.type)?.id === module.id;
 }
@@ -53,6 +56,7 @@ export function receivesLinkedItems(moduleId) {
 export function getLinkedItems(moduleId) {
   if (!receivesLinkedItems(moduleId)) return [];
   const module = getModule(moduleId);
+  if (getSpaceOfModule(moduleId).kind === 'group') return coHostedLinks(getSpaceOfModule(moduleId).id);
   // My calendar can also show every event in your groups ("One calendar for all my groups").
   return linksFor(module.type, getSpaceOfModule(moduleId).memberIds[0], { allInMyGroups: module.type === 'calendar' && Boolean(module.data?.allGroups) });
 }
@@ -72,6 +76,26 @@ export function otherCalendarLinks(memberId, exceptSpaceId) {
     spaceId: personal.id, spaceName: 'My calendar', status: '',
   }));
   return [...own, ...linksFor('calendar', memberId)].filter((link) => link.spaceId !== exceptSpaceId);
+}
+
+/**
+ * Events and entries from somewhere else that this group hosts (an event's
+ * "Hosts" field) or that were shared with it (Share → Add to a group's
+ * calendar), for the group's calendar.
+ */
+function coHostedLinks(groupId) {
+  const links = [];
+  for (const space of getSpaces()) {
+    if (space.id === groupId) continue;
+    for (const source of space.modules) {
+      if (source.type !== 'calendar' && source.type !== 'events') continue;
+      for (const item of source.data?.events ?? []) {
+        if (!(item.hostGroupIds ?? []).includes(groupId) && !(item.sharedGroupIds ?? []).includes(groupId)) continue;
+        links.push({ item: structuredClone(item), itemId: item.id, moduleId: source.id, moduleTitle: source.title, spaceId: space.id, spaceName: space.name, status: '' });
+      }
+    }
+  }
+  return links;
 }
 
 /** Items of a module type, in spaces other than `ownerId`'s homepage, assigned to them. */

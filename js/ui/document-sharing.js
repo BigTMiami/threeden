@@ -305,7 +305,7 @@ export function documentShareButton({ vaultModuleId, itemId }) {
       h('div', { class: 'doc-share__publish' },
         h('button', { type: 'button', class: 'button button--primary button--small', onClick: () => { close(); openPublishDialog({ entries: [{ vaultModuleId, item: itemNow() ?? item }] }); } },
           icon(verb === 'Publish' ? 'newspaper' : 'announcements', 14), ` ${verb}`),
-        h('span', { class: 'doc-share__hint' }, verb === 'Publish' ? 'To your blog or a group, as a post with a preview (a note can also become an article).' : 'To your blog or a group, as a post with a preview.')),
+        h('span', { class: 'doc-share__hint' }, verb === 'Publish' ? 'To your blog or a group, as a post with a preview (a document can also become an article).' : 'To your blog or a group, as a post with a preview.')),
     ];
   }
 

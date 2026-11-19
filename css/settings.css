@@ -2359,3 +2359,39 @@ body.is-guest .app-bar__search {
 .children__groups { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .children__groups li { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .groups-page__child-note { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; }
+
+/* After joining: show your blog to the members? (js/groups/blog-choice.js) */
+.blog-question { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--color-border-faint); border-radius: var(--radius); background: var(--color-accent-soft); color: var(--color-accent); }
+.blog-question__text { flex: 1 1 220px; min-width: 0; color: var(--color-text); font-size: 14px; line-height: 1.4; }
+.blog-question__text span { color: var(--color-text-muted); }
+.blog-question__buttons { display: flex; gap: 6px; }
+.join-page__blog { margin: 4px 0 12px; }
+
+/* ─── Security tabs (js/account/security-section.js, js/groups/security-tab.js) ─ */
+
+.security-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.security-list__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface);
+}
+.security-list__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.security-empty, .security-status { margin: 0 0 10px; color: var(--color-text-muted); }
+.security-status { display: flex; align-items: center; gap: 6px; color: var(--color-text); }
+.security-nudge { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: var(--color-accent-soft); font-size: var(--font-size-small); }
+.security-add__form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface-muted); }
+.security-check { margin-bottom: 8px; }
+.security-why { display: block; margin-top: 6px; }
+.security-secret { margin-top: 8px; padding: 12px; border-radius: 12px; background: var(--color-surface-muted); }
+.security-secret p { margin: 0 0 8px; }
+.security-secret__key { font-size: 15px; letter-spacing: 0.06em; word-break: break-all; }
+.security-facts { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.security-facts li { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.security-words { margin-top: 12px; padding: 14px; border: 1px dashed var(--color-border); border-radius: 14px; }
+.security-words__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px 16px; margin: 0 0 10px; padding-left: 22px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 15px; }
+.security-glance { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); }
+.security-glance__row { display: flex; align-items: center; gap: 6px; margin: 0; }
+.security-missing { list-style: none; margin: 2px 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.security-missing li { display: flex; align-items: center; gap: 6px; }
+
+/* A group that asks you for a passkey (space-header.js). */
+.passkey-ask { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--color-accent-soft); font-size: var(--font-size-small); }

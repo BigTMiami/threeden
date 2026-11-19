@@ -8,7 +8,7 @@
  */
 
 import {
-  getCurrentUser, memberIn, getModule, getSpaceOfModule, getSpaceMembers, updateModuleData,
+  getCurrentUser, getMember, getModule, getSpaceOfModule, getSpaceMembers, updateModuleData,
 } from '../state/store.js';
 import { openModulePage } from '../router.js';
 import { can, roleOf } from '../state/permissions.js';
@@ -27,6 +27,14 @@ const focusRequests = new Map();
 export function requestModuleFocus(moduleId, itemId) {
   focusRequests.set(moduleId, itemId);
 }
+
+/**
+ * What a module's expand button (module-frame.js) should open: the item the
+ * card has open right now, e.g. a document open in a vault card opens in
+ * its full editor (Nov 18). null: the module's full page as usual.
+ */
+const expandTargets = new Map();
+export const expandTargetOf = (moduleId) => expandTargets.get(moduleId) ?? null;
 
 export function createModuleContext(moduleId) {
   const space = getSpaceOfModule(moduleId);
@@ -53,8 +61,7 @@ export function createModuleContext(moduleId) {
     // Only the people in this module's space: in a personal homepage, just you.
     members: getSpaceMembers(space),
     currentUser: getCurrentUser(),
-    // A member by the name they go by here (their alias in a group that allows them).
-    getMember: (memberId) => memberIn(space, memberId),
+    getMember,
     // What the current user may do here, e.g. context.can('postAnnouncements').
     // See js/state/permissions.js. Always true on your own homepage.
     can: (permissionId) => can(space, getCurrentUser()?.id, permissionId),
@@ -69,6 +76,8 @@ export function createModuleContext(moduleId) {
       else focusRequests.delete(moduleId);
       openModulePage(moduleId);
     },
+    // The item the card has open, for the expand button to open in the full page (null: none).
+    setExpandTarget: (itemId) => { if (itemId) expandTargets.set(moduleId, itemId); else expandTargets.delete(moduleId); },
     // In a full page: the item the card asked to show, or null. Read once.
     takeFocusRequest: () => {
       const itemId = focusRequests.get(moduleId) ?? null;

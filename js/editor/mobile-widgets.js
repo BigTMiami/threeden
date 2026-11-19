@@ -71,7 +71,7 @@ function ring(done, total) {
 export function renderWidget(module, space, me, { onOpen = null, controls = null } = {}) {
   const type = getModuleType(module.type);
   const size = widgetSize(module, space);
-  const s = widgetSummary(module, space, me);
+  const s = widgetSummary(module, space, me, size);
   const featured = module.type === 'upnext' && s.date;
   const body = [
     h('span', { class: 'mwidget__head' },
@@ -93,6 +93,8 @@ export function renderWidget(module, space, me, { onOpen = null, controls = null
     !s.date ? s.lines.filter(Boolean).map((line) => h('span', { class: 'mwidget__line' }, line)) : null,
     s.chips?.length ? h('span', { class: 'mwidget__chips' }, s.chips.map((chip) => h('span', { class: 'mwidget__chip' }, chip))) : null,
     s.people?.length ? h('span', { class: 'mwidget__people' }, s.people.map((id) => avatar(getMember(id), 22))) : null,
+    // Big widgets: the next few things after the first.
+    s.more?.length ? h('span', { class: 'mwidget__more' }, s.more.filter(Boolean).map((line) => h('span', { class: 'mwidget__more-line' }, line))) : null,
   ];
   const className = `mwidget mwidget--${size}${featured ? ' mwidget--featured' : ''}`;
   if (onOpen) {

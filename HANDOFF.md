@@ -114,11 +114,101 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Vault editors, calendar sharing, posts with events (Nov 18):**
+  - Vault: ITEM_KINDS note label is "Document" (kind stays 'note'). Rows use
+    `moreMenu()` (js/ui/more-menu.js; floats via followAnchor). The card
+    opens every file inline (module files with their card renderer:
+    `renderModuleFileView({ compact })`) and calls `context.setExpandTarget`;
+    module-frame's expand reads `expandTargetOf()` (before leaving edit mode,
+    which redraws the card) and passes it as a focus request. The vault page
+    renders `renderFullEditor` (vault-full-editor.js) for notes/module files
+    with `.vault-page.is-editing` hiding the tree and toolbar; documents use
+    the Note module's renderFullPage through `documentContext()`.
+  - Calendar views: `onCreateAt` is double-click now; `onTapEmpty` is the
+    single click (phones: go to the day). The card counts two clicks on the
+    same day within 450 ms itself (its redraw detaches the button, so no
+    dblclick event arrives).
+  - Entries: People field = people search (messageablePeople + members) on
+    attendeeIds, any calendar.
+  - Sharing: `event.sharedGroupIds`; coHostedLinks includes them; Upcoming
+    events in a group reads its calendar's linked items; myUpcoming and
+    canViewEvent count them. Send in 3den adds recipients to inviteeIds when
+    `canEditEvent || visibility !== 'invite'`. Entries: openEntryShare.
+  - Board composer: eventAttacher + askAttacher always (RSVP only with
+    withAsks); post.eventId → renderEventStrip (card, page, Feed). Feed
+    composer: sign-ups as attachment `{ kind: 'signups', signups }`,
+    rendered by renderPostSignups with renderAsks. Board "+ Post" is last in
+    `.board-card-body` (a column), sticky at the bottom while closed.
+  - Tests: test_vault_full_editor.py, test_share_events_posts.py.
+
+- **Security tabs (Nov 18):** js/state/security.js holds `member.security`
+  (passkeys, twoStep, passkeyUnlock, recoveryKeyAt, previews, disappearing,
+  newDeviceAlerts, leaveNoTrace) and `space.security` (encrypt,
+  requirePasskey, history, inviteExpiry, disappearing, publishFiles), with
+  defaults. Account → Security (security-section.js; Password moved there;
+  the recovery words and authenticator key are module-level, never saved,
+  because saving re-renders the page). Group → Security (security-tab.js,
+  canManageRoles). Wired: `chatStartFor()` in thread-view hides group chat
+  messages from before a member's `space.joinedAt` (founders without a join
+  date see all); the group's disappearing choice calls `setDisappearing` on
+  its Chat modules' conversations; your disappearing default seeds
+  `openDirectConversation`; `passkeyNeededIn()` drives the notice in
+  space-header.js. Settings only (for the backend): encrypt, inviteExpiry,
+  publishFiles, previews, leaveNoTrace, passkeyUnlock, newDeviceAlerts.
+  Test: tests/test_security_tabs.py.
+
+- **Phone order, Big widgets, and native snapping (Nov 18):** the phone
+  numbers on module frames (`renderPhoneNumber`) and Layouts → Reset phone
+  order are gone; swipe order = widget order (`phoneOrdered(naturalPhoneOrder())`,
+  which the widgets and grid.js share; widgets flow in a 2-column grid
+  without dense packing, so list order is top-left-to-bottom-right).
+  `setPhonePosition` stays for Edit mobile's ‹ ›. Widget size `'big'`:
+  span 2, min-height 192px, `widgetSummary(…, 'big')` merges `MORE[type]`
+  (`more` lines, or more chips/lines). Snapping is now CSS
+  (`html.phone-module-snap:not(.phone-widgets)` scroll-snap mandatory,
+  header and `.module-grid.is-swiping` snap targets); `softSnap()` and its
+  scroll/touch listeners were removed because the snap came after the
+  scroll. long-press.js: a hard press needs pressure to rise 0.35 above
+  the start after 120 ms (some screens report 1.0 for every touch, which
+  made drags on the month grid open the sheet). Tests: test_phone_order.py
+  (rewritten), test_phone_calendar_sheet.py (touch drags via CDP).
+
+- **Calendars, hosts, and the phone module view (Nov 18):**
+  - A group item you add shows on your homepage calendar: the calendar's
+    `assignments.isAssignedTo` counts `createdBy` (and `cohostIds`), unless
+    the person is in `event.hiddenFrom` ("Show on my calendar" in the
+    editor, shown on group calendars via `mineToggle`).
+  - Hosts: `js/events/event-hosts.js` (`hostsPicker`) in the editor (events
+    only), the step-by-step planner, and the event page's host tools.
+    `event.hostGroupIds`; `canEditEvent(event, id)` in js/state/events.js
+    (creator, co-host, or member of a hosting group) gates editing on the
+    calendar page, Upcoming events, and the event page (where it also means
+    host tools), and `canViewEvent`. `isHostOf` stays people-only so the
+    Dashboard and calendar feeds don't call every group member a host.
+    `receivesLinkedItems` now also says yes to a group's first calendar,
+    which gets `coHostedLinks()` (events elsewhere naming the group); the
+    calendar page drops duplicates by id.
+  - Phones: `js/ui/long-press.js` (touch/pen, 500 ms, swallows the next
+    click and the context menu); views take `onLongPressAt`. On the full
+    calendar page a phone tap on an empty day goes to that day.
+    `js/events/event-sheet.js`: `openEventSheet` (event page, or entry
+    details + Edit in place) and `openNewItemSheet`; a modal.js dialog
+    (class `phone-sheet`) that pushes a history step and closes on
+    popstate or hashchange.
+  - The module view: in groups and homepages `fillScreen()` sizes modules
+    from the top bar down and sets `--snap-top`; entering the swipe view
+    (`showModuleAt` or the switch to swiping) scrolls the header out of
+    view; `softSnap()` settles the page after scrolls/touches end (from
+    the module it takes 45% of the header to reveal it; from the header a
+    16 px nudge returns; replaced the same day by CSS scroll snapping, see
+    above). Tests: tests/test_calendar_hosts_mine.py,
+    tests/test_phone_calendar_sheet.py; test_calendar.py expects the sheet.
+
 - **Editing controls in the header (Nov 17):** while editing, the page
   header shows `editingControls()` (Layouts, Preview, Done editing) from
   js/editor/edit-bar.js instead of Edit; the bottom bar is gone (the file
   keeps its name). Layouts is the old layout menu opening downward
-  (`.layout-menu--down`), with Featured / Fit to content / Reset phone order
+  (`.layout-menu--down`), with Featured / Fit to content (Reset phone order was removed Nov 18)
   under the layouts (`layoutExtras()`). Preview: groups use
   `setMemberView(true)`; other pages set `previewSpaceId` and leave edit
   mode; `isPagePreview()` makes the header show `previewControls()`.
@@ -146,14 +236,36 @@ functions, no build step.
   updated (vault + New order, library, many lists).
   Leo's Nov 17 vault batch and header controls are both done (see below).
 
-- **Aliases (Nov 18, late night):** Leo asked for "an option for aliases in
-  groups"; I asked whether he meant a per-member name or other names for the
-  group, got no answer, and built the per-member name. `space.allowAliases`
-  + `space.aliases[memberId]`; `memberIn(space, id)` returns the member with
-  `name` = alias and `realName`. `getSpaceMembers` applies it, the module
-  context's `getMember` does, and so do thread-view (group chats), Up next,
-  and widget summaries. Not applied (on purpose, for now): the global Feed,
-  notifications, profiles, and avatar initials. Test: `test_group_aliases.py`.
+- **Blog shown or hidden per group (Nov 18, morning):** `member.blogHiddenIn`
+  and `member.blogChosenIn` (groups.js). Applied in directory-page, thread-view
+  (group chat author link), feed-post bylines (when `spaceId` is a group), and
+  the blog About's In list. The question shows in space-header for groups whose
+  `joinedAt[me]` is on or after Nov 18 2026 and unanswered. Test:
+  `test_blog_in_groups.py`.
+
+- **Group Board (Nov 18, morning):** Leo chose design 1 of the board mockups
+  (canvas "3den: mobile module layouts", row 2) and asked: replace
+  Announcements; admins pin with a duration; everyone posts with a + by
+  default, admins can change that; posts go to members' Feeds by default.
+  - Kept the `announcements` type (no type migration); label "Board". Data:
+    `post.pin = { until, by, at }` (normalizePost turns old `pinned: true`
+    into a pin until unpinned), `toFeed`, `likes`, optional `title`;
+    `isPinned`, `pinLabel`, `makePin`, `PIN_DURATIONS`, `postName`.
+  - Posting = the existing `postAnnouncements` permission (relabelled "Post
+    on the board", members by default); pinning = `pinPosts` (admins). The
+    full page's "Who can post" calls `setPermission`.
+  - Feed: `collectGroupItems` adds kind 'boardpost' (not your own, not
+    `toFeed: false`); `renderBoardItem` in feed-page.js.
+  - The card doesn't redraw when data changes from elsewhere (as before);
+    an expired pin moves on the next draw.
+  - Migration 71 renames modules titled "Announcements" to "Board".
+  - Test: `test_group_board.py`; six older tests updated for the new markup.
+  - Leo also asked (not done yet): a Budget overhaul proposal with mockups,
+    and whether Lists should become a Tasks view (I suggested a Checklist
+    view and offered to do it).
+
+- **Aliases removed (Nov 18, morning):** Leo decided aliases were a bad idea;
+  the alias commit was reverted (no `memberIn`, `aliasIn`, Names section).
 
 - **Phone editing, sweep fixes (Nov 18, late night):**
   - Leo: widgets-then-modules is the only phone layout for groups and
@@ -200,7 +312,7 @@ functions, no build step.
     (`widgetSize` defaults wide for upnext, feeds, grocery, forum, events,
     kanban, gantt, budget). `resetPhoneOrder` clears both.
   - `mobile-editor.js`: Edit mobile toggle (groups, computers), drag by grip
-    (own pointer code), ‹ › via `setPhonePosition`, Small/Wide.
+    (own pointer code), ‹ › via `setPhonePosition`, Small/Wide/Big.
   - Widgets use `data-widget-id` (not `data-module-id`, which other code
     looks up). Chat widgets open Messages, like the swipe view's Chat button.
   - Later the same night: homepages too (`WIDGET_KINDS` in

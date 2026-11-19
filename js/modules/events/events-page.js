@@ -23,6 +23,7 @@ import { createEvent, applyRsvp, rsvpOf, isHostOf, DEFAULT_EVENT_LENGTH_MINUTES,
 import { renderEventEditor } from '../calendar/calendar-editor.js';
 import { renderEventDetails } from '../../events/event-details.js';
 import { eventsSource } from './events-source.js';
+import { canEditEvent } from '../../state/events.js';
 import { listOccurrences, monthLabel, renderEventRow } from './events-list.js';
 import { NEW_EVENT } from './events-card.js';
 
@@ -117,7 +118,7 @@ export function renderEventsPage(container, context) {
   };
 
   const canEdit = (event) => !context.isVisitor
-    && (Boolean(event._link) || isHostOf(event, me.id) || event.visibility === 'group' || context.can('moderate') || !event.createdBy);
+    && (Boolean(event._link) || isHostOf(event, me.id) || canEditEvent(event, me.id) || event.visibility === 'group' || context.can('moderate') || !event.createdBy);
 
   // ─── Toolbar ───────────────────────────────────────────────────────────────
 
@@ -266,6 +267,8 @@ export function renderEventsPage(container, context) {
       members: context.members,
       showAttendees: !isSolo,
       me,
+      homeGroupId: context.spaceKind === 'group' ? context.spaceId : null,
+      mineToggle: context.spaceKind === 'group' && !event._link && (panel.mode === 'new' || event.createdBy === me.id || (event.hiddenFrom ?? []).includes(me.id)),
       onSave: handleSave,
       onCancel: () => { view.panel = panel.mode === 'new' ? null : { mode: 'details', eventId: event.id }; drawAll(); },
       onDelete: event._link ? null : () => handleDelete(event),

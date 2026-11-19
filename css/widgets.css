@@ -21,7 +21,8 @@ html.phone-widgets .module-dots { display: none !important; }
 }
 
 .mwidgets__cell { min-width: 0; display: flex; }
-.mwidgets__cell--wide { grid-column: span 2; }
+.mwidgets__cell--wide,
+.mwidgets__cell--big { grid-column: span 2; }
 
 /* ─── One widget ─── */
 
@@ -49,6 +50,12 @@ button.mwidget:focus-visible { outline: 2px solid var(--color-accent); outline-o
 
 .mwidget--small { min-height: 150px; }
 .mwidget--wide { min-height: 96px; }
+/* Big: as wide as Wide, twice as tall, with the next few things (widget-summaries.js MORE). */
+.mwidget--big { min-height: 192px; }
+.mwidget--big .mwidget__image { height: 170px; }
+.mwidget--big .mwidget__line { -webkit-line-clamp: 6; }
+.mwidget__more { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--color-border-faint); }
+.mwidget__more-line { font-size: 13px; line-height: 1.35; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .mwidget__body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 

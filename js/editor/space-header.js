@@ -24,6 +24,8 @@
  * shows for people whose role allows it (js/state/permissions.js).
  */
 
+import { renderBlogQuestion } from '../groups/blog-choice.js';
+import { passkeyNeededIn, groupSecurity } from '../state/security.js';
 import { isChild, isWaitingFor } from '../state/children.js';
 import { personMenu } from '../feed/post-menu.js';
 import { renderWelcomeChecklist } from '../groups/welcome-checklist.js';
@@ -146,6 +148,11 @@ export function renderSpaceHeader() {
       ),
     ),
     editMode ? null : renderWelcomeChecklist(space, me),
+    editMode || !isMine ? null : renderBlogQuestion(space, me, () => renderSpaceHeader()), // after joining: show your blog here? (blog-choice.js)
+    // The group asks for passkeys and you haven't added one (its Security settings).
+    !editMode && isMine && space.kind === 'group' && passkeyNeededIn(space, me.id) ? h('p', { class: 'passkey-ask', role: 'status' },
+      icon('shield', 14), ` ${space.name} asks ${groupSecurity(space).requirePasskey === 'everyone' ? 'everyone' : 'admins'} to sign in with a passkey.`,
+      h('a', { class: 'button button--small', href: '#account-security' }, 'Add a passkey')) : null,
     editMode ? null : renderGroupSuggestion(space, me), // a new group grows when it needs to
     h('div', { class: 'space-header__actions' },
       editMode ? renderResetButton() : null,

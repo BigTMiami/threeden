@@ -42,8 +42,9 @@ import { renderEventEditor } from './calendar-editor.js';
 import { renderEventDetails } from '../../events/event-details.js';
 import { otherCalendarLinks } from '../../editor/linked-items.js';
 import { getSpace, getModule, getSpaceOfModule, updateModuleData } from '../../state/store.js';
+import { canEditEvent, findEvent as findEventAnywhere } from '../../state/events.js';
+import { openEventSheet, openNewItemSheet } from '../../events/event-sheet.js';
 import { onSwipe, slideIn, isPhone } from '../../ui/swipe.js';
-import { eventHref } from '../../events/event-details.js';
 
 const VIEWS = [
   { id: 'month', label: 'Month', key: 'm' },
@@ -97,11 +98,13 @@ export function renderCalendarPage(container, context) {
   // you're going to, invited to or involved in. A linked item carries its
   // link in `_link`. On a group's calendar, "Show my other calendars" can
   // lay your other calendars over it.
+  // (One item can come in two ways, e.g. an event this group co-hosts that
+  // you're also going to; it's shown once.)
   const allEvents = () => [
     ...context.getData().events.map(normalizeEvent).filter((event) => canSeeEvent(event, me.id, { publicOnly: context.isVisitor && context.spaceKind === 'group' && !context.sharedFrom })),
     ...context.getLinkedItems().map(fromLink),
     ...overlayLinks().map(fromLink),
-  ];
+  ].filter((event, index, all) => all.findIndex((e) => e.id === event.id) === index);
   const findEvent = (eventId) => allEvents().find((e) => e.id === eventId) ?? null;
 
   /** Your other calendars' items, on a group's calendar, if you chose to show them. */
@@ -132,7 +135,7 @@ export function renderCalendarPage(container, context) {
     changeFn(saved);
     data.events[index] = saved;
     // Saved directly (not context.saveData) so a visitor's RSVP to a public
-    // event goes through; editing is kept from visitors by canEditEvent().
+    // event goes through; editing is kept from visitors by canEdit().
     updateModuleData(context.moduleId, data);
   }
 
@@ -196,8 +199,7 @@ export function renderCalendarPage(container, context) {
     });
   }
 
-  function handleSave(fields) {
-    const isNew = view.panel.mode === 'new';
+  function handleSave(fields, { isNew = view.panel?.mode === 'new', fromSheet = false } = {}) {
     const { _link: link, ...savedFields } = fields;
     if (link) {
       context.updateLinkedItem(link, (saved) => Object.assign(saved, savedFields));
@@ -207,11 +209,37 @@ export function renderCalendarPage(container, context) {
       if (isNew) data.events.push(savedFields);
       else data.events[data.events.findIndex((e) => e.id === fields.id)] = savedFields;
       context.saveData(data);
-      showToast(isNew ? `Added "${fields.title}".` : `Saved "${fields.title}".`);
+      const alsoMine = isNew && context.spaceKind === 'group' && !(fields.hiddenFrom ?? []).includes(me.id);
+      showToast(isNew ? `Added "${fields.title}"${alsoMine ? '. It’s on your calendar too' : ''}.` : `Saved "${fields.title}".`);
     }
     if (view.mode !== 'agenda') view.anchorDate = fields.date; // show where it landed
-    view.panel = { mode: 'details', eventId: fields.id };
+    view.panel = fromSheet ? null : { mode: 'details', eventId: fields.id };
     drawAll();
+  }
+
+  /**
+   * Phones: press and hold a day or a time, and a new entry (or event) for
+   * then opens over the calendar (event-sheet.js).
+   */
+  function startNewInSheet(date, time = '') {
+    if (context.isVisitor) return;
+    openNewItemSheet({
+      draft: createEvent({
+        kind: 'entry', title: '', date, allDay: !time, time,
+        endTime: time ? addMinutesToTime(time, DEFAULT_EVENT_LENGTH_MINUTES) : '',
+        attendeeIds: [me.id], createdBy: me.id,
+      }),
+      members: context.members,
+      homeGroupId: context.spaceKind === 'group' ? context.spaceId : null,
+      mineToggle: context.spaceKind === 'group',
+      onSave: (fields) => handleSave(fields, { isNew: true, fromSheet: true }),
+    });
+  }
+
+  /** Phones: an item opens over the calendar, with × to come back (event-sheet.js). */
+  function openInSheet(event) {
+    if (event._link && !findEventAnywhere(event.id)) { openPanel({ mode: 'details', eventId: event.id }); return; }
+    openEventSheet(event.id, { canEdit: !context.isVisitor, onClosed: () => { if (container.isConnected) drawAll(); } });
   }
 
   function handleDelete(event) {
@@ -236,7 +264,7 @@ export function renderCalendarPage(container, context) {
   /** A drag ended in one of the views. `changes` is null when nothing moved. */
   function handleMove(occurrence, changes) {
     const { event } = occurrence;
-    if (!changes || !canEditEvent(event)) { drawView(); return; }
+    if (!changes || !canEdit(event)) { drawView(); return; }
     changeEvent(event, (saved) => {
       if ('dayDelta' in changes) {
         saved.date = addDays(saved.date, changes.dayDelta);
@@ -460,11 +488,13 @@ export function renderCalendarPage(container, context) {
     const shared = {
       events: visibleEvents(),
       selectedEventId,
-      // On a phone, tapping an event opens its page; entries (no page) show their details.
-      onOpenEvent: ({ event }) => (isPhone() && event.kind === 'event'
-        ? (window.location.hash = eventHref(event.id))
-        : openPanel({ mode: 'details', eventId: event.id })),
-      onCreateAt: startNewEvent,
+      // On a phone, tapping an event or entry opens it over the calendar, with × to come back.
+      onOpenEvent: ({ event }) => (isPhone() ? openInSheet(event) : openPanel({ mode: 'details', eventId: event.id })),
+      // A double-click on empty space adds something there (Nov 18: a single click used to).
+      // On a phone, a tap on an empty day shows that day; press and hold to add something.
+      onCreateAt: isPhone() ? startNewInSheet : startNewEvent,
+      onTapEmpty: isPhone() ? (date) => { if (view.mode !== 'day') goToDate(date, 'day'); } : null,
+      onLongPressAt: isPhone() ? startNewInSheet : null,
       onCreateRange: (date, time, endTime) => startNewEvent(date, time, endTime),
       onShowDay: (date) => goToDate(date, 'day'),
       onMoveEvent: handleMove,
@@ -501,10 +531,10 @@ export function renderCalendarPage(container, context) {
 
   const panelElement = h('aside', { class: 'calendar-page__editor', 'aria-label': 'Event details' });
 
-  function canEditEvent(event) {
+  function canEdit(event) {
     if (context.isVisitor) return false;
-    if (event._link) return true; // edits go to the group (see linked items)
-    return isHostOf(event, me.id) || event.visibility === 'group' || context.can('moderate') || !event.createdBy;
+    if (event._link) return true; // edits go to where it lives (see linked items)
+    return isHostOf(event, me.id) || canEditEvent(event, me.id) || event.visibility === 'group' || context.can('moderate') || !event.createdBy;
   }
 
   function drawPanel() {
@@ -529,9 +559,9 @@ export function renderCalendarPage(container, context) {
           changeEvent(event, (saved) => applyRsvp(saved, me.id, answer));
           drawAll();
         },
-        onEdit: canEditEvent(event) ? () => openPanel({ mode: 'edit', eventId: event.id }) : null,
+        onEdit: canEdit(event) ? () => openPanel({ mode: 'edit', eventId: event.id }) : null,
         onDuplicate: context.isVisitor ? null : () => handleDuplicate(event),
-        onDelete: !event._link && canEditEvent(event) ? () => handleDelete(event) : null,
+        onDelete: !event._link && canEdit(event) ? () => handleDelete(event) : null,
         onClose: () => openPanel(null),
         onChanged: () => drawAll(),
       }));
@@ -546,6 +576,9 @@ export function renderCalendarPage(container, context) {
         members: context.members,
         showAttendees: !isSolo,
         me,
+        homeGroupId: context.spaceKind === 'group' ? context.spaceId : null,
+        // A group's item you add also shows on your homepage calendar; untick to keep it off.
+        mineToggle: context.spaceKind === 'group' && !event._link && (panel.mode === 'new' || event.createdBy === me.id || (event.hiddenFrom ?? []).includes(me.id)),
         onSave: handleSave,
         onCancel: () => openPanel(panel.mode === 'new' ? null : { mode: 'details', eventId: event.id }),
         // A group's event can only be deleted in the group.

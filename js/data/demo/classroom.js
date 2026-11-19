@@ -30,7 +30,7 @@ export function createClassroom() {
     modules: [
       // ─── Home ─────────────────────────────────────────────────────────────
       {
-        id: 'u210-announcements', type: 'announcements', title: 'Announcements', span: 8, rows: 12,
+        id: 'u210-announcements', type: 'announcements', title: 'Board', span: 8, rows: 12,
         data: {
           posts: [
             { id: 'u210-post-1', authorId: 'm-hale', title: 'Welcome to Urban Policy 210', body: 'Everything for the class lives here: the calendar, assignments under Coursework, and questions under Discussion. Turn work in with the Submissions module: attach notes straight from your vault.', pinned: true, createdAt: hoursAgo(600), seenBy: STUDENTS, comments: [] },

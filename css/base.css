@@ -912,3 +912,32 @@ html.has-modal { overflow: hidden; }
   margin-top: max(24px, 8vh);
   margin-bottom: auto;
 }
+
+/* ─── "…" menus (js/ui/more-menu.js) ─────────────────────────────────────── */
+
+.more-menu {
+  z-index: 150;
+  min-width: 170px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.16));
+}
+.more-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.more-menu__item:hover,
+.more-menu__item:focus-visible { background: var(--color-surface-muted); outline: none; }
+.more-menu__item.is-danger { color: var(--color-danger, #c0392b); }

@@ -35,6 +35,8 @@ import {
   sortItems, searchItems, locationLabel, folderTree,
 } from './vault-data.js';
 import { createVaultActions } from './vault-actions.js';
+import { hasFullEditor } from './vault-full-editor.js';
+import { moreMenu } from '../../ui/more-menu.js';
 import { documentShareButton, openShareMany } from '../../ui/document-sharing.js';
 import { sharedWith, accessLabel } from '../../ui/file-access.js';
 import { openPublishDialog, publishVerb } from '../../ui/publish-dialog.js';
@@ -239,6 +241,15 @@ export function renderVaultPage(container, context) {
         onBack: () => { view.openItemId = null; drawAll(); },
         context,
         actions,
+        // Documents, articles, and module files: their full editor (vault-full-editor.js).
+        full: true,
+        menu: context.isVisitor ? null : moreMenu({
+          label: `More for “${item.name}”`,
+          items: [
+            { label: 'Move', icon: 'folder', onSelect: () => { view.openItemId = null; view.movingItemId = item.id; drawAll(); } },
+            canDelete(item) ? { label: 'Delete', icon: 'trash', danger: true, onSelect: () => { view.openItemId = null; actions.deleteItem(item); drawAll(); } } : null,
+          ],
+        }),
       })));
       return;
     }
@@ -456,12 +467,18 @@ export function renderVaultPage(container, context) {
     return h('button', { type: 'button', class: 'vault-item__name', onClick: () => openItem(item) }, item.name);
   }
 
+  /** "…": Share, Rename, Move, Delete (Nov 18; they were links on every row). */
   function renderActions(item) {
     return h('span', { class: 'vault-item__actions' },
-      h('button', { type: 'button', class: 'link-button', onClick: () => { view.renamingItemId = item.id; drawMain(); } }, 'Rename'),
-      h('button', { type: 'button', class: 'link-button', onClick: () => { view.movingItemId = item.id; drawMain(); } }, 'Move'),
-      canDelete(item) ? h('button', { type: 'button', class: 'link-button link-button--danger', onClick: () => actions.deleteItem(item) }, 'Delete') : null,
-    );
+      moreMenu({
+        label: `More for “${item.name}”`,
+        items: [
+          !context.isVisitor && me && !me.isGuest && item.kind !== 'link' ? { label: 'Share', icon: 'share', onSelect: () => openShareMany({ vaultModuleId: context.moduleId, itemIds: [item.id], onDone: drawMain }) } : null,
+          { label: 'Rename', icon: 'pencil', onSelect: () => { view.renamingItemId = item.id; drawMain(); } },
+          { label: 'Move', icon: 'folder', onSelect: () => { view.movingItemId = item.id; drawMain(); } },
+          canDelete(item) ? { label: 'Delete', icon: 'trash', danger: true, onSelect: () => actions.deleteItem(item) } : null,
+        ],
+      }));
   }
 
   /** "Move ‘X’ to [folder ▾] [Move] Cancel", shown under the item being moved. */
@@ -536,13 +553,18 @@ export function renderVaultPage(container, context) {
 
   // ─── Layout ────────────────────────────────────────────────────────────────
 
+  // A file in its full editor: the tree and toolbar step aside for it.
+  const grid = h('div', { class: 'vault-page' }, tree, main);
   function drawAll() {
+    const editing = Boolean(view.openItemId) && hasFullEditor(findItem(view.openItemId));
+    grid.classList.toggle('is-editing', editing);
+    toolbar.hidden = editing;
     drawToolbar();
     drawTree();
     drawMain();
   }
 
-  container.append(toolbar, h('div', { class: 'vault-page' }, tree, main), fileInput);
+  container.append(toolbar, grid, fileInput);
   drawAll();
 
   return () => document.removeEventListener('click', handleDocumentClick);

@@ -20,6 +20,7 @@
  *         | { kind: 'event', eventId }  ← an event to RSVP to
  *         | { kind: 'link', url, name } ← a web link
  *         | { kind: 'poll', poll }      ← a poll (js/utils/polls.js; General and Text feeds)
+ *         | { kind: 'signups', signups: [{ id, label, spots, memberIds }] }  ← sign-ups (js/ui/asks.js; Nov 18)
  *       ],
  *     } ],
  *     display: { layout, … },           ← General feeds: list or grid, and sizes (feed-layouts.js)
@@ -78,6 +79,7 @@ export function postTitle(post) {
   if (first?.kind === 'file') return first.item.name;
   if (first?.kind === 'link') return first.name;
   if (first?.kind === 'poll') return first.poll.question;
+  if (first?.kind === 'signups') return `Sign-ups: ${first.signups.map((x) => x.label).join(', ')}`.slice(0, 50);
   return 'a post';
 }
 

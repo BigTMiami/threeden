@@ -11,7 +11,7 @@
  *   │ Location [                 ] │
  *   │ Who can see it ○ Group members ○ Invite only ○ Public │   (events)
  *   │ Invite [Leo][Maya]… [@username] │                          (events)
- *   │ Who's involved [Leo][Maya]   │                             (entries)
+ *   │ People  [Maya ×] add…        │   on their calendars too    (entries)
  *   │ Notes [                    ] │
  *   │ [+ Add ▾] Cover photo · Repeat · Tags · Limit · Which time works?
  *   │ Delete            Cancel Save│
@@ -39,12 +39,15 @@ import { h, appendChildren, replaceChildren } from '../../ui/dom.js';
 import { pollAttacher } from '../../ui/poll-view.js';
 import { icon } from '../../ui/icons.js';
 import { memberToggles } from '../../ui/member-toggles.js';
+import { createPeopleSearch } from '../../ui/people-search.js';
+import { messageablePeople, recipientContext } from '../../messages/recipients.js';
 import { addDays, daysBetween } from '../../utils/dates.js';
 import {
   REPEAT_OPTIONS, VISIBILITY, KINDS, addMinutesToTime, timeToMinutes, minutesToTime, DEFAULT_EVENT_LENGTH_MINUTES,
 } from './calendar-data.js';
 import { getAccounts, findAccountByLogin } from '../../state/accounts.js';
 import { avatar } from '../../ui/avatar.js';
+import { hostsPicker } from '../../events/event-hosts.js';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -58,9 +61,11 @@ const MINUTES_PER_DAY = 24 * 60;
  * @param {function} options.onSave      called with the edited fields
  * @param {function} options.onCancel
  * @param {function} options.onDelete    (existing events only)
- * @param {string[]} options.kinds       which kinds can be chosen (Upcoming events only makes events)
+ * @param {string[]} [options.kinds]     which kinds can be chosen (Upcoming events only makes events)
+ * @param {string|null} [options.homeGroupId]  the group whose calendar this is (it can't also be a hosting group)
+ * @param {boolean}  [options.mineToggle]  show "Show on my calendar" (a group's calendar)
  */
-export function renderEventEditor({ event, isNew, members, showAttendees, me, onSave, onCancel, onDelete, kinds = ['entry', 'event'] }) {
+export function renderEventEditor({ event, isNew, members, showAttendees, me, onSave, onCancel, onDelete, kinds = ['entry', 'event'], homeGroupId = null, mineToggle = false }) {
   // A working copy; nothing is saved until "Save".
   const draft = structuredClone(event);
   if (!kinds.includes(draft.kind)) draft.kind = kinds[0];
@@ -214,11 +219,25 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
   function drawGuests() {
     guestsSlot.replaceChildren();
     if (draft.kind === 'entry') {
-      if (!showAttendees) return;
+      // People (Nov 18): anyone you can message, on any calendar, your own
+      // included. It shows on their calendars too (linked items).
+      if (!me) return;
+      const keepMe = draft.attendeeIds.includes(me.id) || !draft.attendeeIds.length;
+      const choosable = [...members, ...messageablePeople(me)]
+        .filter((p, i, all) => p && p.id !== me.id && all.findIndex((x) => x.id === p.id) === i);
+      const people = createPeopleSearch({
+        people: choosable,
+        suggestedIds: members.filter((m) => m.id !== me.id).map((m) => m.id),
+        selectedIds: draft.attendeeIds.filter((id) => id !== me.id),
+        describe: (p) => (members.some((m) => m.id === p.id) ? 'In this group' : recipientContext(me, p)),
+        label: 'Add people',
+        placeholder: 'Add people by name or @username',
+        onChange: (ids) => { draft.attendeeIds = [...(keepMe ? [me.id] : []), ...ids]; },
+      });
       appendChildren(guestsSlot, [
-        h('span', { class: 'event-editor__label' }, 'Who’s involved'),
-        memberToggles(members, draft.attendeeIds, (ids) => { draft.attendeeIds = ids; }, 'Who’s involved'),
-        h('span', { class: 'event-editor__hint' }, 'It shows on their own calendars too.')]);
+        h('span', { class: 'event-editor__label' }, 'People'),
+        people.element,
+        h('span', { class: 'event-editor__hint' }, 'It shows on their calendars too.')]);
       return;
     }
     const invited = draft.inviteeIds.map((id) => getAccounts().find((a) => a.id === id)).filter(Boolean);
@@ -295,6 +314,27 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
   }
   drawTimePoll();
 
+  // ─── Events: hosts. Entries and events: on my calendar too? ───────────────
+
+  draft.cohostIds = draft.cohostIds ?? [];
+  draft.hostGroupIds = draft.hostGroupIds ?? [];
+  const hostsField = me ? hostsPicker({
+    me, cohostIds: draft.cohostIds, hostGroupIds: draft.hostGroupIds, homeGroupId,
+    onChange: ({ cohostIds, hostGroupIds }) => { draft.cohostIds = cohostIds; draft.hostGroupIds = hostGroupIds; },
+  }) : h('span');
+
+  // On a group's calendar, what you add also goes on your homepage calendar
+  // (unless you untick this).
+  const onMine = () => !(draft.hiddenFrom ?? []).includes(me?.id);
+  const mineField = mineToggle && me ? h('label', { class: 'event-editor__all-day event-editor__mine' },
+    h('input', {
+      type: 'checkbox', checked: onMine(),
+      onChange: (e) => {
+        const others = (draft.hiddenFrom ?? []).filter((id) => id !== me.id);
+        draft.hiddenFrom = e.target.checked ? others : [...others, me.id];
+      },
+    }), ' Show on my calendar') : null;
+
   // ─── Saving ────────────────────────────────────────────────────────────────
 
   function handleSave(submitEvent) {
@@ -319,10 +359,13 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
     }
     const { poll: newTimePoll, error: pollError } = draft.kind === 'event' && !draft.timePoll ? timePoll.read() : { poll: null };
     if (pollError) { errorText.textContent = pollError; return; }
+    const cohostIds = draft.cohostIds.filter((id) => id !== draft.createdBy);
     const guestFields = draft.kind === 'entry'
-      ? { visibility: 'group', inviteeIds: [], rsvps: {}, capacity: null, timePoll: null }
+      ? { visibility: 'group', inviteeIds: [], rsvps: {}, capacity: null, timePoll: null, cohostIds: [], hostGroupIds: [] }
       // A new event: the host is going.
-      : { rsvps: isNew && me ? { [me.id]: 'going', ...draft.rsvps } : draft.rsvps, timePoll: newTimePoll ?? draft.timePoll ?? null };
+      // Co-hosts are invited too, so they can always see it.
+      : { rsvps: isNew && me ? { [me.id]: 'going', ...draft.rsvps } : draft.rsvps, timePoll: newTimePoll ?? draft.timePoll ?? null,
+        cohostIds, inviteeIds: [...new Set([...draft.inviteeIds, ...cohostIds])] };
     onSave({
       ...draft,
       ...guestFields,
@@ -396,6 +439,7 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
     heading.textContent = `${isNew ? 'New' : 'Edit'} ${isEventKind ? 'event' : 'calendar entry'}`;
     titleInput.placeholder = isEventKind ? 'Event name' : 'What is it?';
     visibilityField.hidden = !isEventKind;
+    hostsField.hidden = !isEventKind;
     drawOptional();
     if (deleteButton.tagName === 'BUTTON') deleteButton.textContent = isEventKind ? 'Delete event' : 'Delete entry';
     kindHint.textContent = KINDS.find((k) => k.id === draft.kind).description;
@@ -420,8 +464,10 @@ export function renderEventEditor({ event, isNew, members, showAttendees, me, on
     repeatField,
     field('Location', locationInput),
     visibilityField,
+    hostsField,
     tagsField,
     guestsSlot,
+    mineField,
     capacityField,
     timePollField,
     field('Notes', notesInput),

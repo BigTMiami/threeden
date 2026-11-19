@@ -59,7 +59,7 @@ with sync_playwright() as p:
     want = ['Dashboard', 'Calendar', 'Upcoming events', 'Tasks', 'Vault', 'File from vault', 'Budget', 'Gantt chart', 'Recent groups']
     check(basics == want, f'My Homepage basics in order ({basics})')
     names = library_names(pg)
-    check(not [n for n in names if n in GONE + ['Announcements', 'Forum', 'Submissions']], f'no Announcements, Forum, Submissions, Document, Spreadsheet, Presentation, or Canvas ({[n for n in names if n in GONE + ["Announcements", "Forum", "Submissions"]]})')
+    check(not [n for n in names if n in GONE + ['Board', 'Announcements', 'Forum', 'Submissions']], f'no Announcements, Forum, Submissions, Document, Spreadsheet, Presentation, or Canvas ({[n for n in names if n in GONE + ["Announcements", "Forum", "Submissions"]]})')
     check(pg.locator('.library__vaults').count() == 0, 'no "From your vaults" list')
 
     # 3. Choose a note.
@@ -68,7 +68,7 @@ with sync_playwright() as p:
     check(picker.is_visible() and picker.locator('.vault-picker__title').inner_text() == 'File from vault', 'the picker opens')
     details = picker.locator('.vault-picker__detail').all_inner_texts()
     check(details and not any(d.startswith('Folder') for d in details), 'no folders to choose')
-    note = picker.locator('.vault-picker__item', has=pg.locator('.vault-picker__detail', has_text='Note')).first
+    note = picker.locator('.vault-picker__item', has=pg.locator('.vault-picker__detail', has_text='Document')).first
     note_name = note.locator('.vault-picker__name').inner_text()
     note.click(); pg.wait_for_timeout(600)
     st(pg, 's.setEditMode(false)'); pg.wait_for_timeout(500)
@@ -88,7 +88,7 @@ with sync_playwright() as p:
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(800)
     st(pg, 's.setEditMode(true)'); pg.wait_for_timeout(400)
     gbasics = [t.strip() for t in pg.locator('#module-library .library__list').first.locator('.library-item__label').all_inner_texts()]
-    check(gbasics == ['Announcements', 'Calendar', 'Chat', 'Tasks', 'File from vault', 'Vault'], f'group basics ({gbasics})')
+    check(gbasics == ['Board', 'Calendar', 'Chat', 'Tasks', 'File from vault', 'Vault'], f'group basics ({gbasics})')
     gnames = library_names(pg)
     check(not [n for n in gnames if n in GONE] and 'Forum' in gnames and 'Submissions' in gnames, 'group: Forum and Submissions stay; the four are gone')
 

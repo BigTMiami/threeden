@@ -39,6 +39,7 @@
  * the group adds them to the chat too.
  */
 
+import { mySecurity, DISAPPEAR_MS } from './security.js';
 import { changeState, getState, getSpace, getMember } from './store.js';
 import { makeId } from '../ui/dom.js';
 import { sealOutgoing, openMessage } from './e2ee.js';
@@ -162,7 +163,8 @@ function newConversation(fields) {
 export function openDirectConversation(meId, otherId) {
   const existing = findDirectConversation(meId, otherId);
   if (existing) return existing;
-  const conversation = newConversation({ kind: 'direct', memberIds: [...new Set([meId, otherId])] });
+  // Your default for new conversations (Account settings → Security → Messages).
+  const conversation = newConversation({ kind: 'direct', memberIds: [...new Set([meId, otherId])], disappearAfter: DISAPPEAR_MS[mySecurity(meId).disappearing] ?? 0 });
   changeState((state) => { state.conversations = [...(state.conversations ?? []), conversation]; }, 'messages');
   return conversation;
 }

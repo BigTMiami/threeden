@@ -24,11 +24,11 @@ import { avatar } from '../ui/avatar.js';
 import { renderText } from '../ui/text.js';
 import { formatLongDate } from '../utils/dates.js';
 import {
-  VISIBILITY, REPEAT_OPTIONS, timeRangeLabel, isMultiDay, colorValue, timeToMinutes, addMinutesToTime, DEFAULT_EVENT_LENGTH_MINUTES,
+  VISIBILITY, REPEAT_OPTIONS, timeRangeLabel, isMultiDay, colorValue, timeToMinutes, addMinutesToTime, DEFAULT_EVENT_LENGTH_MINUTES, hostIdsOf,
 } from '../modules/calendar/calendar-data.js';
 import { renderPoll } from '../ui/poll-view.js';
 import { chooseOption } from '../utils/polls.js';
-import { findEvent, updateEvent } from '../state/events.js';
+import { findEvent, updateEvent, hostGroupsOf } from '../state/events.js';
 import { rsvpButtons, guestList, rsvpSummary } from './rsvp.js';
 import { eventCoverBanner } from './event-cover.js';
 import { openEventShare } from './event-share.js';
@@ -95,6 +95,15 @@ export function areaLabel(event) {
   return h('span', { class: 'event-details__muted' }, event.location ? ` · ${place.name}` : place.name);
 }
 
+/** "you", "Anna and Maya", "you, Maya, and Porch Lights": people hosting, then hosting groups. */
+function hostLine(event, me, getMember) {
+  const names = [
+    ...hostIdsOf(event).map(getMember).filter(Boolean).map((m) => (m.id === me?.id ? 'you' : m.name)),
+    ...hostGroupsOf(event).map((g) => g.name),
+  ];
+  return names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
 export function renderEventDetails(event, options) {
   if (event.kind === 'entry') return renderEntryDetails(event, options);
   const { me, getMember, onRsvp, onEdit, onDuplicate, onDelete, onClose, showPageLink = true, note = null } = options;
@@ -115,7 +124,7 @@ export function renderEventDetails(event, options) {
     event.location || event.area ? h('p', { class: 'event-details__row' }, icon('pin', 14), ' ',
       event.location ? mapLink(event.location) : null, areaLabel(event), ' ', directionsButton(event)) : null,
     h('p', { class: 'event-details__row event-details__host' },
-      host ? [avatar(host, 22), ` Hosted by ${host.id === me.id ? 'you' : host.name}`] : 'Host unknown',
+      host ? [h('span', { class: 'avatar-row' }, hostIdsOf(event).map(getMember).filter(Boolean).map((m) => avatar(m, 22))), ` Hosted by ${hostLine(event, me, getMember)}`] : 'Host unknown',
       h('span', { class: `event-badge event-badge--${event.visibility}` }, visibility?.label ?? 'Group event')),
     event.timePoll ? renderTimePoll(event, me, options.onChanged) : null,
     showRsvp ? h('div', { class: 'event-details__rsvp' },
@@ -154,6 +163,8 @@ function renderEntryDetails(entry, { me, getMember, onEdit, onDuplicate, onDelet
     entry.notes ? h('p', { class: 'event-details__notes' }, renderText(entry.notes)) : null,
     h('p', { class: 'event-details__muted' }, 'Calendar entry', addedBy ? ` · added by ${addedBy.id === me.id ? 'you' : addedBy.name}` : ''),
     h('div', { class: 'event-details__actions' },
+      // Share an entry: add people (on their calendars) or put it on a group's calendar (event-share.js).
+      me && !me.isGuest && findEvent(entry.id) ? h('button', { type: 'button', class: 'link-button', onClick: () => openEventShare(findEvent(entry.id), me) }, 'Share') : null,
       onEdit ? h('button', { type: 'button', class: 'link-button', onClick: onEdit }, 'Edit') : null,
       onDuplicate ? h('button', { type: 'button', class: 'link-button', onClick: onDuplicate }, 'Duplicate') : null,
       onDelete ? h('button', { type: 'button', class: 'link-button link-button--danger', onClick: onDelete }, 'Delete') : null,

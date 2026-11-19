@@ -300,10 +300,13 @@ html.in-phone-frame[data-device='se'] {
     align-items: center;
   }
 
-  /* Messages fill the screen between the two bars. */
+  /* Messages fill the screen between the two bars, edge to edge, no box
+     (Nov 18): out past the page's side padding, down to the tab bar. */
   .messages-page {
     /* 140 px: the top bar and the "Messages" heading above it. */
-    height: calc(100dvh - 140px - var(--safe-top) - var(--tab-bar-height) - var(--safe-bottom));
+    height: calc(100dvh - 140px - var(--safe-top) - var(--tab-bar-height) - var(--safe-bottom) + 10px);
+    margin: 0 -12px -20px;
+    border: 0;
   }
 
   .chat-module--page {
@@ -587,4 +590,28 @@ html.in-phone-frame[data-device='se'] {
  */
 @media (pointer: coarse), (max-width: 700px) {
   .module-frame__body { overscroll-behavior-y: auto; }
+}
+
+/* ─── A group's module fills the screen; the page snaps (module-swiper.js) ─
+ * Two resting places: the module, right under the top bar (the group's name
+ * and description just out of view above it), and the top of the page. The
+ * browser's own scroll snapping picks one while the scroll is still moving,
+ * so it reads as the scroll's momentum: a small pull springs back, a flick
+ * carries on to the header, and a flick back lands on the module.
+ */
+@media (max-width: 640px) {
+  /* Only with a module open: on the widgets the page scrolls freely. */
+  html.phone-module-snap:not(.phone-widgets) {
+    scroll-snap-type: y mandatory;
+  }
+
+  html.phone-module-snap #space-header {
+    scroll-snap-align: start;
+    scroll-margin-top: 400px; /* rests at the very top of the page */
+  }
+
+  html.phone-module-snap .module-grid.is-swiping {
+    scroll-snap-align: start;
+    scroll-margin-top: var(--snap-top, 58px);
+  }
 }
