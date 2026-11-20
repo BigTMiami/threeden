@@ -169,6 +169,16 @@ functions, no build step.
     re-applied every 500 ms while a card is up, since bars and grids get
     redrawn; modules are found by data-module-id or, on phones,
     data-widget-id. test_joined_tour (desktop and phone; ~1 minute).
+  - Resume (later Nov 20): × calls pause() → stage 'paused' with `was` and
+    `step`; leaving partway counts too (a stage set before this page load).
+    A "visit" is a browser session (sessionStorage '3den.joinedTour.session');
+    the first sync of a new visit shows "Finish the tour?" [Resume] [No
+    thanks]. Resume → 'next' (or 'home' at the saved step if they're on
+    the homepage); No thanks → 'done'. The board has this as R1.
+  - Vault drag-and-drop: enableFileDrop(target, { onFiles, folderName,
+    isFolder }) in vault-parts.js, on the card's container and the page's
+    grid; rows carry data-item-id so a drop on a folder goes into it.
+    test_tour_resume_and_vault_drop.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

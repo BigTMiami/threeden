@@ -17,11 +17,16 @@
  *      A step whose module isn't on the homepage is left out.
  *
  * Going home before the 15 seconds are up skips straight to the welcome.
- * × or Done ends it for good. Who gets it: an account made in the last
+ * Done ends it for good. × pauses it, and so does leaving partway (Nov 20):
+ * the next time they open 3den, a card asks
+ *   "Welcome back! Want to finish the tour where you left off?"  [Resume] [No thanks]
+ * Resume points them home again (or opens the homepage step they were on);
+ * No thanks ends it. Who gets it: an account made in the last
  * hour whose onboarding says it arrived from a group (arrival.source
  * 'group': the invite page or a group's Join button) and is a member now.
  * Progress lives in member.onboarding.joinedTour, so a reload carries on:
- *   { stage: 'wait' | 'next' | 'home' | 'done', since, step }   (step: on the homepage)
+ *   { stage: 'wait' | 'next' | 'home' | 'paused' | 'done', since, step, was }
+ *   (step: on the homepage; was: the stage it was paused at)
  *
  *   syncJoinedTour()   main.js, after each page is drawn
  */
@@ -37,6 +42,7 @@ export const NEXT_STEP_DELAY_MS = 15000;
 const NEW_ACCOUNT_MS = 60 * 60 * 1000;
 
 let card = null;
+const pageOpenedAt = Date.now();
 let cardStage = null;
 let timer = null;
 let keepSpot = null;
@@ -106,6 +112,51 @@ function end() {
   updateOnboarding({ joinedTour: { stage: 'done', since: Date.now() } });
 }
 
+/** × : put it aside until their next visit, remembering where they were. */
+function pause() {
+  const tour = getOnboarding()?.joinedTour ?? {};
+  clearTimeout(timer);
+  timer = null;
+  closeCard();
+  newVisit = false; // put aside this visit: ask again on the next one
+  updateOnboarding({ joinedTour: { stage: 'paused', since: Date.now(), step: tour.step ?? 0, was: tour.stage === 'paused' ? tour.was : tour.stage ?? 'wait' } });
+}
+
+// A visit is one browser session: the tour asks to resume once per new one.
+const SESSION_KEY = '3den.joinedTour.session';
+function isNewVisit() {
+  try {
+    if (sessionStorage.getItem(SESSION_KEY)) return false;
+    sessionStorage.setItem(SESSION_KEY, '1');
+    return true;
+  } catch { return false; }
+}
+let visitChecked = false;
+let newVisit = false;
+
+function showResume(tour) {
+  if (cardStage === 'resume') return;
+  closeCard();
+  const resume = () => {
+    closeCard();
+    // Back to pointing them home, or straight to the homepage step they were on.
+    updateOnboarding({ joinedTour: { stage: tour.was === 'home' && onHomepage() ? 'home' : 'next', since: Date.now(), step: tour.step ?? 0 } });
+    syncJoinedTour();
+  };
+  card = h('aside', { class: 'tour-card joined-tour joined-tour--resume', role: 'dialog', 'aria-label': 'Finish the tour?', 'aria-live': 'polite' },
+    h('div', { class: 'tour-card__top' },
+      h('span', { class: 'tour-card__count joined-tour__kicker' }, 'Welcome back'),
+      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: () => { newVisit = false; closeCard(); } }, '×')),
+    h('strong', { class: 'tour-card__title' }, 'Finish the tour?'),
+    h('p', { class: 'tour-card__text' }, 'Welcome back! Want to finish the tour where you left off?'),
+    h('div', { class: 'tour-card__actions' },
+      h('button', { type: 'button', class: 'button button--small button--quiet', onClick: end }, 'No thanks'),
+      h('button', { type: 'button', class: 'button button--small button--primary', onClick: resume }, 'Resume')));
+  document.body.append(card);
+  cardStage = 'resume';
+  card.querySelector('.button--primary')?.focus({ preventScroll: true });
+}
+
 function showNextStep() {
   if (cardStage === 'next') return;
   closeCard();
@@ -113,7 +164,7 @@ function showNextStep() {
   card = h('aside', { class: 'tour-card joined-tour', role: 'dialog', 'aria-label': 'Next step', 'aria-live': 'polite' },
     h('div', { class: 'tour-card__top' },
       h('span', { class: 'tour-card__count joined-tour__kicker' }, 'Next step'),
-      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: end }, '×')),
+      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: pause }, '×')),
     h('strong', { class: 'tour-card__title' }, 'Your homepage'),
     h('p', { class: 'tour-card__text' }, 'Everything you’re in, in one place: your groups, your events, and what’s coming up. It’s where to go next.'),
     h('div', { class: 'tour-card__actions' },
@@ -152,7 +203,7 @@ function showHomeStep(i) {
   card = h('aside', { class: 'tour-card joined-tour joined-tour--home', role: 'dialog', 'aria-label': step.title, 'aria-live': 'polite' },
     h('div', { class: 'tour-card__top' },
       h('span', { class: 'tour-card__count joined-tour__kicker' }, steps.length > 1 ? `${step.kicker} · ${at + 1} of ${steps.length}` : step.kicker),
-      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: end }, '×')),
+      h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: pause }, '×')),
     h('strong', { class: 'tour-card__title' }, step.title),
     h('p', { class: 'tour-card__text' }, step.text),
     h('div', { class: 'tour-card__actions' },
@@ -169,7 +220,17 @@ function showHomeStep(i) {
 /** main.js calls this after each page is drawn. */
 export function syncJoinedTour() {
   const tour = stateOf();
+  if (!visitChecked && tour) { visitChecked = true; newVisit = isNewVisit(); }
   if (!tour) { if (card) closeCard(); clearTimeout(timer); timer = null; return; }
+
+  // Paused (×), or left partway on an earlier visit: ask once this visit whether to pick it up.
+  const leftPartway = newVisit && ['wait', 'next', 'home'].includes(tour.stage) && tour.since && tour.since < pageOpenedAt;
+  if (tour.stage === 'paused' || leftPartway) {
+    if (!newVisit) return; // paused this visit: wait for the next one
+    showResume(tour.stage === 'paused' ? tour : { ...tour, was: tour.stage });
+    return;
+  }
+  if (cardStage === 'resume') return;
 
   // Home already (any time before the end): the welcome.
   if (onHomepage()) {

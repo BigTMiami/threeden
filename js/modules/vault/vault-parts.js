@@ -83,6 +83,66 @@ export function renderNewMenu(onPick, { moreOpen = false } = {}) {
   );
 }
 
+/**
+ * Drop files from the computer onto the vault (Nov 20). While files are
+ * dragged over `target` it shows "Drop to add to <folder>"; dropping on a
+ * folder (a row or tile with data-item-id that `isFolder` says is one)
+ * puts them in that folder, anywhere else in the folder you're in.
+ *
+ *   enableFileDrop(element, { onFiles(files, folderId|null), folderName(), isFolder(id) })
+ *
+ * @param {HTMLElement} target
+ * @param {{ onFiles: (files: File[], folderId: string | null) => void, folderName: () => string | undefined, isFolder?: (id: string) => boolean }} options
+ */
+export function enableFileDrop(target, { onFiles, folderName, isFolder = (_id) => false }) {
+  const hint = h('div', { class: 'vault-drop', 'aria-hidden': 'true' }, icon('upload', 22), h('span', { class: 'vault-drop__text' }));
+  let depth = 0;
+  const hasFiles = (event) => [...(event.dataTransfer?.types ?? [])].includes('Files');
+  const folderUnder = (event) => {
+    const row = /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (event.target)?.closest?.('[data-item-id]'));
+    return row && isFolder(row.dataset.itemId) ? row : null;
+  };
+  let marked = null;
+  const mark = (row) => {
+    if (row === marked) return;
+    marked?.classList.remove('is-drop-folder');
+    row?.classList.add('is-drop-folder');
+    marked = row;
+  };
+  const stop = () => { depth = 0; target.classList.remove('is-dropping'); mark(null); hint.remove(); };
+  target.addEventListener('dragenter', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    depth += 1;
+    if (!target.classList.contains('is-dropping')) {
+      target.classList.add('is-dropping');
+      target.append(hint);
+    }
+  });
+  target.addEventListener('dragover', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    const row = folderUnder(event);
+    mark(row);
+    const name = row ? row.querySelector('.vault-item__name, .vault-tile__name, .vault-table__name button')?.textContent?.trim() : folderName();
+    hint.querySelector('.vault-drop__text').textContent = `Drop to add to ${name || 'your vault'}`;
+  });
+  target.addEventListener('dragleave', (event) => {
+    if (!hasFiles(event)) return;
+    depth -= 1;
+    if (depth <= 0) stop();
+  });
+  target.addEventListener('drop', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    const row = folderUnder(event);
+    const files = [...(event.dataTransfer?.files ?? [])];
+    stop();
+    if (files.length) onFiles(files, row ? row.dataset.itemId : null);
+  });
+}
+
 /** A hidden <input type="file"> to open the device's file picker with. */
 export function createFilePicker(onFiles) {
   return h('input', {

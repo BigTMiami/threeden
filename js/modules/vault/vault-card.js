@@ -21,7 +21,7 @@ import { timeAgo } from '../../utils/dates.js';
 import { childrenOf, pathTo, describeItem, iconForItem } from './vault-data.js';
 import { createVaultActions } from './vault-actions.js';
 import {
-  TOP_LEVEL_NAME, renderNewMenu, createFilePicker, renderCreateForm, renderOpenItem,
+  TOP_LEVEL_NAME, renderNewMenu, createFilePicker, renderCreateForm, renderOpenItem, enableFileDrop,
 } from './vault-parts.js';
 import { hasFullEditor } from './vault-full-editor.js';
 import { moreMenu } from '../../ui/more-menu.js';
@@ -196,7 +196,7 @@ export function renderVaultCard(container, context) {
 
     const editor = context.getMember(item.updatedBy);
 
-    return h('li', { class: 'vault-item' },
+    return h('li', { class: 'vault-item', dataset: { itemId: item.id } },
       h('span', { class: `vault-item__icon vault-item__icon--${item.kind}` }, icon(iconForItem(item), 18)),
       h('span', { class: 'vault-item__text' },
         nameElement,
@@ -266,6 +266,14 @@ export function renderVaultCard(container, context) {
   }
 
   container.append(toolbar, menuSlot, folderView, itemView, fileInput);
+  // Drag files from the computer onto the card (Nov 20).
+  if (!context.isVisitor) {
+    enableFileDrop(container, {
+      onFiles: (files, folderId) => actions.uploadFiles(files, folderId ?? currentFolderId),
+      folderName: () => (currentFolderId ? (context.getData().items ?? []).find((i) => i.id === currentFolderId)?.name : 'your vault'),
+      isFolder: (id) => (context.getData().items ?? []).some((i) => i.id === id && i.kind === 'folder'),
+    });
+  }
   redraw();
 
   return () => { document.removeEventListener('click', handleDocumentClick); context.setExpandTarget?.(null); };

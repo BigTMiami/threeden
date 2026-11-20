@@ -4835,3 +4835,15 @@ ul.pres-slide__body { margin: 0; padding-left: 1.2em; color: var(--color-text); 
 .vault-editor__extras { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
 .vault__expand { margin-left: 4px; }
 .vault-module-file.is-compact { min-height: 0; }
+
+/* ─── Drop files onto the vault (Nov 20; enableFileDrop in vault-parts.js) ─── */
+.is-dropping { position: relative; outline: 2px dashed var(--color-accent); outline-offset: 2px; border-radius: 12px; }
+.vault-drop {
+  position: absolute; left: 50%; bottom: 12px; z-index: 5; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  border-radius: 999px; background: var(--color-accent); color: #fff;
+  font-weight: 600; white-space: nowrap; box-shadow: var(--shadow-md, 0 4px 14px rgba(0,0,0,.15)); pointer-events: none;
+}
+.vault-item.is-drop-folder, .vault-tile.is-drop-folder, .vault-table__row.is-drop-folder {
+  outline: 2px solid var(--color-accent); outline-offset: -2px; border-radius: 8px; background: var(--color-accent-soft);
+}
