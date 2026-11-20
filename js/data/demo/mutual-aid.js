@@ -109,19 +109,19 @@ export function createMutualAid() {
         },
       },
       { id: 'aid-events', type: 'events', title: 'Come help', span: 12, rows: 8, data: { events: [], ownEvents: false } },
-      // Volunteer shifts (js/modules/shifts/): this Saturday's are under way; next week's need people.
+      // Shifts (js/modules/shifts/): this Saturday's are under way; next week's need people.
       {
         id: 'aid-shifts', type: 'shifts', title: 'Pantry shifts', span: 12, rows: 13,
         data: {
           shifts: [
             { id: 'aid-sh-1', date: daysFromToday(0), start: '08:30', end: '10:00', role: 'Setup', location: 'Pantry', spots: 3, memberIds: ['m-grace', 'm-theo', 'm-nora'] },
-            { id: 'aid-sh-2', date: daysFromToday(0), start: '10:00', end: '12:00', role: 'Doors', location: 'Pantry', spots: 4, memberIds: ['m-grace', 'm-priya', 'm-leo'] },
+            { id: 'aid-sh-2', date: daysFromToday(0), start: '10:00', end: '12:00', role: 'Doors', location: 'Pantry', spots: 4, memberIds: ['m-grace', 'm-priya', 'm-leo'], notes: 'Greet people, hand out numbers, and keep the line out of the rain. Clipboard is on the hook by the door.' },
             { id: 'aid-sh-3', date: daysFromToday(0), start: '12:00', end: '13:00', role: 'Cleanup', location: 'Pantry', spots: 2, memberIds: ['m-theo'] },
             { id: 'aid-sh-4', date: daysFromToday(6), start: '15:00', end: '17:00', role: 'Driver: orchard pickup', location: 'Van', spots: 1, memberIds: ['m-nora'], notes: 'Ask for Dale at the barn. About 25 crates.' },
             { id: 'aid-sh-5', date: daysFromToday(7), start: '08:30', end: '10:00', role: 'Setup', location: 'Pantry', spots: 3, memberIds: ['m-grace'] },
             { id: 'aid-sh-6', date: daysFromToday(7), start: '10:00', end: '12:00', role: 'Doors', location: 'Pantry', spots: 4, memberIds: ['m-priya'] },
             { id: 'aid-sh-7', date: daysFromToday(7), start: '12:00', end: '13:00', role: 'Cleanup', location: 'Pantry', spots: 2, memberIds: [] },
-            { id: 'aid-sh-8', date: daysFromToday(3), start: '18:00', end: '20:00', role: 'Coat sorting', location: 'Grace’s garage', spots: 3, memberIds: ['m-grace'] },
+            { id: 'aid-sh-8', date: daysFromToday(3), start: '18:00', end: '20:00', role: 'Coat sorting', location: 'Grace’s garage', spots: 3, memberIds: ['m-grace'], notes: 'Side door. Sort by size into the labeled bins; anything torn goes in the blue bag.' },
           ],
         },
       },

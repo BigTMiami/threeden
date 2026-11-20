@@ -3538,6 +3538,25 @@
   margin-top: 6px;
 }
 
+/* My calendar · a line · the group calendars · Select all (Nov 20) */
+.calendar-sources__divider {
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.calendar-sources__all {
+  display: block;
+  margin: 4px 0 10px;
+  font-size: var(--font-size-small);
+}
+
+.calendar-sources__all:disabled {
+  color: var(--color-text-faint);
+  cursor: default;
+  text-decoration: none;
+}
+
 .calendar-sources__others summary {
   color: var(--color-link);
   cursor: pointer;
@@ -4046,20 +4065,34 @@
 .shifts__day.is-today .shifts__date { color: var(--color-accent); }
 .shifts__day.is-past { opacity: .6; }
 .shifts__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.shifts__row { display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: 'time who act' 'what who act'; column-gap: 8px; row-gap: 0; align-items: center; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
+.shifts__row { display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: 'open who act' 'more more more'; column-gap: 8px; row-gap: 0; align-items: center; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
 .shifts__row.is-mine { border-color: var(--color-accent); background: var(--color-accent-soft); }
-.shifts__time { grid-area: time; font-variant-numeric: tabular-nums; font-size: var(--font-size-small); color: var(--color-text-muted); white-space: nowrap; }
-.shifts__row > :last-child:not(.shifts__who) { grid-area: act; }
-.shifts__what { grid-area: what; min-width: 0; }
+.shifts__open-button { grid-area: open; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 6px; }
+.shifts__open-button:hover .shifts__what strong { text-decoration: underline; text-underline-offset: 2px; }
+.shifts__open-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.shifts__time { font-variant-numeric: tabular-nums; font-size: var(--font-size-small); color: var(--color-text-muted); white-space: nowrap; }
+.shifts__act { grid-area: act; }
+.shifts__what { min-width: 0; }
 .shifts__where { color: var(--color-text-muted); font-size: var(--font-size-small); }
-.shifts__notes { display: block; font-size: var(--font-size-small); color: var(--color-text-muted); }
+.shifts__note-mark, .shifts__repeat { color: var(--color-text-faint); }
 .shifts__who { grid-area: who; display: inline-flex; align-items: center; gap: 6px; }
 .shifts__count { font-size: var(--font-size-small); color: var(--color-text-muted); white-space: nowrap; }
+.shifts__details, .shifts__edit { grid-area: more; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-border); }
+.shifts__notes { margin: 0; white-space: pre-wrap; }
+.shifts__notes.is-empty { color: var(--color-text-faint); }
+.shifts__meta { margin: 0; font-size: var(--font-size-small); color: var(--color-text-muted); }
+.shifts__edit-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.shifts__field { display: flex; flex-direction: column; gap: 2px; font-size: var(--font-size-small); color: var(--color-text-muted); }
+.shifts__field > .input { flex: 0 0 auto; }
+.shifts__edit-row > .shifts__field { flex: 1 1 110px; }
+.shifts__edit-row > .shifts__field:has(.shifts__spots) { flex: 0 0 72px; }
+.shifts__field[hidden] { display: none; }
+.shifts__notes-input { width: 100%; resize: vertical; font: inherit; }
 .shifts__full { font-size: var(--font-size-small); color: var(--color-text-faint); padding: 0 8px; }
 .shifts__add { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px; border: 1px dashed var(--color-border-strong); border-radius: 8px; }
 .shifts__spots { width: 64px; }
 .shifts__unit { color: var(--color-text-muted); font-size: var(--font-size-small); }
-@media (max-width: 420px) { .shifts__row { grid-template-columns: 1fr auto; grid-template-areas: 'time act' 'what act' 'who act'; } .shifts__who { justify-self: start; margin-top: 2px; } }
+@media (max-width: 420px) { .shifts__row { grid-template-columns: 1fr auto; grid-template-areas: 'open act' 'who act' 'more more'; } .shifts__who { justify-self: start; margin-top: 2px; } }
 
 /* About (js/modules/blog/about-module.js) */
 .about-block { display: flex; flex-direction: column; gap: 10px; height: 100%; overflow-y: auto; }

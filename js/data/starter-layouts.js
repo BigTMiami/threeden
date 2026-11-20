@@ -181,9 +181,9 @@ export const GROUP_TEMPLATES = [
     ],
   },
   {
-    id: 'nonprofit', label: 'Nonprofit or volunteer group', description: 'Volunteer shifts people sign up for, and upcoming events',
+    id: 'nonprofit', label: 'Nonprofit or volunteer group', description: 'Shifts people sign up for, and upcoming events',
     modules: () => [
-      module('shifts', 'Volunteer shifts', 8, 9, null),
+      module('shifts', 'Shifts', 8, 9, null),
       module('events', 'Upcoming events', 4, 9, { events: [], ownEvents: true }),
     ],
   },

@@ -1658,3 +1658,20 @@ kbd {
 .event-share__section { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 12px; }
 .event-share__section + .event-share__section { border-top: 1px solid var(--color-border); padding-top: 14px; }
 .event-share__section h3 { margin: 0; font-size: 15px; }
+
+/* ─── Add → Event: pick from your calendar (js/events/event-picker.js) ───── */
+.event-picker-modal { width: min(520px, 94vw); }
+.event-picker { display: flex; flex-direction: column; gap: 10px; }
+.event-picker__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.event-picker__title { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 18px; }
+.event-picker__list { display: flex; flex-direction: column; gap: 4px; max-height: min(60vh, 520px); overflow-y: auto; }
+.event-picker__month { margin: 10px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-faint); }
+.event-picker__item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 8px 10px; border: 1px solid transparent; border-radius: 12px;
+  background: none; color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+}
+.event-picker__item:hover, .event-picker__item:focus-visible { border-color: var(--color-border); background: var(--color-surface-muted); outline: none; }
+.event-picker__text { display: flex; flex-direction: column; min-width: 0; }
+.event-picker__meta { font-size: var(--font-size-small); color: var(--color-text-muted); }
+.event-picker__empty { color: var(--color-text-muted); }

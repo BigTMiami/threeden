@@ -141,7 +141,7 @@ jumps anywhere.
 | --- | --- | --- |
 | **Getting your bearings** | Dashboard, Recents, Recent groups (personal); Up next (every group's first module) | personal or group |
 | **Talking** | Board (was Announcements), Forum, Chat | group (Chat on personal too) |
-| **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
+| **Meeting up** | Calendar, Upcoming events, Shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
 | **Getting things done** | Tasks (task list, board, and shared lists views), Budget, Gantt chart, Survey | group, personal |
 | **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
 | **Publishing** | Articles, General feed, Text feed (Carousel: blog only) | blog and group |

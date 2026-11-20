@@ -16,15 +16,18 @@ import { h, replaceChildren } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { attachMentionPicker } from '../../ui/mention-picker.js';
 import { askAttacher } from '../../ui/asks.js';
-import { eventAttacher, addEventToSpace } from '../../ui/event-attach.js';
+import { findEvent } from '../../state/events.js';
+import { shareWithGroup } from '../../events/event-share.js';
 import { notifyMentions } from '../../state/notifications.js';
 import { announcementAttacher } from './announcement-attach.js';
 import { createPost, makePin, isPinned, PIN_DURATIONS, postName } from './announcements-data.js';
 
 /**
- * The "+ Post" form: [Add] [Event] [Sign-ups] (Nov 18: Event and Sign-ups
- * everywhere); `withAsks` adds the lighter RSVP ask too (the full page).
- * Event makes a real calendar event (js/ui/event-attach.js).
+ * The "+ Post" form: [Add] [Sign-ups]; `withAsks` adds the lighter RSVP ask
+ * too (the full page). Add → Event attaches one of your calendar's events
+ * (Nov 20: it replaced an Event button that made a new one); one from
+ * another calendar is shared with this group, so it's on the group's
+ * calendar and members can RSVP.
  */
 export function boardComposer({ context, me, canPin, withAsks = false, onPosted }) {
   const isSolo = context.members.length <= 1;
@@ -33,7 +36,6 @@ export function boardComposer({ context, me, canPin, withAsks = false, onPosted 
   attachMentionPicker(bodyInput, { getCandidates: () => context.members, excludeId: me.id });
   const add = announcementAttacher({ me, moduleId: context.moduleId });
   const asks = askAttacher();
-  const eventField = eventAttacher();
   const pinSelect = canPin ? h('select', { class: 'input input--compact', 'aria-label': 'Pin it' },
     h('option', { value: '' }, 'Don’t pin'),
     PIN_DURATIONS.map((d) => h('option', { value: d.id }, d.ms == null ? 'Pin until unpinned' : `Pin for ${d.label}`))) : null;
@@ -53,18 +55,17 @@ export function boardComposer({ context, me, canPin, withAsks = false, onPosted 
       if (attached.error) { error.textContent = attached.error; return; }
       const extra = asks.read();
       if (!withAsks) extra.rsvp = null;
-      const eventFields = eventField.read();
-      const hasSomething = title || body || attached.media.length || attached.files.length || attached.poll || extra.rsvp || extra.signups?.length || eventFields;
+      const hasSomething = title || body || attached.media.length || attached.files.length || attached.poll || extra.rsvp || extra.signups?.length || attached.eventId;
       if (!hasSomething) { error.textContent = 'Write something, or add a photo, file, or poll.'; bodyInput.focus(); return; }
-      if (eventFields && !(eventFields.title || title)) { error.textContent = 'Give the event a name (or the post a title).'; return; }
-      // The event goes on the group's calendar (or Upcoming events); the post shows it with its RSVP.
-      const made = eventFields ? addEventToSpace(context.spaceId, { ...eventFields, title: eventFields.title || title, notes: body }, { me, fallbackModuleId: context.moduleId, visibility: context.spaceKind === 'group' ? 'group' : 'public' }) : null;
+      // An event from another calendar: share it with this group (its calendar, and members can RSVP).
+      const picked = attached.eventId ? findEvent(attached.eventId) : null;
+      if (picked && context.spaceKind === 'group' && picked.space.id !== context.spaceId) shareWithGroup(picked.event.id, context.spaceId, true);
       const post = createPost({
         authorId: me.id, title, body,
         pin: pinSelect?.value ? makePin(pinSelect.value, me.id) : null,
         toFeed: toFeed.checked,
         poll: attached.poll, media: attached.media, files: attached.files, ...extra,
-        eventId: made?.id ?? null,
+        eventId: picked?.event.id ?? null,
       });
       onPosted(post);
       notifyMentions({ moduleId: context.moduleId, itemId: post.id, after: post.body, where: `the board post “${postName(post)}”` });
@@ -73,12 +74,11 @@ export function boardComposer({ context, me, canPin, withAsks = false, onPosted 
   },
     titleInput,
     add.slots,
-    eventField.slot,
     asks.slot,
     bodyInput,
     error,
     h('div', { class: 'board-composer__row' },
-      h('span', { class: 'form-row' }, add.button, eventField.button, withAsks && !isSolo ? asks.rsvpButton : null, !isSolo ? asks.signupButton : null),
+      h('span', { class: 'form-row' }, add.button, withAsks && !isSolo ? asks.rsvpButton : null, !isSolo ? asks.signupButton : null),
       h('span', { class: 'form-row' },
         pinSelect,
         isSolo || context.isVisitor ? null : h('label', { class: 'page-control board-composer__feed', title: 'Members see it in their Feeds too' }, toFeed, h('span', {}, 'Show in members’ Feeds')),
@@ -89,7 +89,6 @@ export function boardComposer({ context, me, canPin, withAsks = false, onPosted 
     toFeed.checked = true;
     add.reset();
     asks.reset();
-    eventField.reset();
     clearError();
   }
   return { form, reset };

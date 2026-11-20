@@ -26,6 +26,7 @@
  * A link looks like:
  *   {
  *     item,          ← a copy of the item (change it through updateLinkedItem)
+ *     readOnly,      ← true for shifts on your calendar: open them, change them in Shifts
  *     itemId,
  *     moduleId, moduleTitle,   ← the group module it lives in
  *     spaceId, spaceName,      ← the group
@@ -133,6 +134,34 @@ function linksFor(moduleType, ownerId, { allInMyGroups = false } = {}) {
       }
     }
   }
+  if (moduleType === 'calendar') links.push(...shiftLinks(ownerId));
+  return links;
+}
+
+/**
+ * Shifts you've taken (Shifts modules in your groups), as entries on your
+ * calendar (Nov 20). Read-only there: opening one goes to the shift.
+ */
+function shiftLinks(ownerId) {
+  const links = [];
+  for (const group of getSpaces()) {
+    if (group.kind !== 'group' || !group.memberIds.includes(ownerId)) continue;
+    for (const source of group.modules) {
+      if (source.type !== 'shifts') continue;
+      for (const shift of source.data?.shifts ?? []) {
+        if (!(shift.memberIds ?? []).includes(ownerId)) continue;
+        links.push({
+          item: {
+            id: shift.id, kind: 'entry', title: `${shift.role} shift`, date: shift.date, endDate: shift.date,
+            time: shift.start, endTime: shift.end, allDay: false, location: shift.location ?? '', notes: shift.notes ?? '',
+            color: 'green', repeat: 'none', shiftOf: source.id,
+          },
+          itemId: shift.id, moduleId: source.id, moduleTitle: source.title, spaceId: group.id, spaceName: group.name,
+          status: 'Shift', readOnly: true,
+        });
+      }
+    }
+  }
   return links;
 }
 
@@ -142,7 +171,7 @@ function linksFor(moduleType, ownerId, { allInMyGroups = false } = {}) {
  */
 export function updateLinkedItem(link, changeFn) {
   const source = getModule(link.moduleId);
-  if (!source) return;
+  if (!source || link.readOnly) return;
 
   const data = structuredClone(source.data);
   const item = getModuleType(source.type).assignments.items(data).find((i) => i.id === link.itemId);

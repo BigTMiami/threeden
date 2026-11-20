@@ -114,6 +114,33 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Board events from your calendar, Shifts, and the calendar list (Nov 20):**
+  - Board: the composer's Event button is gone (and js/ui/event-attach.js
+    with it). Add → **Event** opens `openEventPicker({ me, onPick })`
+    (js/events/event-picker.js: your coming events from `myUpcoming`, a
+    year ahead, searchable). The pick rides in `announcementAttacher`'s
+    `read().eventId`; board-parts.js shares an event from another calendar
+    with the group (`shareWithGroup`) and saves `post.eventId`. The Feed
+    keeps its own Event button (create or pick).
+  - Shifts: renamed (label, starter layout, help; upgrade v73 renames
+    modules still titled "Volunteer shifts"). shifts-data.js gained notes in
+    the editor, `updateShift`/`deleteShift` (scope 'one' or 'later'),
+    `setRepeat`, `extendSeries`, `nextDate`, and `data.series[seriesId] =
+    { every, until, through, template }`. Repeats are stored as one shift
+    per date (own sign-ups), made `SERIES_AHEAD_DAYS` (56) ahead and topped
+    up on draw; a date that already has the same start and name joins the
+    series instead of doubling. The opened shift lives in a module-level Map
+    shared by card and page (the card behind a module page can take the
+    focus request first). Taken shifts reach your calendar through
+    `shiftLinks()` in linked-items.js: read-only entry links
+    (`link.readOnly`), so the calendar won't edit or duplicate them and
+    "Open in <group>" goes to the shift.
+  - Calendar list: My calendar, an `hr.calendar-sources__divider`, the
+    group calendars (`.calendar-sources__list--groups`), then **Select all**
+    (disabled when everything's shown); the same in a group calendar's
+    "Show my other calendars".
+  - Tests: test_shift_details, test_calendar_sources_list;
+    test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**
   - Chat: data `{ conversationId (# general), channels: [{ id, name,
     conversationId, createdBy, createdAt }] }`; each channel is

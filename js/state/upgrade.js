@@ -25,7 +25,7 @@
  */
 
 /** Bump this when the sample data or the saved shape changes (it used to be the storage key's version). */
-export const DATA_VERSION = 72;
+export const DATA_VERSION = 73;
 
 /**
  * Steps for saves from before a version, oldest first.
@@ -97,6 +97,15 @@ const MIGRATIONS = [
           }
         }
         for (const removed of space.removedModules ?? []) convert(removed.module);
+      }
+    },
+  },
+  {
+    version: 73,
+    note: 'Volunteer shifts is now Shifts: modules still titled "Volunteer shifts" are renamed',
+    run: (state) => {
+      for (const space of state.spaces ?? []) {
+        for (const module of space.modules ?? []) if (module.type === 'shifts' && module.title === 'Volunteer shifts') module.title = 'Shifts';
       }
     },
   },

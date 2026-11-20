@@ -88,7 +88,7 @@ export function pinLabel(post) {
 }
 
 export function createPost({ authorId, title = '', body, pin = null, toFeed = true, poll = null, media = [], files = [], rsvp = null, signups = [], eventId = null }) {
-  // eventId: a calendar event made with the post (js/ui/event-attach.js), shown on it with its RSVP.
+  // eventId: one of the poster's calendar events (Add → Event, event-picker.js), shown on it with its RSVP.
   return normalizePost({ id: makeId('post'), authorId, title, body, pin, toFeed, poll, media, ...(files.length ? { files } : {}), rsvp, signups, ...(eventId ? { eventId } : {}), createdAt: Date.now() });
 }
 

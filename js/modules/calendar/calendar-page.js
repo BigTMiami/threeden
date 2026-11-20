@@ -440,14 +440,21 @@ export function renderCalendarPage(container, context) {
       const linked = new Map(context.getLinkedItems().map((link) => [link.spaceId, link.spaceName]));
       const sources = [['here', 'My calendar'], ...linked];
       const only = (key) => { view.hiddenSources = new Set(sources.map(([k]) => k).filter((k) => k !== key)); drawAll(); };
+      const sourceRow = ([key, label]) => row(key, label, {
+        checked: !view.hiddenSources.has(key),
+        onToggle: (on) => setHidden(key, !on),
+        onOnly: sources.length > 1 ? () => only(key) : null,
+      });
+      // My calendar, a line, then the group calendars, then Select all (Nov 20).
       return h('section', { class: 'calendar-sources' },
         h('h3', { class: 'calendar-sources__title' }, 'Calendars'),
-        h('ul', { class: 'calendar-sources__list' }, sources.map(([key, label]) => row(key, label, {
-          checked: !view.hiddenSources.has(key),
-          onToggle: (on) => setHidden(key, !on),
-          onOnly: sources.length > 1 ? () => only(key) : null,
-        }))),
-        view.hiddenSources.size ? h('button', { type: 'button', class: 'link-button calendar-sources__all', onClick: () => { view.hiddenSources.clear(); drawAll(); } }, 'Show all') : null,
+        h('ul', { class: 'calendar-sources__list' }, sourceRow(sources[0])),
+        linked.size ? h('hr', { class: 'calendar-sources__divider' }) : null,
+        linked.size ? h('ul', { class: 'calendar-sources__list calendar-sources__list--groups', 'aria-label': 'Group calendars' }, [...linked].map(sourceRow)) : null,
+        linked.size ? h('button', {
+          type: 'button', class: 'link-button calendar-sources__all', disabled: !view.hiddenSources.size,
+          onClick: () => { view.hiddenSources.clear(); drawAll(); },
+        }, 'Select all') : null,
         // One calendar for all your groups: every event in them, not only the ones you've answered.
         context.isVisitor ? null : h('label', { class: 'calendar-sources__label calendar-sources__all-groups' },
           h('input', {
@@ -460,14 +467,28 @@ export function renderCalendarPage(container, context) {
     const space = getSpace(context.spaceId);
     const otherLinks = otherCalendarLinks(me.id, context.spaceId);
     const others = new Map(otherLinks.map((link) => [link.spaceId, link.spaceName]));
+    const otherRow = ([key, label]) => row(key, label, {
+      checked: view.shownOthers.has(key) && !view.hiddenSources.has(key),
+      total: otherLinks.filter((link) => link.spaceId === key).length,
+      onToggle: (on) => { if (on) view.shownOthers.add(key); else view.shownOthers.delete(key); view.hiddenSources.delete(key); drawAll(); },
+    });
+    // My calendar first, a line, then the groups, then Select all (Nov 20).
+    const personalId = otherLinks.find((link) => getSpace(link.spaceId)?.kind === 'personal')?.spaceId;
+    const mine = [...others].filter(([key]) => key === personalId);
+    const groups = [...others].filter(([key]) => key !== personalId);
+    const allShown = [...others.keys()].every((key) => view.shownOthers.has(key) && !view.hiddenSources.has(key));
     const details = h('details', { class: 'calendar-sources__others', open: view.showOthers },
       h('summary', {}, 'Show my other calendars'),
       others.size
-        ? h('ul', { class: 'calendar-sources__list' }, [...others].map(([key, label]) => row(key, label, {
-            checked: view.shownOthers.has(key) && !view.hiddenSources.has(key),
-            total: otherLinks.filter((link) => link.spaceId === key).length,
-            onToggle: (on) => { if (on) view.shownOthers.add(key); else view.shownOthers.delete(key); view.hiddenSources.delete(key); drawAll(); },
-          })))
+        ? [
+          mine.length ? h('ul', { class: 'calendar-sources__list' }, mine.map(otherRow)) : null,
+          mine.length && groups.length ? h('hr', { class: 'calendar-sources__divider' }) : null,
+          groups.length ? h('ul', { class: 'calendar-sources__list calendar-sources__list--groups', 'aria-label': 'Group calendars' }, groups.map(otherRow)) : null,
+          h('button', {
+            type: 'button', class: 'link-button calendar-sources__all', disabled: allShown,
+            onClick: () => { for (const key of others.keys()) { view.shownOthers.add(key); view.hiddenSources.delete(key); } drawAll(); },
+          }, 'Select all'),
+        ]
         : h('p', { class: 'calendar-sources__hint' }, 'Nothing on your other calendars.'),
       h('p', { class: 'calendar-sources__hint' }, 'Only you see these, to check for clashes. Nothing is added to this group’s calendar.'));
     details.addEventListener('toggle', () => { view.showOthers = details.open; drawView(); });
@@ -533,6 +554,7 @@ export function renderCalendarPage(container, context) {
 
   function canEdit(event) {
     if (context.isVisitor) return false;
+    if (event._link?.readOnly) return false; // a shift you took: change it in Shifts
     if (event._link) return true; // edits go to where it lives (see linked items)
     return isHostOf(event, me.id) || canEditEvent(event, me.id) || event.visibility === 'group' || context.can('moderate') || !event.createdBy;
   }
@@ -560,7 +582,7 @@ export function renderCalendarPage(container, context) {
           drawAll();
         },
         onEdit: canEdit(event) ? () => openPanel({ mode: 'edit', eventId: event.id }) : null,
-        onDuplicate: context.isVisitor ? null : () => handleDuplicate(event),
+        onDuplicate: context.isVisitor || event._link?.readOnly ? null : () => handleDuplicate(event),
         onDelete: !event._link && canEdit(event) ? () => handleDelete(event) : null,
         onClose: () => openPanel(null),
         onChanged: () => drawAll(),

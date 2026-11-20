@@ -56,7 +56,7 @@ export const HELP_TOPICS = [
   ]],
   ['signups', 'Sign-ups and shifts', 'hand2', [
     ['How do I ask who’s coming, or who’ll bring what?', 'In an announcement, add RSVP or Sign-ups before posting. People answer right in the post, or from the top of their Feed.'],
-    ['How do volunteer shifts work?', 'Add the Volunteer shifts module to a group. Anyone takes a shift with one tap. If someone drops a shift in the next two days, the organizers are told. “Copy to next week” repeats a week’s shifts.'],
+    ['How do shifts work?', 'Add the Shifts module to a group. Anyone takes a shift with one tap, and it goes on their calendar. Click a shift to see its notes; Edit changes it, and Repeat makes it every week, every 2 weeks, or every month. If someone drops a shift in the next two days, the organizers are told. “Copy to next week” repeats a week’s shifts.'],
     ['Where do my shifts show up?', 'On your dashboard under “Coming up”, and with “Mine” in the shifts module.'],
   ]],
   ['feed', 'Feed', 'globe', [

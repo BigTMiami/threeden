@@ -151,7 +151,7 @@ export function myUpcoming(me, days = 30) {
       }
     }
   }
-  // Volunteer shifts you've taken (shifts module), as rows like events.
+  // Shifts you've taken (shifts module), as rows like events.
   for (const space of getSpaces()) {
     if (!space.memberIds.includes(me.id)) continue;
     for (const module of space.modules) {
