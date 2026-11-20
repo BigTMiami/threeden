@@ -95,8 +95,9 @@ export function createMutualAid() {
         },
       },
       {
-        id: 'aid-pantry', type: 'grocery', title: 'Pantry is low on', span: 4, rows: 12,
+        id: 'aid-pantry', type: 'todo', title: 'Pantry is low on', span: 4, rows: 12,
         data: {
+          view: 'lists', tasks: [], // Tasks on its Lists view (the List module until Nov 20)
           items: [
             groceryItem('aid-g-1', 'Rice', 'pantry', 'm-grace', { quantity: '20 lb', claimedBy: 'm-priya' }),
             groceryItem('aid-g-2', 'Canned beans', 'pantry', 'm-grace', { quantity: '2 cases' }),

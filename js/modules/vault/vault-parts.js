@@ -38,7 +38,6 @@ export const NEW_MENU_ENTRIES = [
 
 /** Behind "More". */
 export const MORE_MENU_ENTRIES = [
-  { action: 'module:grocery', label: 'List', description: 'Groceries, supplies, who’s bringing what', icon: 'list' },
   { action: 'module:todo', label: 'Tasks', description: 'Tasks for people, as a list or a board', icon: 'todo' },
   { action: 'module:relationship', label: 'Relationship map', description: 'Who is connected to whom', icon: 'relationship' },
   { action: 'module:gantt', label: 'Gantt chart', description: 'Plan phases over time', icon: 'gantt' },

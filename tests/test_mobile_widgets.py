@@ -80,7 +80,7 @@ with sync_playwright() as p:
 
     # 3
     phone.locator('.mwidget', has_text='Groceries').first.click(); phone.wait_for_timeout(600)
-    gid = st(phone, "return s.getVisibleModules().find(m=>m.type==='grocery').id")
+    gid = st(phone, "return s.getVisibleModules().find(m=>m.id==='house-grocery').id")
     phone.evaluate(f"location.hash='#module-{gid}'"); phone.wait_for_timeout(700)
     phone.evaluate("location.hash='#space-juniper'"); phone.wait_for_timeout(900)
     check(not phone.locator('#mobile-widgets').is_visible() and phone.locator('.module-strip__chip.is-current').count() == 1, 'phone: back from a module page keeps the swipe view')

@@ -25,7 +25,7 @@
  */
 
 /** Bump this when the sample data or the saved shape changes (it used to be the storage key's version). */
-export const DATA_VERSION = 71;
+export const DATA_VERSION = 72;
 
 /**
  * Steps for saves from before a version, oldest first.
@@ -79,7 +79,27 @@ const MIGRATIONS = [
         }
       }
     },
-  }
+  },
+  {
+    version: 72,
+    note: 'The List module is now Tasks’ Lists view: List modules (and vault list files) become Tasks on the Lists view, keeping their lists',
+    run: (state) => {
+      const convert = (thing) => {
+        if (thing?.type === 'grocery') { thing.type = 'todo'; thing.data = { tasks: [], ...(thing.data ?? {}), view: 'lists' }; }
+      };
+      for (const space of state.spaces ?? []) {
+        for (const module of space.modules ?? []) {
+          convert(module);
+          if (module.type === 'vault' && Array.isArray(module.data?.items)) {
+            for (const item of module.data.items) {
+              if (item.kind === 'module' && item.moduleType === 'grocery') { item.moduleType = 'todo'; item.data = { tasks: [], ...(item.data ?? {}), view: 'lists' }; }
+            }
+          }
+        }
+        for (const removed of space.removedModules ?? []) convert(removed.module);
+      }
+    },
+  },
 ];
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);

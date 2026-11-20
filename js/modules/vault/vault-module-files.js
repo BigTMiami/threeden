@@ -26,6 +26,7 @@ import { documentAccess } from '../../ui/file-access.js';
  * Module types that can be made as vault files (the "+ New" menu in
  * vault-parts.js lists them, with short descriptions of its own).
  */
+// ('grocery' stays so an old list file not yet upgraded still opens; Lists are Tasks now, Nov 20.)
 export const FILE_MODULE_TYPES = ['sheet', 'grocery', 'todo', 'relationship', 'gantt', 'survey', 'presentation'];
 
 /** The data for a new file of this type (the same as a new module of it). */

@@ -347,6 +347,11 @@ export function renameConversation(conversationId, name) {
   updateConversation(conversationId, (c) => { c.name = name.trim(); });
 }
 
+/** Delete a conversation outright: a chat channel its group's admins deleted (chat-card.js). */
+export function deleteConversation(conversationId) {
+  changeState((state) => { state.conversations = (state.conversations ?? []).filter((c) => c.id !== conversationId); }, 'messages');
+}
+
 /** Leave a group conversation (not a group's chat: leave the group for that). */
 export function leaveConversation(conversationId, memberId) {
   updateConversation(conversationId, (c) => { c.memberIds = c.memberIds.filter((id) => id !== memberId); });

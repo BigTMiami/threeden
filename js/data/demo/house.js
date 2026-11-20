@@ -82,8 +82,9 @@ export function createHouse() {
         },
       },
       {
-        id: 'house-grocery', type: 'grocery', title: 'Groceries', span: 5, rows: 13,
+        id: 'house-grocery', type: 'todo', title: 'Groceries', span: 5, rows: 13,
         data: {
+          view: 'lists', tasks: [], // Tasks on its Lists view (the List module until Nov 20)
           items: [
             groceryItem('house-g-1', 'Rice', 'pantry', 'm-maya', { quantity: '1 big bag', claimedBy: 'm-maya' }),
             groceryItem('house-g-2', 'Scallions', 'produce', 'm-maya'),

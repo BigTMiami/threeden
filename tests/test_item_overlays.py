@@ -21,7 +21,7 @@ with sync_playwright() as p:
     pg.screenshot(path='test-output/overlay-task.png')
     pg.keyboard.press('Escape'); pg.wait_for_timeout(300); print('Esc closes:', pg.locator('dialog.modal[open]').count()==0)
     # a list item
-    lst=pg.locator('.module-frame[data-module-type="grocery"]').first
+    lst=pg.locator('.module-frame[data-module-id="house-grocery"]').first
     lst.locator('.grocery-item__name--button').first.click(); pg.wait_for_timeout(300)
     d=pg.locator('dialog.modal[open]'); iname=d.locator('.item-overlay__title-input').input_value(); print('list overlay:', iname)
     d.get_by_label('Quantity').fill('3'); d.get_by_label('Quantity').dispatch_event('change'); pg.wait_for_timeout(200)

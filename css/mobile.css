@@ -311,7 +311,23 @@ html.in-phone-frame[data-device='se'] {
 
   .chat-module--page {
     height: calc(100dvh - 210px - var(--tab-bar-height) - var(--safe-bottom));
+    flex-direction: column;
   }
+
+  /* Phones: the channel list is a row of chips above the chat (chat-card.js). */
+  .chat-module--page .chat-channels {
+    width: auto;
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .chat-module--page .chat-channels__title { display: none; }
+  .chat-module--page .chat-channel { width: auto; flex: none; border: 1px solid var(--color-border); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .chat-module--page .chat-channel__unread { margin-left: 3px; }
 
   /* Toasts sit above the tab bar. */
   .toast-region {

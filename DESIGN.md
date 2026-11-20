@@ -142,7 +142,7 @@ jumps anywhere.
 | **Getting your bearings** | Dashboard, Recents, Recent groups (personal); Up next (every group's first module) | personal or group |
 | **Talking** | Board (was Announcements), Forum, Chat | group (Chat on personal too) |
 | **Meeting up** | Calendar, Upcoming events, Volunteer shifts | group, personal (Upcoming events on blogs too; shifts in groups only) |
-| **Getting things done** | Tasks (list and board views), List, Budget, Gantt chart, Survey | group, personal |
+| **Getting things done** | Tasks (task list, board, and shared lists views), Budget, Gantt chart, Survey | group, personal |
 | **Making and keeping things** | Vault, File from vault (which shows documents, spreadsheets, presentations, and any other vault file), Submissions | group, personal (File from vault on blogs too; Submissions in groups only) |
 | **Publishing** | Articles, General feed, Text feed (Carousel: blog only) | blog and group |
 | **A blog's front page** | About, Photo gallery, Carousel | blog |
@@ -274,8 +274,8 @@ and the simulated user test.
 - **Too many "needs you" lists?** The Dashboard's For you, the Feed's From
   groups, notifications, and Up next all surface things that need attention.
   One clear place may be better than several.
-- **Tasks and List.** Both hold checklists. Where's the line, and should a
-  List item be able to become a task?
+- **Tasks and List.** Settled Nov 20: shared lists are a view of Tasks. Should
+  a list item be able to become a task?
 - **How many modules?** Over two dozen types is a lot to choose from. Which
   ones earn a place in the default library, and which belong behind "More"?
 - **Encrypted spaces versus discovery.** End-to-end encrypted spaces can't

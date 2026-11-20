@@ -22,10 +22,11 @@
  * show their description. Nothing here changes data.
  */
 
+import { channelsOf, chatUnreadTotal } from '../modules/chat/chat-data.js';
 import { getMember, getModule } from '../state/store.js';
 import { needsYou, myUpcoming, groupUpdates } from '../modules/dashboard/dashboard-data.js';
 import { getModuleType } from '../modules/registry.js';
-import { getConversation, unreadCount, lastMessage, messagePreview } from '../state/messages.js';
+import { getConversation, lastMessage, messagePreview } from '../state/messages.js';
 import { hasSeen, sortPosts, normalizePost, isPinned, postName } from '../modules/announcements/announcements-data.js';
 import { nextEventIn } from '../modules/upnext/upnext-data.js';
 import { normalizeEvent, occurrencesBetween, occurrenceTimeLabel } from '../modules/calendar/calendar-data.js';
@@ -55,10 +56,12 @@ const SUMMARIES = {
     return { date: block, kicker: `Next event · ${block.weekday}`, title: next.event.title, lines: [[occurrenceTimeLabel(next), next.event.location, going ? `${going} going` : ''].filter(Boolean).join(' · ')] };
   },
   chat(module, space, me) {
-    const conversation = module.data?.conversationId ? getConversation(module.data.conversationId) : null;
-    const last = conversation ? lastMessage(conversation) : null;
-    const unread = conversation && me ? unreadCount(conversation, me.id) : 0;
-    return { badge: unread ? String(unread) : '', lines: [last ? `${firstName(last.authorId)}: ${messagePreview(last)}` : 'Say hello'], people: [...new Set((conversation?.messages ?? []).slice(-6).map((m) => m.authorId))].reverse().slice(0, 3) };
+    // The latest message in any channel, and unread across all of them (chat-data.js).
+    const channels = channelsOf(module.data).map((c) => ({ c, conversation: c.conversationId ? getConversation(c.conversationId) : null })).filter((x) => x.conversation);
+    const latest = channels.map((x) => ({ ...x, last: lastMessage(x.conversation) })).filter((x) => x.last).sort((a, b) => b.last.createdAt - a.last.createdAt)[0];
+    const unread = me ? chatUnreadTotal(module.data, me.id) : 0;
+    const where = latest && channels.length > 1 ? `#${latest.c.name} · ` : '';
+    return { badge: unread ? String(unread) : '', lines: [latest ? `${where}${firstName(latest.last.authorId)}: ${messagePreview(latest.last)}` : 'Say hello'], people: [...new Set((latest?.conversation.messages ?? []).slice(-6).map((m) => m.authorId))].reverse().slice(0, 3) };
   },
   announcements(module, space, me) {
     const posts = module.data?.posts ?? [];
@@ -68,6 +71,7 @@ const SUMMARIES = {
     return { badge: unseen ? `${unseen} new` : '', kicker: isPinned(top) ? 'Pinned' : '', title: postName(top), lines: [`${getMember(top.authorId)?.name ?? 'Someone'} · ${timeAgo(top.createdAt)}`] };
   },
   todo(module) {
+    if (module.data?.view === 'lists') return SUMMARIES.grocery(module); // Tasks on its Lists view
     const tasks = module.data?.tasks ?? [];
     const done = tasks.filter((t) => t.done).length;
     const open = tasks.filter((t) => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
@@ -175,7 +179,7 @@ const MORE = {
     return { more: (conversation?.messages ?? []).slice(-5, -1).reverse().map((m) => `${firstName(m.authorId)}: ${messagePreview(m)}`) };
   },
   announcements: (module) => ({ more: sortPosts((module.data?.posts ?? []).map(normalizePost)).slice(1, 4).map((p) => `${postName(p)} · ${firstName(p.authorId)}`) }),
-  todo: (module) => ({ more: (module.data?.tasks ?? []).filter((t) => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')).slice(1, 5).map((t) => (t.due ? `${t.text} · ${shortDate(t.due)}` : t.text)) }),
+  todo: (module) => (module.data?.view === 'lists' ? MORE.grocery(module) : { more: (module.data?.tasks ?? []).filter((t) => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')).slice(1, 5).map((t) => (t.due ? `${t.text} · ${shortDate(t.due)}` : t.text)) }),
   grocery: (module) => {
     const items = listsOf(module.data).flatMap((l) => l.items ?? []).filter((i) => !i.bought);
     const shown = items.slice(0, 10).map((i) => i.name);

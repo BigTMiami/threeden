@@ -53,7 +53,8 @@ function choicesIn(vault) {
     .flatMap((item) => {
       const folders = pathTo(items, item.parentId).map((f) => f.name);
       const base = { vault, item, folders, name: item.name, kind: describeItem(item, items), listId: null };
-      if (item.kind === 'module' && item.moduleType === 'grocery') {
+      // Shared lists: a Tasks file on its Lists view (the List module until Nov 20).
+      if (item.kind === 'module' && (item.moduleType === 'grocery' || (item.moduleType === 'todo' && item.data?.view === 'lists'))) {
         const lists = listsOf(item.data);
         if (lists.length > 1) return lists.map((list) => ({ ...base, name: list.name || item.name, kind: `A list in ${item.name}`, listId: list.id }));
       }

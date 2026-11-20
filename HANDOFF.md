@@ -114,6 +114,27 @@ functions, no build step.
 
 ## Recently finished (all published)
 
+- **Chat channels and Lists in Tasks (Nov 20):**
+  - Chat: data `{ conversationId (# general), channels: [{ id, name,
+    conversationId, createdBy, createdAt }] }`; each channel is
+    `createModuleConversation({ spaceId, moduleId, name })`, so it's a group
+    conversation (everyone in the group) listed in Messages. chat-card.js
+    keeps the open channel in a module-level Map shared by card and page,
+    sets `setExpandTarget(channelId)` and reads `takeFocusRequest()` on the
+    page; `canManageChannels` = canManageRoles. Deleting a channel calls the
+    new `deleteConversation()`. Unread across channels: `chatUnreadTotal`
+    (module-swiper chip, widget summary).
+  - Lists: the grocery module is `available: false`; Tasks' `view: 'lists'`
+    renders grocery-lists.js `renderLists` with `listsContext()`, which
+    saves only lists/items/history into the Tasks data. Upgrade v72 turns
+    `type: 'grocery'` modules (and vault files) into todo with `view:
+    'lists'`; demo data, templates, starter layouts, and the shared-list
+    suggestion (which now passes `data`) were changed to match. Widgets use
+    the grocery summary when a Tasks module is on Lists.
+  - Tests: test_chat_channels.py, test_lists_in_tasks.py (and updated
+    test_item_overlays, test_many_lists, test_mobile_widgets,
+    test_vault_new_menu).
+
 - **Vault editors, calendar sharing, posts with events (Nov 18):**
   - Vault: ITEM_KINDS note label is "Document" (kind stays 'note'). Rows use
     `moreMenu()` (js/ui/more-menu.js; floats via followAnchor). The card

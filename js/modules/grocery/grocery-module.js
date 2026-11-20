@@ -7,6 +7,12 @@
  * (It started life as the Grocery list, so its type and files are still
  * called "grocery"; saved homepages refer to the type.)
  *
+ * Nov 20: the List module became the Tasks module's **Lists** view
+ * (todo-module.js), and left the module library. Old List modules turn
+ * into Tasks modules on the Lists view when a save loads (upgrade.js, v72).
+ * This definition stays registered so anything not yet upgraded still
+ * draws; the files here draw the Lists view.
+ *
  * Files in this folder:
  *   grocery-module.js  ← this file: the module definition
  *   grocery-card.js    the homepage card (quick add, check off, claim)
@@ -31,7 +37,7 @@ export const groceryModule = {
   icon: 'list',
   defaultSpan: 4,
   defaultRows: 13,
-  available: true,
+  available: false, // folded into Tasks (Lists view), Nov 20
 
   createInitialData() {
     return { items: [], history: [] };

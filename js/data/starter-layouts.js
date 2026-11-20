@@ -198,7 +198,7 @@ export const GROUP_TEMPLATES = [
     id: 'trip', label: 'Trip or event planning', description: 'A calendar for the plan and a packing list',
     modules: () => [
       module('calendar', 'The plan', 6, 10, { events: [] }),
-      module('grocery', 'Packing list', 6, 10, null),
+      module('todo', 'Packing list', 6, 10, { tasks: [], view: 'lists', items: [], history: [] }),
     ],
   },
   {
@@ -233,7 +233,7 @@ export const GROUP_TEMPLATES = [
     modules: () => [
       module('announcements', 'Family news', 8, 11, { posts: [] }),
       module('calendar', 'Family calendar', 4, 11, { events: [] }),
-      module('grocery', 'Who’s bringing what', 12, 12, null),
+      module('todo', 'Who’s bringing what', 12, 12, { tasks: [], view: 'lists', items: [], history: [] }),
     ],
   },
   {

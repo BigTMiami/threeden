@@ -31,7 +31,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const has = (space, ...types) => space.modules.some((m) => types.includes(m.type));
 const eventsOf = (space) => space.modules.filter((m) => m.type === 'events' || m.type === 'calendar').flatMap((m) => (m.data?.events ?? []).map(normalizeEvent));
 
-/** @type {{ id: string, when: (space: any) => boolean, text: (space: any) => string, label: string, type: string, title: string }[]} */
+/** @type {{ id: string, when: (space: any) => boolean, text: (space: any) => string, label: string, type: string, title: string, data?: any }[]} */
 export const GROUP_SUGGESTIONS = [
   {
     id: 'calendar', type: 'calendar', title: 'Calendar', label: 'Add a calendar',
@@ -39,8 +39,9 @@ export const GROUP_SUGGESTIONS = [
     text: (s) => `${eventsOf(s).length} events planned. Add a calendar so everyone sees the month?`,
   },
   {
-    id: 'grocery', type: 'grocery', title: 'Shared list', label: 'Add a shared list',
-    when: (s) => s.template === 'house' && !has(s, 'grocery') && s.memberIds.length >= 3,
+    // Tasks, opened on its Lists view (the List module until Nov 20).
+    id: 'grocery', type: 'todo', title: 'Shared list', label: 'Add a shared list', data: { tasks: [], view: 'lists', items: [], history: [] },
+    when: (s) => s.template === 'house' && !s.modules.some((m) => m.type === 'grocery' || (m.type === 'todo' && m.data?.view === 'lists')) && s.memberIds.length >= 3,
     text: () => 'Everyone’s in. Add a shared list for groceries and supplies?',
   },
   {
@@ -89,6 +90,12 @@ export function renderGroupSuggestion(space, me) {
       label: suggestion.label,
       run: () => {
         const module = addModule(suggestion.type, undefined, { title: suggestion.title });
+        if (suggestion.data) {
+          changeState(() => {
+            const added = getSpace(space.id).modules.find((m) => m.id === module.id);
+            if (added) added.data = { ...(added.data ?? {}), ...structuredClone(suggestion.data) };
+          }, 'layout');
+        }
         // A new calendar takes over the events Upcoming events kept on its own, so both show the same ones.
         if (suggestion.type === 'calendar') {
           changeState(() => {

@@ -49,7 +49,7 @@ export const PERSONAL_TEMPLATES = [
     id: 'parent', label: 'Parent or family planner', who: 'The family calendar, the shopping list, and everyone’s to-dos',
     modules: () => [
       module('calendar', 'Family calendar', 8, 12, { events: [] }),
-      module('grocery', 'Shopping list', 4, 12),
+      module('todo', 'Shopping list', 4, 12, { tasks: [], view: 'lists', items: [], history: [] }),
       module('todo', 'To-do', 6, 12, { tasks: [] }),
       module('note', 'Notes', 6, 12, { html: '<p></p>' }),
     ],

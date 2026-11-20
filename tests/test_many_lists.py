@@ -10,7 +10,7 @@ with sync_playwright() as p:
     pg=b.new_page(viewport={'width':1300,'height':900}); pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_selector('.app-bar', timeout=20000)
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
-    card=pg.locator('.module-frame[data-module-type="grocery"]').first; mid=card.get_attribute('data-module-id')
+    card=pg.locator('.module-frame[data-module-id="house-grocery"]').first; mid=card.get_attribute('data-module-id')
     print('old list still shows items:', card.locator('.grocery__items li').count(), '| single-list "+ New list":', card.locator('.lists__first-new').count())
     card.locator('.lists__first-new').click(); card.locator('.lists__new-input').fill('Hardware store'); card.locator('.lists__new-input').press('Enter'); pg.wait_for_timeout(400)
     chips=card.locator('.lists__chip:not(.lists__chip--new)').all_inner_texts(); print('chips:', chips, '| open:', card.locator('.lists__chip.is-open').inner_text())
@@ -29,8 +29,8 @@ with sync_playwright() as p:
     pg.locator('.toast').get_by_role('button', name='Undo').click(); pg.wait_for_timeout(300); print('undo:', st(pg, f"return s.getModule('{mid}').data.lists.length"))
     # a vault List file with two lists → each in File from vault's picker; opens on that list
     st(pg, """const sp=s.getSpace('juniper'); const v=sp.modules.find(m=>m.type==='vault'); const data=structuredClone(v.data);
-      data.items.push({id:'lf-t', kind:'module', moduleType:'grocery', name:'Party lists', parentId:null, createdBy:'m-leo', createdAt:Date.now(), updatedAt:Date.now(),
-        data:{lists:[{id:'food', name:'Food', items:[{id:'i1', name:'Chips', bought:false}], history:[]},{id:'music', name:'Music', items:[{id:'i2', name:'Speaker', bought:false}], history:[]}]}});
+      data.items.push({id:'lf-t', kind:'module', moduleType:'todo', name:'Party lists', parentId:null, createdBy:'m-leo', createdAt:Date.now(), updatedAt:Date.now(),
+        data:{tasks:[], view:'lists', lists:[{id:'food', name:'Food', items:[{id:'i1', name:'Chips', bought:false}], history:[]},{id:'music', name:'Music', items:[{id:'i2', name:'Speaker', bought:false}], history:[]}]}});
       s.updateModuleData(v.id, data); s.setEditMode(true); return 1""")
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(900)
     pg.locator('#module-library .library-item', has_text='File from vault').click(); pg.wait_for_timeout(400)

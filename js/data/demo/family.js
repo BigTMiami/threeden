@@ -85,8 +85,9 @@ export function createFamily() {
         },
       },
       {
-        id: 'larsen-dishes', type: 'grocery', title: 'Who’s bringing what', span: 6, rows: 13,
+        id: 'larsen-dishes', type: 'todo', title: 'Who’s bringing what', span: 6, rows: 13,
         data: {
+          view: 'lists', tasks: [], // Tasks on its Lists view (the List module until Nov 20)
           items: [
             groceryItem('larsen-d-1', 'Turkey (22 lb)', 'meat', 'm-ingrid', { claimedBy: 'm-ingrid', note: 'Brining Tuesday night.' }),
             groceryItem('larsen-d-2', 'Grandma Ruth’s stuffing', 'other', 'm-ingrid', { claimedBy: 'm-ingrid', note: 'Recipe is in Photos & recipes.' }),

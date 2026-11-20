@@ -29,10 +29,10 @@
  * remembers which module you were on, per homepage and tab.
  */
 
+import { chatUnreadTotal } from '../modules/chat/chat-data.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { getCurrentSpace, getCurrentTabId, getCurrentUser, getModule, isEditMode, subscribe } from '../state/store.js';
-import { getConversation, unreadCount } from '../state/messages.js';
 import { getModuleType } from '../modules/registry.js';
 
 const PHONE = window.matchMedia('(max-width: 640px)');
@@ -190,9 +190,8 @@ function update() {
 /** How many messages in a page's chat you haven't read (shown on its chip). */
 function chatUnread(frame) {
   const module = getModule(frame.dataset.moduleId);
-  const conversation = module?.data?.conversationId ? getConversation(module.data.conversationId) : null;
   const me = getCurrentUser();
-  return conversation && me ? unreadCount(conversation, me.id) : 0;
+  return module && me ? chatUnreadTotal(module.data, me.id) : 0; // every channel (chat-data.js)
 }
 
 /** Open the swipe view at a module (a widget was tapped, mobile-widgets.js). */
