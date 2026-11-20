@@ -12,6 +12,8 @@
  * Join asks only for their name and a phone number (or email), makes a
  * quick account (js/onboarding/guest.js), and joins. They finish the
  * account (username, password) later, when they want a blog or the Feed.
+ * Signed out, the page shows one button, "Create an account and join", and
+ * no blog choice or "Not now" (Nov 20).
  */
 
 import { blogJoinCheckbox } from './blog-choice.js';
@@ -43,7 +45,8 @@ export function renderJoinPage(container, inviteCode) {
   }
 
   const count = getSpaceMembers(group).length;
-  const blogChoice = blogJoinCheckbox(me); // show your blog to the members? (blog-choice.js)
+  const signedOut = Boolean(me?.isGuest);
+  const blogChoice = signedOut ? { element: null, shown: () => true } : blogJoinCheckbox(me); // show your blog to the members? (blog-choice.js)
   replaceChildren(container, h('div', { class: 'settings-section join-page' },
     h('p', { class: 'join-page__kicker' }, 'You’re invited to join'),
     h('div', { class: 'join-page__group' },
@@ -75,6 +78,6 @@ export function renderJoinPage(container, inviteCode) {
           showToast(`Welcome to ${group.name}!`);
           goTo(spaceHref(group.id));
         },
-      }, icon('plus', 14), ` Join ${group.name}`),
-      h('a', { href: '#', class: 'button button--quiet' }, 'Not now'))));
+      }, icon('plus', 14), signedOut ? ' Create an account and join' : ` Join ${group.name}`),
+      signedOut ? null : h('a', { href: '#', class: 'button button--quiet' }, 'Not now'))));
 }

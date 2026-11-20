@@ -149,6 +149,14 @@ functions, no build step.
     asks about event sign-ups, and thank-yous don't read them. Old
     `event.signups`/`event.rides` data is just ignored. Post sign-ups
     (Board, Feed) are unchanged.
+  - Groups' public pages: Carousel's spaceKinds now include groups; the
+    library (renderModuleList(kind, { publicTab })) puts General feed and
+    Carousel first under "For your public page" when the tab being edited
+    is public (`isOnPublicTab`). test_group_public_feeds.
+  - Invite links signed out: join-page.js shows only "Create an account and
+    join" (no "Show my blog to the members", no Not now). The guest has a
+    username ('guest'), so blog-choice.js's hasBlog now also checks
+    !isGuest. test_join_link_signed_out.
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**

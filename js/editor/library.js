@@ -28,7 +28,7 @@ import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { moduleTypesFor, getModuleType } from '../modules/registry.js';
-import { addModule, getCurrentSpace, getMember, getCurrentUser, subscribe } from '../state/store.js';
+import { addModule, getCurrentSpace, getMember, getCurrentUser, subscribe, getTabs, getCurrentTabId } from '../state/store.js';
 import { removedFor, putBack } from '../state/module-backups.js';
 import { timeAgo } from '../utils/dates.js';
 import { openVaultFilePicker } from './vault-file-picker.js';
@@ -58,7 +58,7 @@ export function renderLibrary(container) {
           tab('removed', removed.length ? `Removed (${removed.length})` : 'Removed')),
         libraryTab === 'add' ? h('p', { class: 'library__hint' }, isPhone() ? 'Tap one to add it at the end of the page.' : 'Drag onto the page, or click to add at the end.') : null,
       ),
-      libraryTab === 'add' ? renderModuleList(kind) : renderRemoved(space, removed, draw),
+      libraryTab === 'add' ? renderModuleList(kind, { publicTab: isOnPublicTab(space) }) : renderRemoved(space, removed, draw),
     );
   }
   // Redrawn when edit mode opens, and after a module comes off or goes back.
@@ -150,10 +150,22 @@ let showRare = false;
 
 /**
  * The module list. A blog's feeds (photo & video, text, general) come
- * first under "Feeds", since they're what a blog is mostly for.
+ * first under "Feeds", since they're what a blog is mostly for. On a
+ * group's public tab, General feed and Carousel come first under "For
+ * your public page" (Nov 20).
  */
-function renderModuleList(kind) {
-  const all = moduleTypesFor(kind).filter((t) => !t.hiddenFromLibrary);
+function renderModuleList(kind, { publicTab = false } = {}) {
+  let all = moduleTypesFor(kind).filter((t) => !t.hiddenFromLibrary);
+  let publicSection = null;
+  if (publicTab) {
+    const picks = PUBLIC_PAGE.map((type) => all.find((t) => t.type === type)).filter(Boolean);
+    all = all.filter((t) => !PUBLIC_PAGE.includes(t.type));
+    publicSection = [
+      h('h3', { class: 'library__section' }, 'For your public page'),
+      h('p', { class: 'library__hint' }, 'Posts anyone visiting this tab can see. Members with permission post; they also show in members’ Feeds.'),
+      h('ul', { class: 'library__list library__list--public' }, picks.map(renderLibraryItem)),
+    ];
+  }
   const basicIds = BASICS[kind] ?? BASICS.group;
   // Modules few pages use go in their own menu at the very bottom.
   const isRare = (t) => LESS_COMMON.includes(t.type) && !basicIds.includes(t.type);
@@ -165,8 +177,9 @@ function renderModuleList(kind) {
   if (kind !== 'blog' || feeds.length === 0) {
     const basics = basicIds.map((type) => types.find((t) => t.type === type)).filter(Boolean);
     const rest = types.filter((t) => !basicIds.includes(t.type));
-    if (basics.length < 3 || rest.length === 0) return [h('ul', { class: 'library__list' }, types.map(renderLibraryItem)), rareMenu];
+    if (basics.length < 3 || rest.length === 0) return [publicSection, h('ul', { class: 'library__list' }, types.map(renderLibraryItem)), rareMenu];
     return [
+      publicSection,
       h('h3', { class: 'library__section' }, 'The basics'),
       h('ul', { class: 'library__list' }, basics.map(renderLibraryItem)),
       collapsible('library-more', 'More modules', rest, () => showAllModules, (on) => { showAllModules = on; }),
@@ -182,6 +195,15 @@ function renderModuleList(kind) {
     rareMenu,
   ];
 }
+
+/** Is the group tab being edited public (anyone with the link can see it)? */
+function isOnPublicTab(space) {
+  if (space?.kind !== 'group') return false;
+  return getTabs(space).find((t) => t.id === getCurrentTabId())?.visibility === 'public';
+}
+
+/** Offered first on a group's public tab (Nov 20): posts for the people who find the group. */
+const PUBLIC_PAGE = ['generalfeed', 'carousel'];
 
 /** A "More modules (N)" style button with its list under it, open or shut. */
 function collapsible(id, label, types, isOpen, setOpen) {

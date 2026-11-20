@@ -22,7 +22,8 @@ import { showToast } from '../ui/toast.js';
 import { blogShownIn, setBlogShownIn, shouldAskAboutBlog } from '../state/groups.js';
 import { getSpace, getMember } from '../state/store.js';
 
-const hasBlog = (member) => Boolean(member?.username) && member.features?.blog !== false;
+// The signed-out guest has a username ('guest') but no blog.
+const hasBlog = (member) => Boolean(member?.username) && !member.isGuest && member.features?.blog !== false;
 
 /** The one-time question after joining, or null. */
 export function renderBlogQuestion(space, me, redraw) {

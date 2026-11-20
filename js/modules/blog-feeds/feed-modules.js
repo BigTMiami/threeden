@@ -11,8 +11,9 @@
  *                        the same size (feed-layouts.js; the owner picks
  *                        under "Layout"). Tapping one opens the post over
  *                        the page (photo-viewer.js)
- *   Carousel (blogs)     the same posts as a General feed, one at a time,
- *                        moving on by itself (feed-carousel.js)
+ *   Carousel             the same posts as a General feed, one at a time,
+ *                        moving on by itself (feed-carousel.js). Blogs and,
+ *                        since Nov 20, groups (for a public tab's front page)
  *
  * The Photo & video feed was folded into the General feed on Nov 17 (old
  * ones became General feeds in a grid: js/state/upgrade.js), and the Photo
@@ -91,7 +92,7 @@ export const generalFeedModule = feedModule({
   description: 'Anything: words, photos and videos, any file from your vault, an event invitation.',
 });
 export const carouselModule = feedModule({
-  type: 'carousel', variant: 'carousel', label: 'Carousel', icon: 'slides', defaultSpan: 8, defaultRows: 14, spaceKinds: ['blog'],
+  type: 'carousel', variant: 'carousel', label: 'Carousel', icon: 'slides', defaultSpan: 8, defaultRows: 14,
   initialData: { autoplay: true, seconds: 5 },
   description: 'The same posts as a General feed, shown one at a time like a slideshow.',
 });
