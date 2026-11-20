@@ -161,6 +161,14 @@ functions, no build step.
     now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
     owned by them, not just a username. New accounts have none until they
     say yes on the Blog tab. test_blog_question_new_account.
+  - Joined-from-link tour (js/onboarding/joined-tour.js, syncJoinedTour()
+    in main.js after each draw): for an account under an hour old whose
+    onboarding.source is 'group' and that's in that group. Stages in
+    onboarding.joinedTour { stage: wait → next → home → done, since, step };
+    NEXT_STEP_DELAY_MS = 15000. Outlines (`.tour-spot--steady`) are
+    re-applied every 500 ms while a card is up, since bars and grids get
+    redrawn; modules are found by data-module-id or, on phones,
+    data-widget-id. test_joined_tour (desktop and phone; ~1 minute).
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
