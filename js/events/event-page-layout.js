@@ -37,8 +37,6 @@ export const SECTION_LABELS = {
   about: 'About',
   skips: 'Skipped dates',
   after: 'After the event',
-  signups: 'Sign-ups',
-  rides: 'Rides',
   guests: 'Guests',
   bring: 'Bring a friend',
   notes: 'Meeting notes',

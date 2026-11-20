@@ -31,7 +31,6 @@ function thankable(event, meId) {
   const people = [];
   const add = (id, why) => { if (!id || seen.has(id) || !getMember(id)) return; seen.add(id); people.push({ id, why }); };
   for (const id of hostIdsOf(event)) add(id, id === event.createdBy ? 'host' : 'co-host');
-  for (const slot of event.signups ?? []) for (const id of slot.memberIds ?? []) add(id, slot.label.toLowerCase());
   for (const [id, answer] of Object.entries(event.rsvps ?? {})) if (answer === 'going') add(id, 'went');
   return people;
 }

@@ -44,7 +44,6 @@ import { VISIBILITY, isMultiDay, applyRsvp, colorValue, rsvpOf, hostIdsOf, isFul
 import { repeatLabel } from './event-series.js';
 import { todayKey, addDays } from '../utils/dates.js';
 import { editInPlace } from '../ui/edit-in-place.js';
-import { renderRides } from './event-rides.js';
 import { choiceMenu } from '../ui/choice-menu.js';
 import { availabilityChip } from '../ui/availability-chip.js';
 import { requestModuleFocus } from '../editor/module-context.js';
@@ -52,7 +51,7 @@ import { openModulePage, spaceHref, goBack, backLabel, goTo } from '../router.js
 import { rsvpButtons, rsvpSummary, guestList } from './rsvp.js';
 import { whenLabel, mapLink, eventHref, renderTimePoll, areaLabel, directionsButton } from './event-details.js';
 import {
-  renderAfterEvent, renderSkips, renderBringFriend, renderSignups, renderMeetingNotes, friendCodeOwner,
+  renderAfterEvent, renderSkips, renderBringFriend, renderMeetingNotes, friendCodeOwner,
 } from './event-extras.js';
 import { setPageMeta } from '../ui/page-meta.js';
 import { eventCoverBanner, hasCover, coverPicker } from './event-cover.js';
@@ -179,8 +178,6 @@ export function renderEventPage(container, eventId, friendCode = null) {
       h('p', { class: 'event-page__notes' }, renderText(event.notes))) : null,
     skips: renderSkips(event, me, redraw),
     after: renderAfterEvent(found, me, redraw),
-    signups: renderSignups(event, me, canEdit, redraw),
-    rides: renderRides(event, me, redraw),
     guests: h('section', { class: 'event-page__guests' },
       h('h2', { class: 'event-page__section-title' }, 'Guests'),
       guestList(event, getMember)),

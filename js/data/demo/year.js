@@ -350,11 +350,6 @@ export function createYearDemo() {
         ...evBase, id: `${spaceId}-special`, title: specialTitle, date: daysFromToday(3 + (gid % 16)), time: tags.includes('outdoors') ? '10:00' : '18:00', endTime: tags.includes('outdoors') ? '12:30' : '21:00',
         location: `${AREA_NAMES[area]}`, tags, notes: specialNotes, color: 'purple', capacity: kind === 'club' && gid % 3 === 0 ? 30 : null,
         rsvps: specialRsvps, attendeeIds: Object.keys(specialRsvps).filter((id) => specialRsvps[id] === 'going'), createdAt: ago(6 + (gid % 5)),
-        ...(kind === 'organizing' ? { signups: [
-          { id: `${spaceId}-es1`, label: 'Set up', spots: 3, memberIds: several(70, 2) },
-          { id: `${spaceId}-es2`, label: 'Bring snacks', spots: 2, memberIds: several(71, 1) },
-          { id: `${spaceId}-es3`, label: 'Clean up', spots: 3, memberIds: [] },
-        ] } : {}),
       };
       calendar.data.events = [...(calendar.data.events ?? []), ...past, next, special];
       eventIds.push(next.id, special.id);

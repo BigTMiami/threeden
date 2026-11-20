@@ -54,8 +54,6 @@ export function createMutualAid() {
               attendeeIds: ['m-grace', 'm-leo'], rsvps: { 'm-grace': 'going', 'm-leo': 'going', 'm-theo': 'maybe' },
               // Saturdays before the sample data starts (js/events/regulars.js): both are regulars.
               pastVisits: { 'm-grace': 14, 'm-leo': 5 },
-              // Rides (js/events/event-rides.js): Theo drives, Iris needs one.
-              rides: { drivers: { 'm-theo': 3 }, riders: { 'm-iris': null } },
             },
             // Last weekend's cleanup, already over: Leo went, so its page asks him for a recap (js/events/event-recap.js).
             {

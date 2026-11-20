@@ -12,11 +12,8 @@ with sync_playwright() as p:
     g=pg.locator('.event-page__guests'); print('67 friends line:', g.locator('.guest-list__friends').inner_text() if g.locator('.guest-list__friends').count() else None)
     print('   going order:', g.locator('dd').first.locator('.guest-list__name').all_inner_texts(), '| regulars:', g.locator('.guest-list__regular').count())
     print('71 skips title:', pg.locator('.event-page__skips h2').inner_text())
-    r=pg.locator('.event-page__rides'); print('72 rides:', r.locator('.event-rides__row').all_inner_texts())
-    r.get_by_role('button', name='Ride with Theo').click(); pg.wait_for_timeout(300)
-    print('   after ride:', pg.locator('.event-page__rides .event-rides__row').first.inner_text(), '|', store(pg,"const e=s.getSpace('mutualaid').modules.flatMap(m=>m.data?.events||[]).find(e=>e.id==='aid-ev-1'); return JSON.stringify(e.rides)"))
-    pg.locator('.event-page__rides').get_by_role('button', name='Not riding').click(); pg.wait_for_timeout(200)
-    pg.screenshot(path='test-output/event-rides.png', full_page=True)
+    # 72 Rides were removed Nov 20; so were event sign-ups
+    print('72 no rides or sign-ups:', pg.locator('.event-page__rides, .event-page__signups').count() == 0)
     # 68 thanks after an event Leo went to (find a past event he went to)
     eid=store(pg,"const me=s.getCurrentUser().id; const t=new Date().toISOString().slice(0,10); for(const sp of s.getSpaces()) for(const m of sp.modules) for(const e of (m.data?.events||[])) if((e.endDate||e.date)<t && (e.rsvps?.[me]==='going'||e.createdBy===me) && e.repeat!=='weekly') return e.id; return null")
     print('68 past event:', eid)

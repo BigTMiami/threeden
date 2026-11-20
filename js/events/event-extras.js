@@ -11,18 +11,18 @@
  *                        being counted for a week you'll miss  (event.skips)
  *   renderBringFriend    A link that lets one friend see the event and RSVP as your
  *                        guest  (event.friendCodes = { code: memberId })
- *   renderSignups        A sign-up sheet: who's bringing what, or volunteer shifts,
- *                        each with a number of spots  (event.signups)
  *   renderMeetingNotes   Notes for each meeting of a group's event, kept by date
  *                        (event.minutes = { 'YYYY-MM-DD': { text, by, at } })
  *   shareCardButton      A picture for Instagram, with the link (js/ui/share-card.js)
+ *
+ * (Nov 20: event pages no longer have Sign-ups or Rides; a Board or Feed post
+ * can still carry sign-ups, and groups have the Shifts module.)
  *
  *   friendCodeOwner(event, code) → the member whose guest link this is, or null
  */
 
 import { h, replaceChildren, makeId } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { avatarStack } from '../ui/avatar.js';
 import { isRegular, visitsOf, VISITS_TO_BE_A_REGULAR } from './regulars.js';
 import { renderSayThanks } from './event-thanks.js';
 import { showToast } from '../ui/toast.js';
@@ -178,56 +178,6 @@ export function renderBringFriend({ event, space }, me) {
   return h('section', { class: 'event-page__friend' },
     h('h2', { class: 'event-page__section-title' }, 'Bring a friend'),
     box);
-}
-
-// ─── Sign-up sheet ───────────────────────────────────────────────────────────
-
-export function renderSignups(event, me, canEdit, redraw) {
-  const signups = event.signups ?? [];
-  if (signups.length === 0 && !canEdit) return null;
-  const canSign = !me.isGuest;
-
-  const rows = signups.map((slot) => {
-    const taken = slot.memberIds ?? [];
-    const mine = taken.includes(me.id);
-    const full = taken.length >= slot.spots;
-    const people = taken.map(getMember).filter(Boolean);
-    return h('li', { class: 'event-signups__row' },
-      h('span', { class: 'event-signups__label' }, slot.label),
-      h('span', { class: 'event-details__muted' }, `${taken.length} of ${slot.spots}`),
-      people.length ? avatarStack(people, 22) : null,
-      canSign ? h('button', {
-        type: 'button', class: `button button--small${mine ? '' : ' button--primary'}`, disabled: full && !mine,
-        onClick: () => {
-          updateEvent(event.id, (e) => {
-            e.signups = (e.signups ?? []).map((s) => (s.id !== slot.id ? s
-              : { ...s, memberIds: mine ? s.memberIds.filter((id) => id !== me.id) : [...(s.memberIds ?? []), me.id] }));
-          });
-          showToast(mine ? `Took you off “${slot.label}”.` : `You signed up for “${slot.label}”.`);
-          redraw();
-        },
-      }, mine ? 'Drop out' : full ? 'Full' : 'Sign up') : null,
-      canEdit ? h('button', {
-        type: 'button', class: 'icon-button icon-button--subtle', 'aria-label': `Remove “${slot.label}”`,
-        onClick: () => { updateEvent(event.id, (e) => { e.signups = (e.signups ?? []).filter((s) => s.id !== slot.id); }); redraw(); },
-      }, icon('close', 14)) : null);
-  });
-
-  const label = h('input', { type: 'text', class: 'input input--compact', placeholder: 'e.g. Bring snacks, Set up chairs, 6–8pm shift', 'aria-label': 'What to sign up for', maxlength: '80' });
-  const spots = h('select', { class: 'input input--compact', 'aria-label': 'Spots' }, [1, 2, 3, 4, 5, 6, 8, 10, 15, 20].map((n) => h('option', { value: n, selected: n === 2 }, `${n} ${n === 1 ? 'spot' : 'spots'}`)));
-
-  return h('section', { class: 'event-page__signups' },
-    h('h2', { class: 'event-page__section-title' }, 'Sign-ups'),
-    signups.length ? h('ul', { class: 'event-signups' }, rows) : h('p', { class: 'event-details__muted' }, 'Add things for people to sign up for: who’s bringing what, or volunteer shifts.'),
-    canEdit ? h('form', {
-      class: 'form-row event-signups__add',
-      onSubmit: (submit) => {
-        submit.preventDefault();
-        if (!label.value.trim()) { label.focus(); return; }
-        updateEvent(event.id, (e) => { e.signups = [...(e.signups ?? []), { id: makeId('su'), label: label.value.trim(), spots: Number(spots.value), memberIds: [] }]; });
-        redraw();
-      },
-    }, label, spots, h('button', { type: 'submit', class: 'button button--small' }, 'Add')) : null);
 }
 
 // ─── Meeting notes ───────────────────────────────────────────────────────────

@@ -17,7 +17,6 @@
  *   rsvp          upcoming group events you can see and haven't answered (needsYou in dashboard-data.js)
  *   poll          open polls on announcements in the last two weeks that you haven't voted in
  *   task          group to-dos nobody has taken, due within two weeks or added in the last week
- *   signup        open sign-up slots on events you're going to (or hosting) in the next month
  *   postask       announcements asking who's coming or who'll bring what (js/ui/asks.js)
  *   announcement  announcements from the last week you haven't seen: reply in place
  * Dismissing one ("Not for me") hides it for you: member.dismissedAsks.
@@ -35,7 +34,7 @@ import { needsYou } from '../modules/dashboard/dashboard-data.js';
 import { normalizeTask, dueLabel } from '../modules/todo/todo-data.js';
 import { normalizePost as normalizeAnnouncement, hasSeen, createComment } from '../modules/announcements/announcements-data.js';
 import { isClosed, myVote, castVote } from '../utils/polls.js';
-import { applyRsvp, normalizeEvent, rsvpOf } from '../modules/calendar/calendar-data.js';
+import { applyRsvp, rsvpOf } from '../modules/calendar/calendar-data.js';
 import { updateEvent, findEvent } from '../state/events.js';
 import { rsvpButtons } from '../events/rsvp.js';
 import { eventHref } from '../events/event-details.js';
@@ -119,16 +118,6 @@ export function collectAsks(me) {
           if (soon || fresh) asks.push({ kind: 'task', key: `task:${task.id}`, space, module, task, urgency: task.due || addDays(today, 12) });
         }
       }
-      if (Array.isArray(data.events)) {
-        for (const raw of data.events) {
-          const event = normalizeEvent(raw);
-          if (!event.signups?.length || event.date < today || event.date > addDays(today, 30)) continue;
-          if (event.createdBy !== me.id && rsvpOf(event, me.id) !== 'going') continue;
-          if (event.signups.some((slot) => (slot.memberIds ?? []).includes(me.id))) continue;
-          const open = event.signups.filter((slot) => (slot.memberIds ?? []).length < slot.spots);
-          if (open.length) asks.push({ kind: 'signup', key: `signup:${event.id}`, space, module, event, slots: open, urgency: event.date });
-        }
-      }
     }
   }
   const hidden = dismissed(me);
@@ -208,19 +197,6 @@ function askRow(ask, me, redraw) {
           answered(`It’s yours: “${ask.task.text}”.`, () => updateModuleData(ask.module.id, before), redraw);
         },
       }, icon('hand2', 14), ' I’ll do it'));
-  }
-  if (ask.kind === 'signup') {
-    return row('hand2', [where, ' · ', h('a', { href: eventHref(ask.event.id) }, ask.event.title), ' needs:'],
-      ask.slots.slice(0, 3).map((slot) => h('button', {
-        type: 'button', class: 'chip needs__choice', title: `${(slot.memberIds ?? []).length} of ${slot.spots} taken`,
-        onClick: () => {
-          const before = eventSnapshot(ask.event.id);
-          updateEvent(ask.event.id, (e) => {
-            e.signups = e.signups.map((s) => (s.id === slot.id ? { ...s, memberIds: [...(s.memberIds ?? []), me.id] } : s));
-          });
-          answered(`You signed up for “${slot.label}”.`, () => restoreEvent(ask.event.id, before), redraw);
-        },
-      }, `${slot.label} (${slot.spots - (slot.memberIds ?? []).length} left)`)));
   }
   if (ask.kind === 'postask') {
     const when = ask.post.rsvp?.when;

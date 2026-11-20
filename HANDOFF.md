@@ -142,6 +142,13 @@ functions, no build step.
   - Event Share box (later, Nov 20): centered with rounded corners on every
     screen size (no more phone bottom sheet), "Send in 3den" → "Messages",
     Text and Email removed (css/events.css, js/events/event-share.js).
+  - Event pages lost **Sign-ups** and **Rides** (later, Nov 20):
+    js/events/event-rides.js and renderSignups are gone, the sections are
+    out of SECTION_LABELS (normalizePage drops them from saved layouts),
+    event bundles no longer add sign-ups, the Feed's "Needs you" no longer
+    asks about event sign-ups, and thank-yous don't read them. Old
+    `event.signups`/`event.rides` data is just ignored. Post sign-ups
+    (Board, Feed) are unchanged.
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**
