@@ -2,8 +2,9 @@
 /**
  * new-group-page.js — "Create a group" (#new-group).
  *
- * One page with every option (no steps): name, type, description, who can
- * see it and how people join, then a template. You become the group's
+ * One page with every option (no steps): name, type, description, a
+ * template, then who can see it and how people join (Nov 20: the template
+ * comes first, since picking one sets those two). You become the group's
  * owner. A template (a set of modules for a household, a band, a
  * newsroom…) or a blank slate can be changed in edit mode, and you add
  * people in Group settings → Members. Picking a template moves the access
@@ -108,13 +109,14 @@ export function renderNewGroupPage(container) {
       groupTypeField, groupTypeOptions,
       h('span', { class: 'settings-field__hint' }, 'What it is, in a word or two, like “Band” or “News outlet”. Shown with its name.')),
     field('Description (optional)', descriptionInput),
-    // Two separate choices: a band can be public but add its own members.
-    accessChoices(accessFor(DEFAULT_TEMPLATE), { prefix: 'new-' }),
     // A template decides the first modules; the full library is always there.
+    // It comes before the access choices (Nov 20), since picking one sets them.
     h('div', { class: 'settings-field' },
       h('span', { class: 'settings-field__label' }, 'Start from a template'),
       h('span', { class: 'settings-field__hint' }, 'Each one is just a starting set of modules. You can change everything later in edit mode: add, remove, and rearrange modules.'),
       templateChoices()),
+    // Two separate choices: a band can be public but add its own members.
+    accessChoices(accessFor(DEFAULT_TEMPLATE), { prefix: 'new-' }),
     error,
     h('div', { class: 'form-row' },
       h('button', { type: 'submit', class: 'button button--primary' }, 'Create group'),

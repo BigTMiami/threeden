@@ -16,7 +16,8 @@ with sync_playwright() as p:
     order=pg.evaluate("""(()=>{const f=document.querySelector('.new-group-form'); const pos=(el)=>el?[...f.querySelectorAll('*')].indexOf(el):-1;
       return {visibility: pos(f.querySelector('input[name=new-visibility]')), joining: pos(f.querySelector('input[name=new-joining]')), templates: pos(f.querySelector('.template-choices'))}})()""")
     print('order:', order)
-    if not (0 <= order['visibility'] < order['templates'] and 0 <= order['joining'] < order['templates']): errs.append('access choices should come before templates')
+    # Nov 20: templates first, then the access choices.
+    if not (0 <= order['templates'] < order['visibility'] < order['joining']): errs.append('templates should come before the access choices')
     shown=[t.split('\n')[0] for t in pg.locator('.template-choices:not(.template-choices--more) .template-choice strong').all_inner_texts()]
     print('first four:', shown, '| more hidden:', pg.locator('.template-choices--more').is_hidden())
     if shown!=['Friends and family','IRL community','Digital community','Business']: errs.append('the four broad templates')

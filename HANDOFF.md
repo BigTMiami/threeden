@@ -191,6 +191,9 @@ functions, no build step.
     disappearing-messages select and hides the bar unless it's on (then
     it just says so). The full page and Messages keep the setting.
     test_chat_card_no_timer.
+  - Create a group: the template picker now comes before Who can see it and
+    How people join (new-group-page.js); picking a template still sets them
+    until you touch them. test_new_group_order; test_group_setup updated.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
