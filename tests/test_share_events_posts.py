@@ -4,7 +4,7 @@ Calendar sharing, double-click, entry people, and posts with events and sign-ups
 1. Desktop: a single click on an empty day doesn't open the editor; a double-click does (month,
    week at the time clicked); double-clicking a day on the calendar card opens its add form on it.
 2. Entries have a People field (anyone, on your own calendar too); people added get it on their calendar.
-3. Share an event: "Send in 3den" invites the people it's sent to (on their calendar, with RSVP);
+3. Share an event: "Messages" (was "Send in 3den") invites the people it's sent to (on their calendar, with RSVP);
    "Add to a group's calendar" puts it on that group's calendar, its Upcoming events, and a
    member's Dashboard; taking it off works. Entries: Share → Add people, and Add to a group's calendar.
 4. Board: the composer has Event and Sign-ups; posting with an event puts it on the group's calendar
@@ -94,7 +94,13 @@ with sync_playwright() as p:
     # Send to a person: invited
     pg.evaluate(f"location.hash='#event-{eid}'"); pg.wait_for_timeout(700)
     pg.locator('.event-page').get_by_role('button', name='Share').first.click(); pg.wait_for_timeout(300)
-    pg.locator('.event-share').get_by_text('Send in 3den').click(); pg.wait_for_timeout(400)
+    sh = pg.locator('.event-share')
+    check(sh.get_by_text('Text message').count() == 0 and sh.get_by_text('Email', exact=True).count() == 0, 'no Text or Email in Share')
+    box, vp = sh.locator('.event-share__panel').bounding_box(), pg.viewport_size
+    check(abs((box['x'] + box['width'] / 2) - vp['width'] / 2) < 4 and abs((box['y'] + box['height'] / 2) - vp['height'] / 2) < 4, 'the Share box is centered on the screen')
+    check(sh.locator('.event-share__panel').evaluate("e => parseFloat(getComputedStyle(e).borderTopLeftRadius) >= 12 && parseFloat(getComputedStyle(e).borderBottomRightRadius) >= 12"), 'with rounded corners')
+    sh.locator('.event-share__panel').screenshot(path='test-output/out/event-share-box.png')
+    sh.get_by_text('Messages', exact=True).click(); pg.wait_for_timeout(400)
     dialog = pg.locator('.share-dialog, [role=dialog]').last
     first_person = dialog.locator('input[type=checkbox], [role=checkbox], .share-dialog__person').first
     if first_person.count():
@@ -103,7 +109,7 @@ with sync_playwright() as p:
         if send.count():
             send.first.click(); pg.wait_for_timeout(400)
     invited = st(pg, f"return ev.findEvent('{eid}').event.inviteeIds")
-    check(len(invited) >= 1, f'“Send in 3den” puts it on their calendar as an invitation ({invited})')
+    check(len(invited) >= 1, f'“Messages” puts it on their calendar as an invitation ({invited})')
 
     # entry share: add people, and a group
     did = entry['id']

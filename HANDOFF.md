@@ -139,6 +139,9 @@ functions, no build step.
     group calendars (`.calendar-sources__list--groups`), then **Select all**
     (disabled when everything's shown); the same in a group calendar's
     "Show my other calendars".
+  - Event Share box (later, Nov 20): centered with rounded corners on every
+    screen size (no more phone bottom sheet), "Send in 3den" → "Messages",
+    Text and Email removed (css/events.css, js/events/event-share.js).
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**
@@ -180,7 +183,7 @@ functions, no build step.
     attendeeIds, any calendar.
   - Sharing: `event.sharedGroupIds`; coHostedLinks includes them; Upcoming
     events in a group reads its calendar's linked items; myUpcoming and
-    canViewEvent count them. Send in 3den adds recipients to inviteeIds when
+    canViewEvent count them. Share → Messages (was Send in 3den) adds recipients to inviteeIds when
     `canEditEvent || visibility !== 'invite'`. Entries: openEntryShare.
   - Board composer: eventAttacher + askAttacher always (RSVP only with
     withAsks); post.eventId → renderEventStrip (card, page, Feed). Feed

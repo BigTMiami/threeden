@@ -3,18 +3,20 @@
  *
  *   Share “Porch Lights at the Backroom”            ×
  *   ┌──────────────────────────────────────────────┐
- *   │ ↗ Send in 3den       to friends, in Messages │
+ *   │ ↗ Messages           to friends, in 3den     │
  *   │ 🔗 Copy link                                  │
- *   │ 💬 Text message                               │  ← public events
- *   │ ✉ Email                                       │  ← public events
  *   │ 🖼 Share card for Instagram                   │  ← public events
  *   │ ⋯ More options        (the phone's own share sheet)
  *   └──────────────────────────────────────────────┘
  *   Anyone with a 3den account can open the link.
  *
+ * A rounded box in the middle of the screen, phones too (Nov 20: it was a
+ * bottom sheet on phones; "Send in 3den" became "Messages", and Text and
+ * Email went: Copy link and More options cover those).
+ *
  * Who it can go to follows who can see the event (canViewEvent):
  *   public       anyone: friends, groupmates, people you've messaged, and
- *                outside 3den by text, email, or Instagram
+ *                outside 3den by link, Instagram, or the device's share menu
  *   group        people who can already see it (the group, anyone invited)
  *   invite only  the host can send it to anyone, which invites them;
  *                guests can send it to others on the guest list
@@ -80,7 +82,6 @@ export function openEventShare(found, me) {
   const isPublic = event.visibility === 'public';
   const url = linkTo(eventHref(event.id));
   const blurb = [event.title, whenLabel(event), event.location].filter(Boolean).join(' · ');
-  const message = `${blurb}\n${url}`;
   const previousFocus = document.activeElement;
   const isHostOfPrivate = event.visibility === 'invite' && canEditEvent(event, me.id);
   // Sending puts it on their calendars as an invitation, when you may invite.
@@ -145,11 +146,9 @@ export function openEventShare(found, me) {
         h('h2', { class: 'sub-viewer__title' }, icon('share', 18), ` Share “${event.title}”`),
         h('button', { type: 'button', class: 'icon-button', 'aria-label': 'Close', onClick: () => close() }, icon('close', 18))),
       h('ul', { class: 'event-share__options' },
-        option('send', 'Send in 3den', isHostOfPrivate ? 'To anyone. Sending it invites them.' : mayInvite ? 'Their RSVP card arrives in Messages, and it goes on their calendar' : 'To people who can see it, in Messages', sendInApp),
+        option('send', 'Messages', isHostOfPrivate ? 'To anyone. Sending it invites them.' : mayInvite ? 'Their RSVP card arrives in Messages, and it goes on their calendar' : 'To people who can see it, in Messages', sendInApp),
         groupChoices(found, me).length && maySharetoGroups(found, me) ? option('calendar', 'Add to a group’s calendar', 'It shows on the group’s calendar, its Upcoming events, and members’ Dashboards', () => showGroups()) : null,
         option('link', 'Copy link', null, copyLink),
-        isPublic ? option('chat', 'Text message', null, null, `sms:?&body=${encodeURIComponent(message)}`) : null,
-        isPublic ? option('mail', 'Email', null, null, `mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(message)}`) : null,
         isPublic ? option('image', 'Share card for Instagram', 'A picture for a story or post, with the link', instagram) : null,
         isPublic && typeof navigator.share === 'function' ? option('more', 'More options', 'Your device’s share menu', nativeShare) : null),
       h('p', { class: 'event-share__note' }, whoCanOpen(found),
