@@ -179,6 +179,18 @@ functions, no build step.
     isFolder }) in vault-parts.js, on the card's container and the page's
     grid; rows carry data-item-id so a drop on a folder goes into it.
     test_tour_resume_and_vault_drop.
+  - Tabs in edit mode: makeTabDraggable() in space-header.js (pointer
+    events; link.draggable = false so the browser's own link drag doesn't
+    swallow the pointer; the drop spot is row-aware since tabs wrap on
+    phones) → moveTabTo(tabId, index) in store.js (Home stays first; returns
+    whether it moved). Clicking the open tab renames it; the rename box's
+    blur saves on a timeout and only if the box is still on the page (a
+    redraw draws a fresh one). The old List module is hiddenFromLibrary.
+    test_tab_drag_rename (desktop and phone).
+  - Chat module card: createThreadView({ compact: true }) leaves out the
+    disappearing-messages select and hides the bar unless it's on (then
+    it just says so). The full page and Messages keep the setting.
+    test_chat_card_no_timer.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

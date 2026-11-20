@@ -45,7 +45,7 @@ import { showToast } from '../ui/toast.js';
 import { groupInitials } from '../utils/initials.js';
 import {
   getCurrentSpace, getCurrentUser, getMember, getSpaceMembers, isEditMode, setEditMode, renameCurrentSpace, resetToDemo, subscribe, isGuestBrowsing,
-  getTabs, getCurrentTabId, addTab, renameTab, moveTab, removeTab, restoreTab, setTabVisibility, HOME_TAB_ID,
+  getTabs, getCurrentTabId, addTab, renameTab, moveTab, moveTabTo, removeTab, restoreTab, setTabVisibility, HOME_TAB_ID,
   isVisitingGroup, } from '../state/store.js';
 import { hasRequestedToJoin, joinOrRequest, declineJoinRequest, acceptInvite, renameSpace, setSpaceDescription } from '../state/groups.js';
 import { editInPlace } from '../ui/edit-in-place.js';
@@ -343,6 +343,75 @@ function renderMuteButton(space, me) {
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
+/**
+ * Drag a tab along the strip to move it (edit mode, Nov 20). It follows the
+ * pointer; the tab it would land before or after is marked; letting go
+ * moves it there (moveTabTo; Home stays first). A press that doesn't move
+ * is a click. Mouse, pen, and touch alike.
+ */
+function makeTabDraggable(link, tabId) {
+  // A link is draggable by the browser itself (to the desktop, another tab), which swallows the pointer: not here.
+  link.draggable = false;
+  link.addEventListener('dragstart', (event) => event.preventDefault());
+  link.addEventListener('pointerdown', (down) => {
+    if (down.button !== 0 || renamingTabId) return;
+    const strip = link.closest('.space-tabs');
+    if (!strip) return;
+    const startX = down.clientX;
+    const startY = down.clientY;
+    let dragging = false;
+    let target = null; // { index, el, side }
+    const others = () => [...strip.querySelectorAll('.space-tabs__tab[data-tab-id]')].filter((el) => el !== link);
+    const clearMarks = () => strip.querySelectorAll('.is-drop-before, .is-drop-after').forEach((el) => el.classList.remove('is-drop-before', 'is-drop-after'));
+    const onMove = (move) => {
+      const dx = move.clientX - startX;
+      if (!dragging) {
+        if (Math.abs(dx) < 6) return;
+        dragging = true;
+        try { link.setPointerCapture(down.pointerId); } catch { /* fine */ }
+        link.classList.add('is-dragging');
+        strip.classList.add('is-reordering');
+      }
+      move.preventDefault();
+      link.style.transform = `translate(${dx}px, ${move.clientY - startY}px)`;
+      // Where would it land? Before the first tab on a lower row, or on the
+      // pointer's row with its middle right of the pointer (tabs wrap on phones).
+      const tabs = others();
+      let index = tabs.length;
+      for (let i = 0; i < tabs.length; i += 1) {
+        const box = tabs[i].getBoundingClientRect();
+        const below = move.clientY < box.top;
+        const sameRow = move.clientY >= box.top && move.clientY <= box.bottom;
+        if (below || (sameRow && move.clientX < box.left + box.width / 2)) { index = i; break; }
+      }
+      index = Math.max(1, index); // never before the first tab
+      clearMarks();
+      const before = tabs[index];
+      if (before) before.classList.add('is-drop-before'); else tabs[tabs.length - 1]?.classList.add('is-drop-after');
+      target = { index };
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      if (!dragging) return;
+      // The click that follows a drag isn't a click.
+      link.addEventListener('click', (click) => { click.preventDefault(); click.stopImmediatePropagation(); }, { capture: true, once: true });
+      link.classList.remove('is-dragging');
+      link.style.transform = '';
+      strip.classList.remove('is-reordering');
+      clearMarks();
+      if (target) {
+        const name = link.textContent?.trim();
+        if (moveTabTo(tabId, target.index)) showToast(`Moved “${name}”.`);
+      }
+    };
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  });
+}
+
 /** Which tab is being renamed (kept across redraws). */
 let renamingTabId = null;
 
@@ -355,7 +424,7 @@ function renderTabs(space, canEditTabs) {
 
   const tabLink = (tab) => {
     const isCurrent = tab.id === currentId;
-    if (isCurrent && renamingTabId === tab.id) {
+    if (canEditTabs && renamingTabId === tab.id) {
       // Finish once: Enter or leaving saves, Escape cancels. (The redraw that
       // removes the box blurs it; without the guard that saved and redrew again.)
       let finished = false;
@@ -374,20 +443,30 @@ function renderTabs(space, canEditTabs) {
           if (event.key === 'Enter') { event.preventDefault(); finish(true); }
           if (event.key === 'Escape') { event.preventDefault(); finish(false); }
         },
-        onBlur: () => finish(true),
+        // Later, not inside the blur: a redraw that removes the box also blurs it.
+        onBlur: () => setTimeout(() => { if (input.isConnected) finish(true); }, 0), // gone: a redraw drew a fresh box, which carries on
       });
       requestAnimationFrame(() => { input.focus(); input.select(); });
       return input;
     }
     // Members see a globe on the tabs anyone can see.
     const showGlobe = space.kind === 'group' && tab.visibility === 'public' && isPublicGroup(space) && !isVisitingGroup(space);
-    return h('a', {
+    // In edit mode (Nov 20): click the open tab (or double-click any) to rename it,
+    // and drag any tab but the first to move it.
+    const movable = canEditTabs && tab.id !== HOME_TAB_ID;
+    const link = h('a', {
       href: spaceHref(space.id, tab.id),
-      class: `space-tabs__tab${isCurrent ? ' is-active' : ''}`,
+      class: `space-tabs__tab${isCurrent ? ' is-active' : ''}${movable ? ' is-movable' : ''}`,
       'aria-current': isCurrent ? 'page' : null,
-      title: showGlobe ? 'Public: anyone with the link can see this tab' : null,
+      'data-tab-id': tab.id,
+      title: canEditTabs
+        ? (movable ? 'Drag to move · click to open, then click again to rename' : 'Click to rename (the first tab stays first)')
+        : showGlobe ? 'Public: anyone with the link can see this tab' : null,
+      onClick: canEditTabs && isCurrent ? (event) => { event.preventDefault(); renamingTabId = tab.id; renderSpaceHeader(); } : null,
       onDblclick: canEditTabs ? (event) => { event.preventDefault(); renamingTabId = tab.id; renderSpaceHeader(); } : null,
     }, showGlobe ? h('span', { class: 'space-tabs__globe', 'aria-label': 'Public' }, icon('globe', 12)) : null, tab.name);
+    if (movable) makeTabDraggable(link, tab.id);
+    return link;
   };
 
   // In a public group: make the current tab public, or members-only again.

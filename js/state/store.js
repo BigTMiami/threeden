@@ -886,6 +886,21 @@ export function moveTab(tabId, direction) {
   emit('space');
 }
 
+/** Put a tab at a position (dragging tabs in edit mode, Nov 20). Home always stays first. → true if it moved */
+export function moveTabTo(tabId, index) {
+  const space = getCurrentSpace();
+  const tabs = [...getTabs(space)];
+  const from = tabs.findIndex((t) => t.id === tabId);
+  if (from < 1) return false;
+  const [tab] = tabs.splice(from, 1);
+  tabs.splice(Math.max(1, Math.min(index, tabs.length)), 0, tab);
+  if (tabs.every((t, i) => t.id === getTabs(space)[i]?.id)) return false;
+  space.tabs = tabs;
+  persist();
+  emit('space');
+  return true;
+}
+
 /**
  * Remove a tab. Its modules move to the Home tab, so nothing is lost.
  * Returns what restoreTab() needs to undo it.
