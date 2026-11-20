@@ -157,6 +157,13 @@ functions, no build step.
     join" (no "Show my blog to the members", no Not now). The guest has a
     username ('guest'), so blog-choice.js's hasBlog now also checks
     !isGuest. test_join_link_signed_out.
+  - The blog question (header bar, join-page checkbox, settings section)
+    now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
+    owned by them, not just a username. New accounts have none until they
+    say yes on the Blog tab. test_blog_question_new_account.
+  - Uncommitted, not mine: at 15:23–15:24 someone edited
+    js/onboarding/guest.js and js/groups/join-page.js to drop the quick
+    sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**

@@ -339,9 +339,19 @@ export function setBlogShownIn(spaceId, memberId, shown) {
   }, 'account', 'space', 'layout');
 }
 
+/**
+ * Has this person set up a blog yet? A new account has a username but no
+ * blog until they say yes on the Blog tab (Nov 20: someone who just made an
+ * account from an invite link isn't asked about a blog they don't have).
+ */
+export function hasSetUpBlog(member) {
+  if (!member?.username || member.isGuest || member.features?.blog === false) return false;
+  return getState().spaces.some((space) => space.kind === 'blog' && space.memberIds[0] === member.id);
+}
+
 /** Should the group ask whether to show your blog? (Joined lately, haven't said, have a blog.) */
 export function shouldAskAboutBlog(space, member) {
-  if (!space || space.kind !== 'group' || !member?.username || member.features?.blog === false) return false;
+  if (!space || space.kind !== 'group' || !hasSetUpBlog(member)) return false;
   if ((member.blogChosenIn ?? []).includes(space.id)) return false;
   return (space.joinedAt?.[member.id] ?? 0) >= BLOG_CHOICE_SINCE;
 }
