@@ -4097,6 +4097,7 @@
 /* About (js/modules/blog/about-module.js) */
 .about-block { display: flex; flex-direction: column; gap: 10px; height: 100%; overflow-y: auto; }
 .about-block__who { display: flex; gap: 12px; align-items: center; }
+.about-block__badge { width: 64px; height: 64px; flex: none; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft, #E3EAF8); color: var(--accent, #2A56B8); }
 .about-block__name { margin: 0; font-size: var(--font-size-large); }
 .about-block__handle { color: var(--color-text-muted); font-size: var(--font-size-small); }
 .about-block__headline { margin: 2px 0 0; color: var(--color-text-muted); }

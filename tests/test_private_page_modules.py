@@ -69,7 +69,8 @@ with sync_playwright() as p:
     for toggle in lib.locator('.library__more').all():
         if toggle.get_attribute('aria-expanded') == 'false': toggle.click()
     pubnames = [t.split('\n')[0].strip() for t in lib.locator('.library-item').all_inner_texts()]
-    check(all(n in pubnames for n in GONE), f'Public tab: still offers them ({[n for n in GONE if n not in pubnames]})')
+    PUBLIC_ONLY = ['Upcoming events', 'Articles', 'General feed', 'Text feed', 'Carousel']
+    check(all(n in pubnames for n in PUBLIC_ONLY), f'Public tab: offers the public-page modules ({[n for n in PUBLIC_ONLY if n not in pubnames]})')
 
     # A group without a public page: Home is private too.
     st(pg, 's.setEditMode(false)')

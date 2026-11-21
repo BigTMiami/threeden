@@ -232,6 +232,19 @@ functions, no build step.
     into NEW_MENU_ENTRIES (seven on top). test_private_page_modules;
     test_group_setup_flow, test_vault_new_menu, test_file_from_vault, and
     test_group_public_feeds updated.
+  - Module review (latest Nov 20): Leo checked every module against four
+    pages on https://claude.ai/artifact/CZcGaoMofgMdeSpcrgkLzs (slug
+    5da20f9c-f690-4e73-948b-c46e59376fd0; his checks are db docs
+    picks/<type> {groupPublic, groupPrivate, homepage, blog, note}; source
+    in /home/claude/module-matrix). module-lists.js now has OFFERED_ON
+    (replacing NOT_ON_PRIVATE_PAGE) and pageKey(kind, {publicTab}); types
+    not in it fall back to spaceKinds. About and gallery got spaceKinds
+    ['blog','group']; About renders renderForGroup on a group (editDetails
+    edits). createGroup setup public tab: generalfeed 8×14 + events 4×14.
+    The library's flat-list fallback keeps the basics order.
+    test_module_offers; test_file_from_vault, test_imports_library_
+    notifications, test_tab_drag_rename, test_simpler_modules_and_themes,
+    test_group_setup_flow, and test_private_page_modules updated.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

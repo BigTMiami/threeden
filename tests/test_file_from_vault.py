@@ -56,7 +56,7 @@ with sync_playwright() as p:
     pg.evaluate("location.hash='#space-me'"); pg.wait_for_timeout(800)
     st(pg, 's.setEditMode(true)'); pg.wait_for_timeout(400)
     basics = [t.strip() for t in pg.locator('#module-library .library__list').first.locator('.library-item__label').all_inner_texts()]
-    want = ['Dashboard', 'Calendar', 'Upcoming events', 'Tasks', 'Vault', 'File from vault', 'Budget', 'Gantt chart', 'Recent groups']
+    want = ['Dashboard', 'Calendar', 'Tasks', 'Vault', 'File from vault', 'Budget', 'Gantt chart', 'Recent groups']  # Nov 20 review: no Upcoming events or Chat
     check(basics == want, f'My Homepage basics in order ({basics})')
     names = library_names(pg)
     check(not [n for n in names if n in GONE + ['Board', 'Announcements', 'Forum', 'Submissions']], f'no Announcements, Forum, Submissions, Document, Spreadsheet, Presentation, or Canvas ({[n for n in names if n in GONE + ["Announcements", "Forum", "Submissions"]]})')

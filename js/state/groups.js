@@ -44,7 +44,8 @@ export function createGroup({ name, description = '', visibility = 'private', jo
     if (visibility === 'public') {
       tabs = [{ id: 'home', name: 'Public', visibility: 'public' }, { id: 'private', name: 'Private' }];
       const starter = (type, title, span, rows) => ({ id: makeId('mod'), type, title, span, rows, data: getModuleType(type).createInitialData(getState()) });
-      modules = [starter('upnext', 'Up next', 8, 14), starter('events', 'Upcoming events', 4, 14)];
+      // General feed big, Upcoming events beside it: Up next is members-only (Nov 20 module review).
+      modules = [starter('generalfeed', 'General feed', 8, 14), starter('events', 'Upcoming events', 4, 14)];
     }
   } else if (twoTabs) {
     tabs = [{ id: 'home', name: 'Private' }, { id: 'public', name: 'Public', visibility: 'public' }];

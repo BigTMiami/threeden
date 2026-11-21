@@ -19,7 +19,7 @@ with sync_playwright() as p:
     rare=lib.locator('.library__more', has_text='Less common')
     rare.click(); pg.wait_for_timeout(150)
     names=lib.locator('#library-rare .library-item__label').all_inner_texts(); print('less common:', names)
-    if 'Gantt chart' not in names or 'Relationship map' not in names: errs.append('gantt and relationship map belong in Less common')
+    if 'Gantt chart' not in names or 'Relationship map' in names: errs.append('gantt belongs in Less common; relationship map is offered nowhere (Nov 20)')
     lib.locator('.library__more', has_text='More modules').click(); pg.wait_for_timeout(150)
     more=lib.locator('#library-more .library-item__label').all_inner_texts(); print('more:', more)
     if 'Gantt chart' in more or 'Kanban' in more + names: errs.append('wrong menu')

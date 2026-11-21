@@ -82,6 +82,6 @@ with sync_playwright() as p:
     for t in pg.locator('#module-library .library__more').all():
         if t.get_attribute('aria-expanded') == 'false': t.click()
     labels = [x.strip() for x in pg.locator('#module-library .library-item__label').all_inner_texts()]
-    check('List' not in labels and 'Tasks' in labels, f'the module list has no “List (Soon)” ({len(labels)} modules)')
+    check('List' not in labels and 'Calendar' in labels, f'the module list has no “List (Soon)” ({len(labels)} modules)')
     b.close()
 print('PASS' if not fails else f'FAILED: {fails}')

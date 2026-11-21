@@ -1,5 +1,5 @@
 """Nov 20: after Create a group. No public page: one tab, "Home". Public page:
-"Public" (Up next big, Upcoming events to its right) and "Private". Then
+"Public" (General feed big, Upcoming events to its right) and "Private". Then
 "Set up your group's page" (or "...Private page. Only members can see this."):
 pick modules (Up next and Board start picked); they go on the members' tab;
 then cards show how to move (and on desktop resize) them, in edit mode."""
@@ -71,7 +71,7 @@ for width, label in [(1300, 'desktop'), (390, 'phone')]:
     g = group(pg, 'Porch Band')
     check(g['tabs'] == [['home', 'Public', 'public'], ['private', 'Private', '']], f'{label}: two tabs, “Public” and “Private” ({g["tabs"]})')
     pub = [m for m in g['mods'] if m[1] == 'home']
-    check([m[0] for m in pub] == ['upnext', 'events'] and pub[0][2] == 8 and pub[1][2] == 4, f'{label}: Public starts with Up next big and Upcoming events to its right ({pub})')
+    check([m[0] for m in pub] == ['generalfeed', 'events'] and pub[0][2] == 8 and pub[1][2] == 4, f'{label}: Public starts with General feed big and Upcoming events to its right ({pub})')
     sheet = pg.locator('.group-setup')
     check(sheet.locator('.group-setup__title').inner_text() == 'Set up your group’s Private page' and sheet.get_by_text('Only members can see this.').count() == 1, f'{label}: “Set up your group’s Private page. Only members can see this.”')
     sheet.get_by_role('button', name='Add to my page').click(); pg.wait_for_timeout(900)

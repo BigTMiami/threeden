@@ -172,7 +172,7 @@ function renderModuleList(kind, { publicTab = false } = {}) {
   if (kind !== 'blog' || feeds.length === 0) {
     const basics = basicIds.map((type) => types.find((t) => t.type === type)).filter(Boolean);
     const rest = types.filter((t) => !basicIds.includes(t.type));
-    if (basics.length < 3 || rest.length === 0) return [publicSection, h('ul', { class: 'library__list' }, types.map(renderLibraryItem)), rareMenu];
+    if (basics.length < 3 || rest.length === 0) return [publicSection, h('ul', { class: 'library__list' }, [...basics, ...rest].map(renderLibraryItem)), rareMenu];
     return [
       publicSection,
       h('h3', { class: 'library__section' }, 'The basics'),
