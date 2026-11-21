@@ -47,6 +47,11 @@ def fresh(b, w=1300, h=900):
 
 def sign_up(pg, box, name, submit):
     user = f"{name.split()[0].lower()}{RUN}{random.randint(10, 99)}"
+    quick = box.get_by_label('Phone number or email')
+    if quick.count():  # the quick sign-up (name, and a phone number or email), where a link still asks for it
+        box.get_by_label('Your name').fill(name); quick.fill(f'{user}@example.com')
+        box.locator('button.button--primary').first.click(); pg.wait_for_timeout(1300)
+        return
     for label, value in [('Your name', name), ('Name', name), ('Username', user), ('Email', f'{user}@example.com'), ('Password', 'correct-horse-battery')]:
         if box.get_by_label(label, exact=True).count(): box.get_by_label(label, exact=True).first.fill(value)
     box.get_by_role('button', name=submit, exact=True).click(); pg.wait_for_timeout(1300)
@@ -63,6 +68,10 @@ def through_home(pg, label, lane_e=False):
 def create_group(pg, name):
     form = pg.locator('.new-group-form')
     form.get_by_label('Group name').fill(name)
+    # A quick account (where a link still makes one) finishes its account on this same form.
+    for label, value in [('Username', f'grp{RUN}{random.randint(100, 999)}'), ('Password', 'correct-horse-battery')]:
+        box = form.get_by_label(label, exact=True)
+        if box.count() and box.first.is_visible(): box.first.fill(value)
     btn = form.get_by_role('button', name='Create group'); btn.evaluate("e=>e.scrollIntoView({block:'start'})"); pg.wait_for_timeout(300)
     btn.click(); pg.wait_for_timeout(1200)
 
@@ -139,12 +148,7 @@ with sync_playwright() as p:
     ctx, pg, errs = fresh(b)
     pg.locator('.auth__preview-path[data-preview="event"]').click(); pg.wait_for_timeout(800)
     pg.locator('main .rsvp__button--going').first.click(); pg.wait_for_timeout(600)
-    sheet = pg.locator('.signup-sheet')
-    quick = sheet.get_by_label('Phone number or email')
-    if quick.count():  # the quick sign-up, if that's what the event asks for
-        sheet.get_by_label('Your name').fill('Bea Tour'); quick.fill(f'bea{RUN}@example.com'); sheet.locator('button[type=submit]').last.click(); pg.wait_for_timeout(1300)
-    else:
-        sign_up(pg, sheet, 'Bea Tour', 'Create account and RSVP')
+    sign_up(pg, pg.locator('.signup-sheet'), 'Bea Tour', 'Create account and RSVP')
     check(step(pg) == 'B1' and title(pg) == 'You’re going!' and any('rsvp' in s for s in spotted(pg)), f'B: B1 You’re going!, the answer outlined ({step(pg)})')
     press(pg, 'Next')
     check(step(pg) == 'B2' and any('event-ics-button' in s for s in spotted(pg)), 'B: B2 outlines Add to calendar')
