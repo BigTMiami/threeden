@@ -8,13 +8,13 @@
  *   This is useful for public facing groups like bands, businesses, official groups, and more.
  *   ( ) No, keep it private      ( ) Yes, give it a public page
  *
- * Every new group is invite only. No: private, with a chat and a calendar
- * ("friends" in starter-layouts.js). Yes: public, still invite only, with
- * a Private tab for members and a Public tab with posts and upcoming
- * events ("public-page"). There's no template picker and no "Who can see
- * it" / "How people join" here any more; both can be changed later in
- * Group settings, and modules in edit mode. You become the group's owner;
- * a short tour shows you around after (group-tour.js).
+ * Every new group is invite only. No: private, one tab, "Home". Yes:
+ * public, still invite only, two tabs: "Public" (Up next big, Upcoming
+ * events to its right) and "Private" (members only). Then "Set up your
+ * group's page" asks which modules go on the members' tab, and shows how
+ * to move and resize them (group-setup.js). There's no template picker
+ * and no "Who can see it" / "How people join" here any more; both can be
+ * changed later in Group settings. You become the group's owner.
  */
 
 import { isChild } from '../state/children.js';
@@ -27,7 +27,7 @@ import { getOnboarding, updateOnboarding } from '../onboarding/onboarding-state.
 import { getCurrentUser } from '../state/store.js';
 import { usernameProblem, suggestUsername, finishAccount } from '../state/accounts.js';
 import { hashPassword, passwordProblem, MIN_PASSWORD_LENGTH } from '../account/password.js';
-import { startGroupTour } from '../onboarding/group-tour.js';
+import { startGroupSetup } from './group-setup.js';
 
 /** The modules a new group starts with (Nov 20: no template picker). */
 const PRIVATE_TEMPLATE = 'friends';
@@ -73,12 +73,13 @@ export function renderNewGroupPage(container) {
         joining: 'invite', // every new group is invite only
         template: wantsPublic ? PUBLIC_TEMPLATE : PRIVATE_TEMPLATE,
         groupType: groupTypeField.value,
+        setup: true, // tabs only: the setup picker chooses the members' modules
       });
       // Someone who came to 3den to organize: their Get started card follows this group.
       if (getOnboarding()?.source === 'organizer' && !getOnboarding().spaceId) updateOnboarding({ spaceId: group.id });
       goTo(spaceHref(group.id));
       showToast(`Created ${group.name}.`);
-      startGroupTour(group.id);
+      startGroupSetup(group.id);
     },
   },
     isQuick ? h('fieldset', { class: 'settings-field settings-fieldset new-group__account' },

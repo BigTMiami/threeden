@@ -22,7 +22,13 @@ import { isChild, isParentOf, askToJoin } from './children.js';
 /** Module types that face outward: on a two-tab group, they start on the Public tab. */
 const PUBLIC_FACING = ['generalfeed', 'textfeed', 'articles', 'events', 'carousel'];
 
-export function createGroup({ name, description = '', visibility = 'private', joining = 'invite', template = 'other', groupType = '' }) {
+/**
+ * `setup: true` (Create a group, Nov 20) makes the tabs the setup picker
+ * fills (js/groups/group-setup.js): one "Home" tab, or, for a public group,
+ * "Public" (first, anyone can see it: Up next big with Upcoming events to
+ * its right) and "Private" (members only, empty until they pick modules).
+ */
+export function createGroup({ name, description = '', visibility = 'private', joining = 'invite', template = 'other', groupType = '', setup = false }) {
   const { currentUserId } = getState();
   // Template modules without data start with their type's own (a forum, a to-do list…).
   let modules = createStarterGroupModules(template)
@@ -32,7 +38,15 @@ export function createGroup({ name, description = '', visibility = 'private', jo
   const twoTabs = visibility === 'public' && (joining === 'admins' || joining === 'invite');
   /** @type {{ id: string, name: string, visibility?: string }[] | null} */
   let tabs = visibility === 'public' ? [{ id: 'home', name: 'Home', visibility: 'public' }] : null;
-  if (twoTabs) {
+  if (setup) {
+    modules = [];
+    tabs = [{ id: 'home', name: 'Home' }];
+    if (visibility === 'public') {
+      tabs = [{ id: 'home', name: 'Public', visibility: 'public' }, { id: 'private', name: 'Private' }];
+      const starter = (type, title, span, rows) => ({ id: makeId('mod'), type, title, span, rows, data: getModuleType(type).createInitialData(getState()) });
+      modules = [starter('upnext', 'Up next', 8, 14), starter('events', 'Upcoming events', 4, 14)];
+    }
+  } else if (twoTabs) {
     tabs = [{ id: 'home', name: 'Private' }, { id: 'public', name: 'Public', visibility: 'public' }];
     const outward = modules.filter((m) => PUBLIC_FACING.includes(m.type));
     const onPublic = new Set((outward.length ? outward : modules.filter((m) => m.type !== 'upnext').slice(0, 1)).map((m) => m.id));

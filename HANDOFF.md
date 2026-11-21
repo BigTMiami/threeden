@@ -203,6 +203,18 @@ functions, no build step.
     sample data and Settings → Layout. test_new_group_order rewritten;
     test_group_setup and test_group_setup_access (now in Group settings)
     updated.
+  - Group setup (later Nov 20): createGroup({ setup: true }) makes the tabs
+    only: private → [Home]; public → [home "Public" (public): upnext 8×14 +
+    events 4×14] and ["private" "Private"]. new-group-page.js then calls
+    startGroupSetup(groupId) (js/groups/group-setup.js) instead of the
+    group tour: a modal picker of setupChoices() (group modules minus
+    hidden, unavailable, and vaultfile; Up next and Board picked), then
+    addPickedModules onto membersTabOf(group), goTo that tab, edit mode
+    on, and tip cards (desktop: .module-frame__drag-strip, then
+    .resize-handle; phone: .mwidget__grip). State in sessionStorage
+    '3den.groupSetup'; syncGroupSetup() in main.js; leaving the group ends
+    it. group-tour.js is no longer started anywhere. test_group_setup_flow
+    (desktop and phone).
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

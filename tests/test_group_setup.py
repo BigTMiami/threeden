@@ -1,5 +1,5 @@
 # Start a group: one page, no steps, no templates (Nov 20): asking for a public page makes it public and still invite only.
-# Then a short tour shows you around the new group, ending with Plan an event.
+# Then "Set up your group's page" opens (group-setup.js).
 from playwright.sync_api import sync_playwright
 import os; os.makedirs('test-output', exist_ok=True)
 errs=[]
@@ -21,19 +21,9 @@ with sync_playwright() as p:
     pg.get_by_role('button', name='Create group').click(); pg.wait_for_timeout(900)
     g=st("const g=s.getSpaces().find(x=>x.name==='The Night Owls'); return [g.id, g.visibility, g.joining, g.template]"); print('made:', g)
     if g[1:]!=['public','invite','public-page']: errs.append('wrong group made')
-    titles=[]
-    for i in range(8):
-        card=pg.locator('.group-tour')
-        if not card.count(): break
-        titles.append(card.locator('.tour-card__title').inner_text())
-        spot=pg.locator('.tour-spot').count()
-        if not spot: errs.append(f'nothing outlined on {titles[-1]}')
-        nxt=card.get_by_role('button', name='Next')
-        if not nxt.count(): break
-        nxt.click(); pg.wait_for_timeout(700)
-    print('tour:', titles)
-    if not titles or titles[-1] != 'Plan the first event': errs.append('the tour should end with planning an event')
-    pg.locator('.group-tour').get_by_role('button', name='Plan an event').click(); pg.wait_for_timeout(700)
-    print('plan an event →', pg.evaluate('location.hash'))
+    # Nov 20: the setup picker replaced the group tour here (test_group_setup_flow).
+    print('setup sheet:', pg.locator('.group-setup').count())
+    if pg.locator('.group-setup').count() != 1: errs.append('the setup picker should open after creating')
+    if pg.locator('.group-tour').count(): errs.append('the old group tour should not start')
     print('errors', errs)
     b.close()
