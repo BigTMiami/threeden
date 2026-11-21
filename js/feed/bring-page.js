@@ -243,7 +243,7 @@ export function renderHiPage(container, username) {
     h('div', { class: 'join-page__group' }, avatar(inviter, 56),
       h('div', {},
         h('h1', { class: 'join-page__name' }, inviter.name),
-        h('p', { class: 'join-page__meta' }, 'Groups, events, and plans with the people you know. Free, with no ads.'))),
+        h('p', { class: 'join-page__meta' }, isGuestBrowsing() ? `Join 3den to be friends with ${inviter.name}.` : 'Groups, events, and plans with the people you know. Free, with no ads.'))),
     h('div', { class: 'form-row' },
       h('button', {
         type: 'button', class: 'button button--primary',
@@ -254,6 +254,6 @@ export function renderHiPage(container, username) {
           showToast(result === 'already' ? `You and ${first} are already friends.` : result === 'unavailable' ? `${first} isn’t using friends right now.` : `You and ${first} are friends now.`);
           goTo(blogHref(inviter));
         },
-      }, icon('heart', 14), ` Be friends with ${first}`),
+      }, icon('heart', 14), isGuestBrowsing() ? ' Create an account' : ` Be friends with ${first}`), // signed out: the board's CL
       h('a', { href: '#', class: 'button button--quiet' }, 'Not now'))));
 }

@@ -159,6 +159,9 @@ function closeCard() {
   cardKey = '';
 }
 
+/** Is "Set up your group's page" (the picker or its tips) still going? The tutorial's G2 waits for it. */
+export const isGroupSetupOpen = () => Boolean(saved());
+
 export function endGroupSetup({ leaveEditing = false } = {}) {
   save(null);
   closeCard();

@@ -1,7 +1,9 @@
 """Nov 20 (evening): the sign-in page's "Preview as a new user" opens each
 path signed out, where that person would start, so every step shows: the
 page they were sent, making the account, then where they land. No account
-is made for you. (It replaced the "first visit" links.)"""
+is made for you. (It replaced the "first visit" links.) Nov 21: four
+previews, one per lane on the onboarding board: group invite, event,
+friend's link, and no link."""
 from playwright.sync_api import sync_playwright
 import os
 os.makedirs('test-output/out', exist_ok=True)
@@ -16,9 +18,7 @@ PATHS = [
   # id, first page, button on it, then the sign-up's button
   ('group', '#join-supper24', 'Create an account and join', 'Create account and join'),
   ('event', '#event-band-ev-2', 'Going', None),
-  ('friend', '#hi-jamal', 'Be friends with Jamal', 'Create account and join'),
-  ('follow', '#space-porchlights', 'Follow', 'Create account and follow'),
-  ('organizer', '#signup', None, 'Create account'),
+  ('friend', '#hi-jamal', 'Create an account', 'Create account and join'),  # signed out: the board's CL
   ('direct', '#welcome', 'Join 3den', 'Create account'),
 ]
 with sync_playwright() as p:
@@ -30,7 +30,7 @@ with sync_playwright() as p:
         st(pg, 'a.signOut()'); pg.evaluate("location.hash='#signin'"); pg.wait_for_timeout(700)
         if i == 0:
             sec = pg.locator('.auth__preview-new')
-            check(sec.locator('.auth__preview-path').count() == 6, 'six previews on the sign-in page')
+            check(sec.locator('.auth__preview-path').count() == 4, 'four previews, one per lane on the onboarding board (Nov 21: no “Wants to start a group” or “Found a public page”)')
             check(pg.locator('.auth__first-visits').count() == 0, 'the old first-visit links are folded in')
             pg.screenshot(path='test-output/out/signin-preview.png', full_page=True)
         before = st(pg, 'return s.getState().members.length')

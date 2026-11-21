@@ -4,7 +4,7 @@
  *
  * 1. The welcome splash — for someone who signed up without a link (no
  *    event, group or blog behind them), the first time they land: two
- *    seconds of "Welcome back to 3den" and an apple tree, fading to their
+ *    seconds of "Welcome to 3den" and an apple tree, fading to their
  *    homepage (welcome-splash.js). It replaced "What brought you here?" on
  *    Nov 15; starting a group and Explore are a tap away on the homepage.
  *

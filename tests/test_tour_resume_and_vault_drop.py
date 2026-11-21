@@ -1,5 +1,7 @@
-"""Nov 20: closing the joined-from-link tour partway (or leaving) asks
-"Finish the tour?" on the next visit; Resume picks it up, No thanks ends it.
+"""Nov 20, reworked Nov 21 for the onboarding tutorial (js/onboarding/tutorial.js):
+leaving the tour partway, or closing it with ×, asks R1 "Want to finish the
+tour where you left off?" on the next visit; Resume picks it up on its page,
+No thanks ends it for good. (test_onboarding_tutorial.py walks every lane.)
 And: drag files onto the vault (card or full page), or onto a folder."""
 from playwright.sync_api import sync_playwright
 import os
@@ -12,6 +14,9 @@ def st(pg, js):
     return pg.evaluate(f"(async()=>{{const s=await import('./js/state/store.js'); const a=await import('./js/state/accounts.js'); const g=await import('./js/state/groups.js'); {js}}})()")
 def new_visit(pg):
     pg.evaluate("sessionStorage.clear()"); pg.reload(); pg.wait_for_timeout(1200)
+def step(pg):
+    c = pg.locator('.onboarding-tour')
+    return c.first.get_attribute('data-step') if c.count() else None
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path='/usr/bin/google-chrome')
@@ -20,45 +25,31 @@ with sync_playwright() as p:
     pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
     gid = st(pg, "return s.getSpaces().find(x=>x.inviteCode==='supper24').id")
     st(pg, f"a.signOut(); const m=a.createAccount({{name:'Rosa Diaz', username:'rosad', email:'rosa@example.com', password:null, arrival:{{source:'group', spaceId:'{gid}'}}}}); g.addMember('{gid}', m.id, 'member', {{via:'link'}}); location.hash='#space-{gid}'")
-    pg.wait_for_timeout(16000)
-    card = pg.locator('.joined-tour')
-    check('Next step' in (card.text_content() or ''), 'the Next step card shows')
-    card.get_by_role('button', name='Close').click(); pg.wait_for_timeout(400)
-    check(pg.locator('.joined-tour').count() == 0, '× closes it')
-    check(st(pg, "return s.getCurrentUser().onboarding.joinedTour.stage") == 'paused', 'and pauses the tour')
+    pg.wait_for_timeout(1200)
+    check(step(pg) == 'A1', f'a new member from the group’s link gets A1 ({step(pg)})')
+    pg.locator('.onboarding-tour').get_by_role('button', name='Next', exact=True).click(); pg.wait_for_timeout(500)
+    check(step(pg) == 'A2', 'A2 next')
+
+    # Leave partway (no ×), come back: asked, and Resume goes back to that step on its page
     home = st(pg, "return s.getPersonalSpace().id")
-    pg.evaluate(f"location.hash='#space-{home}'"); pg.wait_for_timeout(800)
-    check(pg.locator('.joined-tour').count() == 0, 'not again this visit, even at home')
-    signed_in = st(pg, "return s.getCurrentUser().name")
+    pg.evaluate(f"location.hash='#space-{home}'"); pg.wait_for_timeout(500)
     new_visit(pg)
-    check(st(pg, "return s.getCurrentUser().name") == signed_in, 'still signed in after a reload')
-    card = pg.locator('.joined-tour--resume')
-    check(card.count() == 1 and 'Want to finish the tour where you left off?' in card.text_content(), 'next visit: "Finish the tour?"')
-    pg.screenshot(path='test-output/out/tour-resume.png')
-    card.get_by_role('button', name='Resume').click(); pg.wait_for_timeout(600)
-    card = pg.locator('.joined-tour')
-    on_home = pg.evaluate("location.hash").endswith(home) or pg.evaluate("location.hash") in ('', '#')
-    check(('Welcome to your homepage!' in card.text_content()) if on_home else ('Next step' in card.text_content()), f'Resume picks it up (on home: {on_home})')
-    if on_home:
-        card.get_by_role('button', name='Next').click(); pg.wait_for_timeout(500)
-    else:
-        card.get_by_role('button', name='Go to my homepage').click(); pg.wait_for_timeout(800)
-        pg.locator('.joined-tour').get_by_role('button', name='Next').click(); pg.wait_for_timeout(500)
-    check('Your dashboard' in pg.locator('.joined-tour').text_content(), 'on to the dashboard step')
-    # Leave partway (no ×), come back: asked again, and resumes on that step
-    new_visit(pg)
-    card = pg.locator('.joined-tour--resume')
-    check(card.count() == 1, 'left partway: asked again next visit')
+    check(step(pg) == 'R1' and 'Want to finish the tour where you left off?' in pg.locator('.onboarding-tour').inner_text(), 'left partway: R1 on the next visit')
+    pg.locator('.onboarding-tour').get_by_role('button', name='Resume').click(); pg.wait_for_timeout(900)
+    check(step(pg) == 'A2' and pg.evaluate('location.hash') == f'#space-{gid}', 'Resume: back to A2, on the group')
+
+    # × pauses it: nothing more this visit
+    pg.locator('.onboarding-tour').get_by_role('button', name='Close').click(); pg.wait_for_timeout(400)
+    check(step(pg) is None and st(pg, "return s.getCurrentUser().onboarding.tour.paused"), '× closes and pauses it')
     pg.evaluate(f"location.hash='#space-{home}'"); pg.wait_for_timeout(600)
-    pg.locator('.joined-tour--resume').get_by_role('button', name='Resume').click(); pg.wait_for_timeout(600)
-    check('Your dashboard' in (pg.locator('.joined-tour').text_content() or ''), 'Resume on the homepage opens the step they were on')
+    check(step(pg) is None, 'not again this visit')
+
     # No thanks ends it
-    pg.locator('.joined-tour').get_by_role('button', name='Close').click(); pg.wait_for_timeout(300)
     new_visit(pg)
-    pg.locator('.joined-tour--resume').get_by_role('button', name='No thanks').click(); pg.wait_for_timeout(300)
-    check(st(pg, "return s.getCurrentUser().onboarding.joinedTour.stage") == 'done', 'No thanks ends it')
+    pg.locator('.onboarding-tour').get_by_role('button', name='No thanks').click(); pg.wait_for_timeout(300)
+    check(st(pg, "return s.getCurrentUser().onboarding.tour.at") == 'DONE', 'No thanks ends it')
     new_visit(pg)
-    check(pg.locator('.joined-tour').count() == 0, 'and it never asks again')
+    check(pg.locator('.onboarding-tour').count() == 0, 'and it never asks again')
 
     # ── Vault: drag files in ──
     vault = st(pg, "return s.getPersonalSpace().modules.find(m=>m.type==='vault').id")

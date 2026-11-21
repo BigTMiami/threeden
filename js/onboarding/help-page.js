@@ -13,6 +13,7 @@
  * Anyone can read Help, signed in or not.
  */
 
+import { replayTour } from './tutorial.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { getCurrentUser } from '../state/store.js';
@@ -29,7 +30,8 @@ export const SOURCE_CODE_URL = '';
 export const HELP_TOPICS = [
   ['start', 'Getting started', 'compass', [
     ['What is 3den?', 'A home for the groups you’re part of: a tenant union, a band, a mutual aid network, a household. Each group has a page of modules (news, a calendar, sign-ups, a chat) and your homepage pulls together what’s yours.', ['Read the front page', '#welcome']],
-    ['How do I start a group?', 'Groups → Start a group. One page: a name, who can see it and how people join, and a template to start from. Then a short tour shows you around your new group.', ['Start a group', '#new-group']],
+    ['How do I start a group?', 'Groups → Start a group. Give it a name, and say whether it should have a searchable, public page. Then pick what goes on its page, and a few tips show you how to arrange it.', ['Start a group', '#new-group']],
+    ['Can I see the tour again?', 'Yes. The tour new accounts get walks through your homepage, bringing your people, and what to do next. Start it again any time.', ['Replay the tour', 'replay']],
     ['Is 3den open source?', 'Yes. Anyone can read, use, change, and share 3den’s code under the GNU Affero General Public License, version 3 or later. If someone runs a changed version as a service, they have to share their changes with its users too. That’s also how you can check that 3den does what it says with your data.', SOURCE_CODE_URL ? ['See the code', SOURCE_CODE_URL] : null],
     ['Can I see it working first?', 'Yes. The organizer demo walks through a tenants union, the Feed, an event, your dashboard, and more, using sample data.', ['Start the demo', 'tour']],
     ['How do I write an article?', 'Add the Articles module to your blog or a group (Edit → Modules). Write an article gives you a section, a headline, a summary, a picture with a caption, and the story. Save a draft only you can see, or Publish: it’s laid out like a news story and shows in people’s Feeds.'],
@@ -94,7 +96,9 @@ export function renderHelpPage(container, topicId = null) {
 
   const link = ([label, href]) => (href === 'tour'
     ? h('button', { type: 'button', class: 'button button--small', onClick: () => startTour() }, label)
-    : h('a', { class: 'button button--small', href }, label));
+    : href === 'replay'
+      ? h('button', { type: 'button', class: 'button button--small', onClick: () => replayTour() }, label)
+      : h('a', { class: 'button button--small', href }, label));
 
   const qa = ([q, a, l], open) => h('details', { class: 'help__qa', open },
     h('summary', {}, q),

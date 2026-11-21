@@ -246,8 +246,12 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
   follows without knowing.
 - **Onboarding:** guests can browse public pages; saving anything asks for an
   account at that moment; a starting homepage follows from how the person
-  arrived. The first tutorial (setup note, next steps, suggestions, and a
-  focused Dashboard) was removed on Nov 17; a new one is being designed.
+  arrived. The tutorial (js/onboarding/tutorial.js, Nov 21) follows the
+  onboarding board step for step, keyed by its step ids: the page they came
+  for (a group, an event, a friend, or none), their homepage, their people,
+  then what they choose to do next. One card at a time, paused by ×, and
+  offered again on the next visit. The board is the source of truth: change
+  a step there, then its case in stepCard().
 
 ## From prototype to a real service
 

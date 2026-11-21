@@ -161,20 +161,34 @@ functions, no build step.
     now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
     owned by them, not just a username. New accounts have none until they
     say yes on the Blog tab. test_blog_question_new_account.
-  - Joined-from-link tour (js/onboarding/joined-tour.js, syncJoinedTour()
-    in main.js after each draw): for an account under an hour old whose
-    onboarding.source is 'group' and that's in that group. Stages in
-    onboarding.joinedTour { stage: wait → next → home → done, since, step };
-    NEXT_STEP_DELAY_MS = 15000. Outlines (`.tour-spot--steady`) are
-    re-applied every 500 ms while a card is up, since bars and grids get
-    redrawn; modules are found by data-module-id or, on phones,
-    data-widget-id. test_joined_tour (desktop and phone; ~1 minute).
-  - Resume (later Nov 20): × calls pause() → stage 'paused' with `was` and
-    `step`; leaving partway counts too (a stage set before this page load).
-    A "visit" is a browser session (sessionStorage '3den.joinedTour.session');
-    the first sync of a new visit shows "Finish the tour?" [Resume] [No
-    thanks]. Resume → 'next' (or 'home' at the saved step if they're on
-    the homepage); No thanks → 'done'. The board has this as R1.
+  - Onboarding tutorial (latest Nov 21): js/onboarding/tutorial.js replaced
+    joined-tour.js. syncTutorial() runs in main.js after each draw;
+    stepCard(tour) has one case per board step id (A1, A2, ATAB, B1, B2, C1,
+    C2, APP, WAIT, H0–H3, E2, P1, P2a, P2b, P3, N1, G1, G2, V1, V2, M1, M2,
+    END) and returns the card, or null when the step doesn't show on this
+    page (it waits there). Progress: member.onboarding.tour { at, i, since,
+    paused, was, lane, p1, base, from, groupId, eventId, host, myEvents,
+    after, appNext, mods, done }. maybeStart(): accounts under an hour old;
+    lane from onboarding.source (group A, event B, friend/blog C, direct E
+    after the splash, anything else straight to WAIT). onboarding.itemId
+    now keeps a friend link's inviterId. R1: a visit is a browser session
+    ('3den.tour.visit'); paused, or a step set before this page load, asks
+    on the next visit; Resume → goToStepPage(at). G2 waits for
+    isGroupSetupOpen() (group-setup.js). Outlines re-apply every 500 ms,
+    also when a redraw resets the element's classes (the RSVP buttons do).
+    body.has-tour-card pads the page by the card's height. The group
+    welcome checklist hides while a tour is going. replayTour() (Help)
+    starts at H0 for anyone, making an onboarding record if needed.
+    Card words follow the board, except: G1 says "Give it a name. You can
+    change everything later." (no type to pick any more); C1's text is
+    mine (the board's reads "Make an account to ."); E2's title is "Where
+    to start" (the board's is the question). New: js/events/event-ics.js
+    (Add to calendar on event pages, Going or Maybe). Previews: four lanes
+    (no organizer, no follow). layout-tab.js templates use only modules the
+    page offers (modulesOf). test_onboarding_tutorial (every lane, ~3 min);
+    test_tour_resume_and_vault_drop reworked; test_joined_tour removed.
+    Known: test_quick_join_audience fails at line 29 on the code from
+    before Nov 21 too (not from this work).
   - Vault drag-and-drop: enableFileDrop(target, { onFiles, folderName,
     isFolder }) in vault-parts.js, on the card's container and the page's
     grid; rows carry data-item-id so a drop on a folder goes into it.

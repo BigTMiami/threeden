@@ -51,7 +51,7 @@ import { renderSeriesPage } from './events/event-series.js';
 import { renderDirectoryPage } from './groups/directory-page.js';
 import { syncTour } from './onboarding/demo-tour.js';
 import { syncGroupTour } from './onboarding/group-tour.js';
-import { syncJoinedTour } from './onboarding/joined-tour.js';
+import { syncTutorial } from './onboarding/tutorial.js';
 import { syncGroupSetup } from './groups/group-setup.js';
 import { renderSavedPage } from './feed/saved-page.js';
 import { renderWeekPage } from './feed/week-page.js';
@@ -192,7 +192,7 @@ function syncView() {
   }
   syncTour(); // the organizer demo (#tour), if one is running
   syncGroupTour(); // the look around a group you just made, if one is running
-  syncJoinedTour(); // joined from a group's link with a new account: "Next step" → your homepage
+  syncTutorial(); // a new account's tutorial, as on the onboarding board (js/onboarding/tutorial.js)
   syncGroupSetup(); // just made a group: pick its modules, then how to move and resize them
 }
 

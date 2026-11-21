@@ -941,8 +941,12 @@ html.has-modal { overflow: hidden; }
 .more-menu__item:hover,
 .more-menu__item:focus-visible { background: var(--color-surface-muted); outline: none; }
 .more-menu__item.is-danger { color: var(--color-danger, #c0392b); }
-/* Joined from a group's link (js/onboarding/joined-tour.js): the "Next step" kicker, and an outline that stays on Home */
-.joined-tour__kicker { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-accent); }
+/* The onboarding tutorial (js/onboarding/tutorial.js): the kicker, choice cards (P1, N1, E2, R1), and an outline that stays put */
+.onboarding-tour__kicker { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-accent); }
+.onboarding-tour__choices { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.onboarding-tour__choices .button { justify-content: flex-start; width: 100%; }
+/* While a card is up, the page can scroll everything clear of it (a form's button under the card, on a phone). */
+body.has-tour-card { padding-bottom: calc(var(--tour-card-space, 0px) + 24px); }
 .tour-spot--steady { animation: tour-pulse 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tour-spot--steady { animation: none; } }
 

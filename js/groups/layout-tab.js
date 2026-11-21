@@ -34,7 +34,18 @@ import { section, lockedNote } from './settings-page.js';
 let showing = 'templates';
 
 const templatesFor = (space) => ({ personal: PERSONAL_TEMPLATES, blog: BLOG_TEMPLATES }[space.kind]
-  ?? GROUP_TEMPLATES.filter((t) => !t.blank && !t.hidden).map((t) => ({ ...t, who: t.description })));
+  ?? GROUP_TEMPLATES.filter((t) => !t.blank && !t.hidden).map((t) => ({ ...t, who: t.description })))
+  .filter((t) => modulesOf(space, t).length);
+
+/**
+ * A template's modules this page offers (js/modules/module-lists.js): they go
+ * on its first tab, so a group's public-page modules only when that tab is
+ * public. A template keeps the rest of what's on it (Nov 21).
+ */
+function modulesOf(space, template) {
+  const publicTab = getTabs(space)[0]?.visibility === 'public';
+  return template.modules().filter((m) => offeredOn(m, space.kind, { publicTab }));
+}
 
 export function renderLayoutTab(space, me, redraw) {
   const canEdit = space.kind !== 'group' || can(space, me.id, 'editHomepage');
@@ -61,7 +72,7 @@ function renderTemplates(space, canEdit) {
 
   return section('Templates', intro,
     h('ul', { class: 'template-gallery' }, templatesFor(space).map((template) => {
-      const preview = template.modules();
+      const preview = modulesOf(space, template);
       return h('li', { class: 'template-card' },
         h('h3', { class: 'template-card__name' }, template.label),
         h('p', { class: 'template-card__who' }, template.who),
@@ -77,7 +88,7 @@ function renderTemplates(space, canEdit) {
 /** Put a template's modules on the page: after what's there, or instead of it. */
 function useTemplate(space, template, how) {
   const before = structuredClone(getSpace(space.id).modules);
-  const fresh = template.modules().map((m) => (m.data ? m : { ...m, data: getModuleType(m.type).createInitialData(getState()) }));
+  const fresh = modulesOf(space, template).map((m) => (m.data ? m : { ...m, data: getModuleType(m.type).createInitialData(getState()) }));
   changeState((state) => {
     const target = state.spaces.find((s) => s.id === space.id);
     target.modules = how === 'replace' ? fresh : [...target.modules, ...fresh];
