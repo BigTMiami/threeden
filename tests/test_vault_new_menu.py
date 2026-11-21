@@ -23,8 +23,8 @@ with sync_playwright() as p:
     menu.locator('.vault__menu-more-toggle').click(); pg.wait_for_timeout(100)
     more=[t.split('\n')[0] for t in menu.locator('.vault__menu-more .vault__menu-item').all_inner_texts()]
     print('top:', top); print('more hidden at first:', hidden, '| more:', more, '| toggle:', menu.locator('.vault__menu-more-toggle').inner_text())
-    if top!=['Document','Spreadsheet','Presentation','Article','Upload files','Folder']: errs.append('top order')
-    if more[:5]!=['Tasks','Relationship map','Gantt chart','Survey','Link']: errs.append('more order')  # List folded into Tasks (Nov 20)
+    if top!=['Document','Spreadsheet','Presentation','Survey','Article','Upload files','Folder']: errs.append('top order')
+    if more[:4]!=['Tasks','Relationship map','Gantt chart','Link']: errs.append('more order')  # List folded into Tasks; Survey moved up (Nov 20)
     if any(x in top+more for x in ['Calendar','Forum','Canvas']): errs.append('calendar/forum/canvas still listed')
     pg.screenshot(path='test-output/vault-new-menu.png'); pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
     if v.locator('.vault__menu').count(): v.get_by_role('button', name='New').first.click(); pg.wait_for_timeout(200)

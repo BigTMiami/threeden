@@ -34,13 +34,13 @@ with sync_playwright() as p:
     check(first == ['General feed', 'Carousel'], f'General feed and Carousel ({first})')
     lib.screenshot(path='test-output/out/library-public-page.png')
 
-    # A members-only tab: no public section, but Carousel can still be added (Less common)
+    # A members-only tab: no public section, and no Carousel or General feed (Nov 20: public-page modules only)
     st(pg, "s.setCurrentTab('band-tab-room')"); pg.wait_for_timeout(400)
     check(lib.get_by_text('For your public page').count() == 0, 'a members-only tab has no public section')
     for t in lib.locator('.library__more').all():
         if t.get_attribute('aria-expanded') == 'false': t.click()
     names = [t.strip() for t in lib.locator('.library-item__label').all_inner_texts()]
-    check('Carousel' in names and 'General feed' in names, 'both are still in the list on other tabs')
+    check('Carousel' not in names and 'General feed' not in names, 'neither is offered on a members-only tab')
 
     # Add a Carousel to the public Home tab
     st(pg, "s.setCurrentTab('home')"); pg.wait_for_timeout(400)

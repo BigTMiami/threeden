@@ -28,6 +28,7 @@ import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { moduleTypesFor, getModuleType } from '../modules/registry.js';
+import { BASICS, LESS_COMMON, offeredOn } from '../modules/module-lists.js';
 import { addModule, getCurrentSpace, getMember, getCurrentUser, subscribe, getTabs, getCurrentTabId } from '../state/store.js';
 import { removedFor, putBack } from '../state/module-backups.js';
 import { timeAgo } from '../utils/dates.js';
@@ -137,13 +138,6 @@ function closeOnEscape(event) {
   if (event.key === 'Escape') closeLibrarySheet();
 }
 
-/** "The basics", in order, for each kind of page; the rest are one tap away. */
-const BASICS = {
-  group: ['announcements', 'calendar', 'chat', 'todo', 'vaultfile', 'vault'],
-  personal: ['dashboard', 'calendar', 'events', 'todo', 'vault', 'vaultfile', 'budget', 'gantt', 'recentgroups'],
-};
-/** Modules few pages use: in their own "Less common modules" menu at the bottom of the list (unless they're one of the basics). */
-const LESS_COMMON = ['gantt', 'relationship', 'survey', 'shifts', 'recents', 'recentgroups', 'gallery', 'carousel'];
 /** Whether "More modules" is open (kept while the page is open). */
 let showAllModules = false;
 let showRare = false;
@@ -155,7 +149,8 @@ let showRare = false;
  * your public page" (Nov 20).
  */
 function renderModuleList(kind, { publicTab = false } = {}) {
-  let all = moduleTypesFor(kind).filter((t) => !t.hiddenFromLibrary);
+  // A group's private tabs don't offer the public-page modules (Nov 20).
+  let all = moduleTypesFor(kind).filter((t) => !t.hiddenFromLibrary && offeredOn(t, kind, { publicTab }));
   let publicSection = null;
   if (publicTab) {
     const picks = PUBLIC_PAGE.map((type) => all.find((t) => t.type === type)).filter(Boolean);

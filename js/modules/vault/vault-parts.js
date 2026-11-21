@@ -23,7 +23,7 @@ import { timeAgo } from '../../utils/dates.js';
 export const TOP_LEVEL_NAME = 'Vault';
 
 /**
- * The "+ New" menu, in order. The first six are always shown; "More" opens
+ * The "+ New" menu, in order. The first seven are always shown; "More" opens
  * the rest. 'module:<type>' makes a module file (see vault-module-files.js).
  * Module files use a short description here instead of the library's.
  */
@@ -31,6 +31,7 @@ export const NEW_MENU_ENTRIES = [
   { action: 'note', label: 'Document', description: 'Write together, with headings, lists, and tables', icon: 'note' },
   { action: 'module:sheet', label: 'Spreadsheet', description: 'Rows, formulas, and charts', icon: 'table' },
   { action: 'module:presentation', label: 'Presentation', description: 'Slides to present full screen', icon: 'slides' },
+  { action: 'module:survey', label: 'Survey', description: 'Ask questions, see the answers add up', icon: 'survey' },
   { action: 'article', label: 'Article', description: 'Write it here, then publish it to Articles', icon: 'newspaper' },
   { action: 'upload', label: 'Upload files', description: 'From your device', icon: 'upload' },
   { action: 'folder', label: 'Folder', description: 'Organize files', icon: 'folder' },
@@ -41,7 +42,6 @@ export const MORE_MENU_ENTRIES = [
   { action: 'module:todo', label: 'Tasks', description: 'Tasks for people, as a list or a board', icon: 'todo' },
   { action: 'module:relationship', label: 'Relationship map', description: 'Who is connected to whom', icon: 'relationship' },
   { action: 'module:gantt', label: 'Gantt chart', description: 'Plan phases over time', icon: 'gantt' },
-  { action: 'module:survey', label: 'Survey', description: 'Ask questions, see the answers add up', icon: 'survey' },
   { action: 'link', label: 'Link', description: 'Save a web page for the group', icon: 'link' },
 ];
 

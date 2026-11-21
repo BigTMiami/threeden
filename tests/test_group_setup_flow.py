@@ -38,7 +38,7 @@ for width, label in [(1300, 'desktop'), (390, 'phone')]:
     picked = [c.inner_text().split('\n')[0] for c in sheet.locator('.group-setup__choice[aria-pressed=true]').all()]
     check(picked == ['Board', 'Up next'] or sorted(picked) == ['Board', 'Up next'], f'{label}: Up next and Board start picked ({picked})')
     n = sheet.locator('.group-setup__choice').count()
-    check(n >= 15, f'{label}: every module is offered ({n})')
+    check(n >= 10, f'{label}: every module a private tab offers ({n})')
     sheet.locator('.group-setup__choice', has_text='Calendar').first.click()
     sheet.locator('.group-setup__choice', has_text='Chat').first.click()
     sheet.locator('.group-setup__choice', has_text='Board').first.click()  # unpick

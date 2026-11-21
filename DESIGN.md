@@ -148,6 +148,11 @@ jumps anywhere.
 | **A blog's front page** | About, Photo gallery, Carousel | blog |
 | **Organizing** | Relationship map | group, personal |
 
+Which modules a page's module list offers, and in what order (The basics,
+More modules, Less common modules, and what a group's private tabs leave
+out), lives in `js/modules/module-lists.js`, shared by the module list,
+"Set up your group's page", and Settings → Layout.
+
 "Coming soon" entries in the library (`js/modules/coming-soon.js`) mark
 types that are planned but not built.
 

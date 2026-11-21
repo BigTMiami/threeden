@@ -33,6 +33,7 @@ import { isPhone } from '../ui/swipe.js';
 import { showToast } from '../ui/toast.js';
 import { changeState, getSpace, getState, getCurrentSpace, setEditMode, setCurrentTab, getTabs } from '../state/store.js';
 import { moduleTypesFor, getModuleType } from '../modules/registry.js';
+import { inListOrder, offeredOn } from '../modules/module-lists.js';
 import { goTo, spaceHref } from '../router.js';
 
 const KEY = '3den.groupSetup';
@@ -52,9 +53,10 @@ function save(value) {
   try { if (value) sessionStorage.setItem(KEY, JSON.stringify(value)); else sessionStorage.removeItem(KEY); } catch { /* fine */ }
 }
 
-/** The modules offered, in the module list's order. */
+/** The modules offered, in the module list's order (the basics first). Only ones a private tab offers: they go on the members' tab. */
 export function setupChoices() {
-  return moduleTypesFor('group').filter((t) => !t.hiddenFromLibrary && t.available !== false && !LEFT_OUT.has(t.type));
+  const types = moduleTypesFor('group').filter((t) => !t.hiddenFromLibrary && t.available !== false && !LEFT_OUT.has(t.type) && offeredOn(t, 'group'));
+  return inListOrder(types, 'group');
 }
 
 /** Put the picked modules on the group's members' tab. */

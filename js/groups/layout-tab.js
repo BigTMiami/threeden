@@ -20,9 +20,10 @@
 import { h } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
-import { changeState, getState, getSpace, setEditMode } from '../state/store.js';
+import { changeState, getState, getSpace, setEditMode, getTabs } from '../state/store.js';
 import { can } from '../state/permissions.js';
 import { getModuleType, moduleTypesFor } from '../modules/registry.js';
+import { inListOrder, offeredOn } from '../modules/module-lists.js';
 import { PERSONAL_TEMPLATES, BLOG_TEMPLATES } from '../data/page-templates.js';
 import { GROUP_TEMPLATES } from '../data/starter-layouts.js';
 import { goTo, spaceHref } from '../router.js';
@@ -91,7 +92,9 @@ function useTemplate(space, template, how) {
 // ─── Modules ─────────────────────────────────────────────────────────────────
 
 function renderModules(space, canEdit) {
-  const types = moduleTypesFor(space.kind).filter((t) => !t.hiddenFromLibrary && t.available !== false);
+  // New ones go on the first tab: a group's public-page modules only when that tab is public.
+  const publicTab = getTabs(space)[0]?.visibility === 'public';
+  const types = inListOrder(moduleTypesFor(space.kind).filter((t) => !t.hiddenFromLibrary && t.available !== false && offeredOn(t, space.kind, { publicTab })), space.kind);
   const onPage = (type) => space.modules.filter((m) => m.type === type).length;
 
   return section('Modules', 'Add modules one at a time. New ones go at the end of the page’s first tab; drag them into place in edit mode.',

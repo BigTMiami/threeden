@@ -221,6 +221,17 @@ functions, no build step.
     link), event (band-ev-2, applyRsvp going), friend (befriendByLink from
     @jamal), follow (porchlights), organizer (#new-group), direct.
     test_preview_as_new.
+  - Module lists (latest Nov 20): js/modules/module-lists.js holds
+    BASICS, LESS_COMMON, NOT_ON_PRIVATE_PAGE, offeredOn(type, kind,
+    {publicTab}), splitForList, and inListOrder. Group basics: announcements,
+    upnext, calendar, chat, vault, todo, vaultfile. NOT_ON_PRIVATE_PAGE:
+    events, articles, generalfeed, textfeed, relationship, survey,
+    carousel; filtered on any group tab that isn't public (library.js),
+    in setupChoices() (now in list order), and in Settings → Layout when
+    the first tab isn't public. Chat description changed; Survey moved
+    into NEW_MENU_ENTRIES (seven on top). test_private_page_modules;
+    test_group_setup_flow, test_vault_new_menu, test_file_from_vault, and
+    test_group_public_feeds updated.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
