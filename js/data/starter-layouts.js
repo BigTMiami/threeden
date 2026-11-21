@@ -222,6 +222,19 @@ export const GROUP_TEMPLATES = [
       module('forum', 'Forum', 12, 16, null),
     ],
   },
+  // ── What Create a group makes now (Nov 20: no template picker) ──
+  // A private group gets "friends" (a chat and a calendar). One with a public
+  // page also gets a feed and upcoming events, which go on its Public tab.
+  {
+    id: 'public-page', label: 'Group with a public page', hidden: true,
+    description: 'A chat and a calendar for members, and posts and upcoming events on a public page',
+    modules: () => [
+      module('chat', 'Chat', 6, 10, null),
+      module('calendar', 'Calendar', 6, 10, { events: [] }),
+      module('generalfeed', 'Posts', 8, 9, null),
+      module('events', 'Upcoming events', 4, 9, null),
+    ],
+  },
   {
     // Not offered in Settings → Layout (applying it would just empty the page).
     id: 'blank', label: 'Blank slate', description: 'An empty page. Add the modules you want in edit mode.', blank: true,

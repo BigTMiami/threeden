@@ -193,7 +193,16 @@ functions, no build step.
     test_chat_card_no_timer.
   - Create a group: the template picker now comes before Who can see it and
     How people join (new-group-page.js); picking a template still sets them
-    until you touch them. test_new_group_order; test_group_setup updated.
+    until you touch them. (Superseded below.)
+  - Create a group, later Nov 20: no template picker and no access choices.
+    One question, "Do you want a searchable, public page for this group?"
+    (radios new-public no/yes). Always joining 'invite'; no → private with
+    the 'friends' template, yes → public with the hidden 'public-page'
+    template (chat + calendar on the Private tab, generalfeed + events on
+    the Public tab, via createGroup's two-tab split). Templates remain for
+    sample data and Settings → Layout. test_new_group_order rewritten;
+    test_group_setup and test_group_setup_access (now in Group settings)
+    updated.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
