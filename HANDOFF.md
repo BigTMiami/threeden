@@ -245,6 +245,19 @@ functions, no build step.
     test_module_offers; test_file_from_vault, test_imports_library_
     notifications, test_tab_drag_rename, test_simpler_modules_and_themes,
     test_group_setup_flow, and test_private_page_modules updated.
+  - Preview as a new user, reworked (latest Nov 20): startPreview(id) now
+    only navigates, signed out (clears the joinedTour and groupSetup
+    session keys, setAfterSignIn('#new-group') for organizer): group
+    #join-supper24, event #event-band-ev-2, friend #hi-jamal, follow
+    #space-porchlights, organizer #signup, direct #welcome. No preview
+    accounts are made. renderFirstVisits and its CSS are gone.
+    mobile-widgets.js's hashchange handler tolerates guest.js's hand-made
+    HashChangeEvent (no oldURL/newURL), which threw "Failed to construct
+    'URL'" after every sheet sign-up (it also fixes
+    test_two_tabs_and_blog_start). test_preview_as_new rewritten (walks all
+    six through sign-up); test_add_menus expects Event in the Board's Add.
+    Known: an open sign-up sheet stays up if you navigate away without
+    closing it (it lives in guest.js, which has the stray edits).
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

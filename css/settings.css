@@ -1293,14 +1293,7 @@ body.is-guest .app-bar__search {
   font-size: 13px;
 }
 
-.auth__first-visit-list {
-  margin: 0;
-  padding-left: 18px;
-}
 
-.auth__first-visit-list li {
-  margin-bottom: 4px;
-}
 
 .signup-sheet__check {
   display: flex;

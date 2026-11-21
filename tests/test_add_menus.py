@@ -3,7 +3,7 @@ Add menus (Nov 18).
 
 1. Announcements, on the card and the full page, on a computer and a phone:
    "+ Add" opens a menu whose every choice is on screen and not covered
-   (the element at each choice's middle is that choice), in order Poll,
+   (the element at each choice's middle is that choice), in order Poll, Event (Nov 20),
    File from your vault, Upload from camera roll. Poll opens the poll
    fields; File from your vault picks a file that posts as a preview card;
    Upload from camera roll opens the device picker for photos and videos.
@@ -65,7 +65,7 @@ with sync_playwright() as p:
             card = card_composer(pg)
             menu, v = open_add(pg, card)
             check(v['inside'] and not v['covered'], f'{label} card: Add menu fully on screen ({v})')
-            check(v['names'] == ['Poll', 'File from your vault', 'Upload from camera roll'], f'{label} card: order {v["names"]}')
+            check(v['names'] == ['Poll', 'Event', 'File from your vault', 'Upload from camera roll'], f'{label} card: order {v["names"]}')
             pg.screenshot(path='test-output/out/add-menu-card.png')
             pg.keyboard.press('Escape'); pg.wait_for_timeout(150)
         # The full page
@@ -75,7 +75,7 @@ with sync_playwright() as p:
         comp = page.locator('.board-composer')
         menu, v = open_add(pg, comp)
         check(v['inside'] and not v['covered'], f'{label} page: Add menu fully on screen ({v})')
-        check(v['names'] == ['Poll', 'File from your vault', 'Upload from camera roll'], f'{label} page: order {v["names"]}')
+        check(v['names'] == ['Poll', 'Event', 'File from your vault', 'Upload from camera roll'], f'{label} page: order {v["names"]}')
         pg.screenshot(path=f'test-output/out/add-menu-page-{label}.png')
         menu.get_by_role('menuitem', name='Poll').click(); pg.wait_for_timeout(200)
         check(comp.locator('.poll-attacher .poll-attacher__top').count() == 1, f'{label}: Poll opens the poll fields')
