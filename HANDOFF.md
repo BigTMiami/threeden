@@ -215,6 +215,12 @@ functions, no build step.
     '3den.groupSetup'; syncGroupSetup() in main.js; leaving the group ends
     it. group-tour.js is no longer started anywhere. test_group_setup_flow
     (desktop and phone).
+  - Preview as a new user (sign-in page): js/account/preview-as-new.js,
+    PREVIEW_PATHS + startPreview(id). Accounts get `preview: true` (kept
+    out of renderDemoAccounts). Paths: group (supper24, addMember via
+    link), event (band-ev-2, applyRsvp going), friend (befriendByLink from
+    @jamal), follow (porchlights), organizer (#new-group), direct.
+    test_preview_as_new.
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
     sign-up (for invites and event RSVPs). Left as is, waiting on Leo.

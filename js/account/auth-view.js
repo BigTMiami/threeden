@@ -27,6 +27,7 @@ import {
 } from '../state/accounts.js';
 import { hashPassword, checkPassword, passwordProblem, MIN_PASSWORD_LENGTH } from './password.js';
 import { goTo } from '../router.js';
+import { PREVIEW_PATHS, startPreview } from './preview-as-new.js';
 
 /**
  * Where to go once signed in: the homepage, unless the person came from
@@ -62,6 +63,7 @@ export function renderAuthView(container, mode = 'signin') {
       isChild ? renderChildSignUp() : isSignUp ? renderSignUpForm() : renderSignInForm(),
       // A small line under the form (child-account.js).
       mode === 'signup' ? h('p', { class: 'auth__child-link' }, h('a', { href: '#signup-child' }, 'Set up an account for a child')) : null,
+      isSignUp ? null : renderPreviewAsNew(),
       isSignUp ? null : renderDemoAccounts(),
       isSignUp ? null : renderFirstVisits(),
       h('p', { class: 'auth__note' },
@@ -139,9 +141,21 @@ function renderFirstVisits() {
       h('span', { class: 'auth__demo-roles' }, ` · ${visit.detail}`)))));
 }
 
+/** Prototype (Nov 20): one tap starts each way in as a brand-new person (preview-as-new.js). */
+function renderPreviewAsNew() {
+  return h('section', { class: 'auth__demo auth__preview-new' },
+    h('h2', { class: 'auth__demo-title' }, 'Preview as a new user'),
+    h('p', { class: 'auth__hint' }, 'Each makes a fresh account and starts where that person would, so you see their tutorials from the beginning.'),
+    h('ul', { class: 'auth__demo-list' }, PREVIEW_PATHS.map((path) => h('li', {},
+      h('button', { type: 'button', class: 'auth__demo-account auth__preview-path', 'data-preview': path.id, onClick: () => startPreview(path.id) },
+        h('span', { class: 'auth__demo-text' },
+          h('span', { class: 'auth__demo-name' }, path.label),
+          h('span', { class: 'auth__demo-roles' }, path.detail)))))));
+}
+
 /** One button per demo account (the ones without a password). */
 function renderDemoAccounts() {
-  const demo = getAccounts().filter((account) => !account.password && !account.quick && (!account.growth || account.growth.starter));
+  const demo = getAccounts().filter((account) => !account.password && !account.quick && !account.preview && (!account.growth || account.growth.starter));
   if (demo.length === 0) return null;
 
   return h('section', { class: 'auth__demo' },
