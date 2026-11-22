@@ -9,9 +9,8 @@
  *
  * Already in the group? It just opens the group. A link that was turned
  * off or replaced says so. Someone who isn't signed in sees this page too;
- * Join asks only for their name and a phone number (or email), makes a
- * quick account (js/onboarding/guest.js), and joins. They finish the
- * account (username, password) later, when they want a blog or the Feed.
+ * the button makes a full account (js/onboarding/guest.js; Nov 20: no more
+ * quick name-and-phone accounts), then joins.
  * Signed out, the page shows one button, "Create an account and join", and
  * no blog choice or "Not now" (Nov 20).
  */
@@ -66,7 +65,6 @@ export function renderJoinPage(container, inviteCode) {
             reason: `to join ${group.name}`,
             action: 'join',
             arrival: { source: 'group', spaceId: group.id },
-            quick: true, // a name and a phone number; the rest of the account can wait
             then: (newId) => { addMember(group.id, newId); history.replaceState(null, '', spaceHref(group.id)); },
           })) return;
           if (addMember(group.id, me.id, 'member', { via: 'link' }) === 'asked') {
