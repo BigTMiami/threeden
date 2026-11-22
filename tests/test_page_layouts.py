@@ -1,4 +1,4 @@
-# Page layouts: in edit mode, "Layout" in the bottom bar lists 12 layouts; each draws the page's modules without errors.
+# Page layouts: in edit mode, "Layout" in the bottom bar lists 9 layouts (Nov 22: no Magazine, Even tiles, or Storefront); each draws the page's modules without errors.
 # Spotlight: one module down the middle (grows with its content), others on both sides; Featured picks it; dragging a module
 # onto the middle features it; dragging into a side column places it there. Phones: one stack, the featured module first.
 from playwright.sync_api import sync_playwright
@@ -14,8 +14,8 @@ with sync_playwright() as p:
     bar=pg.locator('#space-header')
     bar.locator('.layout-menu__button').click(); pg.wait_for_timeout(200)
     items=pg.locator('.layout-menu__item strong').all_inner_texts(); print('layouts:', len(items), items)
-    if len(items)!=12: errs.append('12 layouts')
-    shot={'spotlight','channels','timeline','magazine'}
+    if len(items)!=9 or any(n in items for n in ['Magazine', 'Even tiles', 'Storefront']): errs.append('9 layouts, without Magazine, Even tiles, or Storefront')
+    shot={'spotlight','channels','timeline','masonry'}
     for name in items:
         if not pg.locator('.layout-menu:not([hidden])').count(): bar.locator('.layout-menu__button').click(); pg.wait_for_timeout(150)
         pg.locator('.layout-menu__item', has_text=name).first.click(); pg.wait_for_timeout(500)

@@ -8,15 +8,16 @@
  *   spotlight   one module down the middle, growing with its content; the rest
  *               in a left and a right column
  *   sidebar     one module as the main column, the rest in a sidebar on the right
- *   magazine    one module across the top, the rest in three columns below
  *   channels    a list of the modules on the left; one open at a time, big
- *   tiles       every module the same size, three across
  *   split       two columns side by side
  *   single      one narrow column, each module as long as its content
  *   masonry     three columns, each module dropped into the shortest one
  *   lanes       modules as tall columns side by side, scrolling sideways
- *   storefront  one module across the top, then a main column and a rail
  *   timeline    one column along a spine, the most recently active module first
+ *
+ * (Magazine, Even tiles, and Storefront were removed on Nov 22; a page saved
+ * with one of them shows the grid, as store.getPageLayout does for any
+ * layout it doesn't know.)
  *
  * `featured` names the column that holds one chosen module (layout.featuredId:
  * "Featured" in the bar, or drag a module onto that column). `slots` are
@@ -28,21 +29,18 @@
  * them. A featured module that grows with its content (Spotlight, Main and
  * sidebar) gets a fixed height once someone drags its resize handle
  * (featuredRows; "Fit to content" in the bar undoes it). Frame modes: 'fixed' (the module's set height), 'grow' (as tall as
- * its content), 'fill' (the column's height), 'tile' (one shared height).
+ * its content), 'fill' (the column's height).
  */
 
 export const LAYOUTS = [
   { id: 'grid', label: 'Grid', description: 'Drag, drop, and resize modules anywhere' },
   { id: 'spotlight', label: 'Spotlight', description: 'One module down the middle, others on both sides', featured: 'center' },
   { id: 'sidebar', label: 'Main and sidebar', description: 'One main module, the rest in a sidebar', featured: 'main' },
-  { id: 'magazine', label: 'Magazine', description: 'One module across the top, three columns below', featured: 'hero' },
   { id: 'channels', label: 'Channels', description: 'A list of modules, one open at a time' },
-  { id: 'tiles', label: 'Even tiles', description: 'Every module the same size' },
   { id: 'split', label: 'Split', description: 'Two columns side by side' },
   { id: 'single', label: 'Single column', description: 'A narrow stack, like a newsletter' },
   { id: 'masonry', label: 'Masonry', description: 'Three columns of different heights' },
   { id: 'lanes', label: 'Lanes', description: 'Tall columns that scroll sideways' },
-  { id: 'storefront', label: 'Storefront', description: 'One module across the top, then a main column and a rail', featured: 'hero' },
   { id: 'timeline', label: 'Timeline', description: 'Most recently active first, along a spine' },
 ];
 
@@ -111,28 +109,12 @@ export function arrange(kind, modules, featuredId, featuredRows = null) {
       return { rows: [row('layout-row--sidebar',
         featuredColumn('main', 'layout-col--main'),
         column('side', 'order', rest, 'fixed', 'layout-col--side'))] };
-    case 'magazine':
-    case 'storefront': {
-      const hero = row('layout-row--hero', column('hero', 'featured', featured ? [featured] : [], 'fixed', 'layout-col--hero'));
-      if (kind === 'storefront') {
-        const parts = bySlot(rest, ['main', 'rail']);
-        if (!parts.main.length && parts.rail.length) parts.main.push(parts.rail.shift());
-        return { rows: [hero, row('layout-row--storefront',
-          column('main', 'slot', parts.main, 'fixed', 'layout-col--main'),
-          column('rail', 'slot', parts.rail, 'fixed', 'layout-col--side'))] };
-      }
-      const cols = [[], [], []];
-      rest.forEach((m, i) => cols[i % 3].push(m));
-      return { rows: [hero, row('layout-row--three', ...cols.map((list, i) => column(`col${i}`, 'order', list, 'fixed', 'layout-col--third')))] };
-    }
     case 'split': {
       const sides = bySlot(modules, ['left', 'right']);
       return { rows: [row('layout-row--split', column('left', 'slot', sides.left, 'fixed', 'layout-col--half'), column('right', 'slot', sides.right, 'fixed', 'layout-col--half'))] };
     }
     case 'single':
       return { rows: [row('layout-row--single', column('single', 'order', modules, 'grow', 'layout-col--single'))] };
-    case 'tiles':
-      return { rows: [row('layout-row--tiles', column('tiles', 'order', modules, 'tile', 'layout-col--tiles'))] };
     case 'masonry': {
       // Each module into the shortest column so far, by its set height.
       const cols = [[], [], []];
