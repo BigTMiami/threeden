@@ -67,7 +67,9 @@ export function renderAccountPage(container) {
   if (!user) return;
   const section = accountSectionOf(getRoute().tab);
   const redraw = () => redrawKeepingScroll(container);
-  const social = !user.quick && uses(user, 'blogs');
+  // Everyone has the Feed and friends (Nov 22); blog settings wait until they can have a blog.
+  const social = uses(user, 'blogs');
+  const blogger = social && !user.quick;
 
   const sections = {
     profile: () => [user.quick ? renderQuickAccountSection(user) : null, renderProfileSection(user, container), renderSignOutSection()],
@@ -76,7 +78,7 @@ export function renderAccountPage(container) {
     notifications: () => [renderNotificationSection(user, redraw), user.phone ? renderTextsSection(user, redraw) : null],
     calendars: () => [renderCalendarFeedSection(user, redraw), renderCalendarsSection(user, redraw)],
     look: () => [renderThemeSection(user, redraw)],
-    feed: () => [renderFeaturesSection(user, redraw), social ? renderFeedSettingsSection(user, redraw) : null, social ? renderBlogSettingsSection(user, redraw) : null, social ? renderInstagramSection(user, redraw) : null],
+    feed: () => [renderFeaturesSection(user, redraw), social ? renderFeedSettingsSection(user, redraw) : null, blogger ? renderBlogSettingsSection(user, redraw) : null, social ? renderInstagramSection(user, redraw) : null],
     groups: () => [renderGroupsSection(user)],
     children: () => [renderChildrenSection(user, redraw)],
   };
@@ -336,7 +338,7 @@ function renderLocationSection(user, redraw) {
 /** A quick account (made answering an event): what it can do, and the way to a full one. */
 function renderQuickAccountSection(user) {
   return section('You have a quick account',
-    `You answered an event with ${user.phone ? 'your phone number' : 'your email'}, so you can use your homepage, events, and messages. Groups and blogs need a full account: a username and a password.`,
+    `You answered an event with ${user.phone ? 'your phone number' : 'your email'}, so you can use your homepage, events, messages, the Feed, and friends. Groups and your own blog need a full account: a username and a password.`,
     h('a', { class: 'button button--primary', href: '#finish-account' }, 'Make my full account'));
 }
 

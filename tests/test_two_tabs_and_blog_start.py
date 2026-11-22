@@ -1,5 +1,6 @@
 # A public group that picks its own members (admins add people, or invite only) starts with two tabs: Private (members, first)
-# and Public (what faces outward). Other groups keep one tab. And "Yes, set me up" on the Blog tab lands on the Feed, not Friends.
+# and Public (what faces outward). Other groups keep one tab. And (Nov 22) the Feed opens as is for someone
+# without a blog; their own blog asks "Start your blog?", and "Start my blog" makes it.
 from playwright.sync_api import sync_playwright
 errs=[]
 with sync_playwright() as p:
@@ -30,11 +31,14 @@ with sync_playwright() as p:
     # blog start → the Feed
     st("s.changeState(st=>{st.spaces=st.spaces.filter(x=>x.id!=='blog-m-leo' && !(x.kind==='blog' && x.memberIds[0]==='m-leo'));}, 'space'); return 1")
     pg.evaluate("location.hash='#feed'"); pg.wait_for_timeout(800)
-    btn=pg.get_by_role('button', name='Yes, set me up')
-    print('asked:', btn.count())
-    if btn.count():
+    if pg.locator('.welcome--blog').count(): errs.append('the Feed should open as is, without the blog question')
+    pg.evaluate("location.hash='#blog-leo'"); pg.wait_for_timeout(800)
+    btn=pg.get_by_role('button', name='Start my blog')
+    print('asked on their own blog:', btn.count())
+    if not btn.count(): errs.append('their own blog should ask “Start your blog?”')
+    else:
         btn.click(); pg.wait_for_timeout(800)
-        print('landed on:', pg.evaluate('location.hash'), '| feed shown:', pg.locator('.feed-page').count(), '| blog made:', st("return Boolean(s.getBlogOf('m-leo'))"))
-        if pg.evaluate('location.hash') != '#feed': errs.append('should land on the Feed')
+        print('blog made:', st("return Boolean(s.getBlogOf('m-leo'))"))
+        if not st("return Boolean(s.getBlogOf('m-leo'))"): errs.append('Start my blog should make the blog')
     print('errors', errs)
     b.close()

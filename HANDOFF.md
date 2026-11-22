@@ -161,6 +161,16 @@ functions, no build step.
     now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
     owned by them, not just a username. New accounts have none until they
     say yes on the Blog tab. test_blog_question_new_account.
+  - Feed and friends for everyone (Nov 22): needsFullAccount() no longer
+    gates the Feed or other people's blogs (isTheirs counts someone else's
+    blog); only route.blogUsername === me.username, groups they aren't in,
+    and the empty Groups tab. needsBlogWelcome() only on their own blog
+    address (it used to show "Dive into 3den?" on the first Feed visit);
+    renderBlogWelcome is now "Start your blog?" [Start my blog] [Not now →
+    #feed]. account-page.js: `social` (Feed settings, Instagram) is for
+    everyone who uses blogs; `blogger` (blog settings) excludes quick
+    accounts. test_feed_friends_for_everyone; test_two_tabs_and_blog_start
+    updated.
   - Onboarding tutorial (latest Nov 21): js/onboarding/tutorial.js replaced
     joined-tour.js. syncTutorial() runs in main.js after each draw;
     stepCard(tour) has one case per board step id (A1, A2, ATAB, B1, B2, C1,

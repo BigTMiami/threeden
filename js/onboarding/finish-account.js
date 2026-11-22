@@ -4,10 +4,14 @@
  *
  * Someone who answered an event with just their name and a phone number
  * or email has a quick account (js/state/accounts.js). Their homepage,
- * events, calendar and messages all work. Groups and blogs need more: a
- * username people can @mention, and a password. So when a quick account
- * opens a group, a blog, the Blog tab or the Groups tab, main.js shows this
- * page instead; once it's done, the page they wanted opens.
+ * events, calendar, messages, Feed, and Friends all work, and they can open
+ * anyone's blog and ask to be friends (Nov 22: everyone starts with the
+ * Feed and friends). Starting their own blog, and groups they weren't
+ * invited to, need more: a username people can @mention, and a password.
+ * So when a quick account opens its own blog (the Blog tab), a group it
+ * isn't in, or the Groups tab with no groups, main.js shows this page
+ * instead; once it's done, the page they wanted opens. Setting up a blog
+ * stays something they choose to do.
  *
  *   needsFullAccount(route)   → show this page instead?
  *   renderFinishAccount(container, route)
@@ -64,16 +68,17 @@ export function fullAccountNudge(me, onHide) {
       }, 'Not now')));
 }
 
-/** Is this page for groups or blogs (which quick accounts can't use yet)? */
+/** Is this page their own blog, or a group (which quick accounts can't use yet)? */
 export function needsFullAccount(route) {
   const me = getCurrentUser();
   if (!me?.quick) return false;
   if (route.page === 'finish-account') return true;
   // (Create a group asks for a username and password on its own form instead: one step.)
-  if (route.page === 'feed') return true;
-  if (route.blogUsername) return true;
-  // Groups they joined from a link work right away; the rest can wait.
-  const isTheirs = (space) => space?.kind === 'personal' || (space?.kind === 'group' && space.memberIds.includes(me.id));
+  // The Feed, Friends, and other people's blogs are open to everyone (Nov 22); starting their own blog asks.
+  if (route.blogUsername) return route.blogUsername === me.username;
+  // Groups they joined from a link work right away, and so does anyone else's blog; the rest can wait.
+  const isTheirs = (space) => space?.kind === 'personal' || (space?.kind === 'group' && space.memberIds.includes(me.id))
+    || (space?.kind === 'blog' && space.memberIds[0] !== me.id);
   if (route.page === 'groups') return !getSpaces().some((s) => s.kind === 'group' && s.memberIds.includes(me.id));
   if (route.page === 'module') return !isTheirs(getSpaceOfModule(route.moduleId));
   if (route.page === 'home' && route.spaceId) return !isTheirs(getSpace(route.spaceId));
@@ -83,12 +88,12 @@ export function needsFullAccount(route) {
 
 /** What they were trying to open, for the lede. */
 function whatTheyWanted(route) {
-  if (route.page === 'feed' || route.blogUsername) return 'Blogs and the Feed need';
+  if (route.blogUsername) return 'Your own blog needs';
   if (['groups', 'new-group', 'join'].includes(route.page)) return 'Groups need';
   const space = route.page === 'module' ? getSpaceOfModule(route.moduleId) : getSpace(route.spaceId);
-  if (space?.kind === 'blog') return 'Blogs need';
+  if (space?.kind === 'blog') return 'Your own blog needs';
   if (space?.kind === 'group') return `${space.name} needs`;
-  return '3den’s groups and blogs need';
+  return 'Groups and your own blog need';
 }
 
 export function renderFinishAccount(container, route) {
@@ -106,7 +111,7 @@ export function renderFinishAccount(container, route) {
   replaceChildren(container, h('div', { class: 'welcome finish-account' },
     h('h1', { class: 'welcome__title' }, 'Make your full 3den account'),
     h('p', { class: 'welcome__lede' },
-      `${goingHome ? '3den’s groups and blogs need' : whatTheyWanted(route)} a full account: a username people can @mention, and a password. Your events and homepage stay just as they are.`),
+      `${goingHome ? 'Groups and your own blog need' : whatTheyWanted(route)} a full account: a username people can @mention, and a password. Your events, homepage, Feed, and friends stay just as they are.`),
     h('form', {
       class: 'signup-sheet__form finish-account__form',
       onSubmit: async (event) => {
