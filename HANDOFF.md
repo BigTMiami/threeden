@@ -179,6 +179,10 @@ functions, no build step.
     body.has-tour-card pads the page by the card's height. The group
     welcome checklist hides while a tour is going. replayTour() (Help)
     starts at H0 for anyone, making an onboarding record if needed.
+    A2's words per module (MODULE_LINES) are on the board's panel "A2 ·
+    What the card says for each module" (e130; cards e132–e150, one per
+    module a group's page can have, "**Name** · type" then the quoted
+    words): when Leo edits one, copy the quote into MODULE_LINES.
     Card words follow the board, except: G1 says "Give it a name. You can
     change everything later." (no type to pick any more); C1's text is
     mine (the board's reads "Make an account to ."); E2's title is "Where
