@@ -161,6 +161,13 @@ functions, no build step.
     now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
     owned by them, not just a username. New accounts have none until they
     say yes on the Blog tab. test_blog_question_new_account.
+  - Online groups (Nov 22): space.area 'online' → explore.js ONLINE
+    ({ id, name, online: true }, no lat/lng). groupPlace returns it;
+    inWhere: online places match 'near' and 'online', never a
+    neighborhood; rankGroups gives them no distance; whereChoices adds
+    Online when publicPlaces has it. Events have no Online (event.area is
+    a PLACES id). Known: test_bigger_demo's "thin groups" fails on the code
+    from before this too.
   - Feed and friends for everyone (Nov 22): needsFullAccount() no longer
     gates the Feed or other people's blogs (isTheirs counts someone else's
     blog); only route.blogUsername === me.username, groups they aren't in,

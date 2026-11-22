@@ -41,7 +41,7 @@ import { renderMembersTab } from './members-tab.js';
 import { renderLayoutTab } from './layout-tab.js';
 import { renderAppearanceEditor } from './appearance-editor.js';
 import { goTo, settingsHref, spaceHref } from '../router.js';
-import { INTERESTS, groupInterests, groupPlace, setGroupExplore } from '../state/explore.js';
+import { INTERESTS, ONLINE, groupInterests, groupPlace, setGroupExplore } from '../state/explore.js';
 import { PLACES } from '../utils/places.js';
 
 /**
@@ -366,7 +366,9 @@ function renderOnExplore(space, canEdit) {
     const where = h('select', {
       class: 'input', disabled: !canEdit, 'aria-label': 'Where it meets',
       onChange: (e) => { setGroupExplore(space.id, { area: e.target.value }); showToast('Saved.'); draw(); },
-    }, h('option', { value: '' }, 'Not set'), PLACES.map((p) => h('option', { value: p.id, selected: place?.id === p.id }, p.name)));
+    }, h('option', { value: '' }, 'Not set'),
+    h('option', { value: ONLINE.id, selected: place?.id === ONLINE.id }, 'Online'), // meets online (Nov 22)
+    PLACES.map((p) => h('option', { value: p.id, selected: place?.id === p.id }, p.name)));
     replaceChildren(root, section('On Explore', visibilityOf(fresh) === 'public' ? 'Helps people nearby who are into these find the group.' : 'Only public groups show on Explore. These are used if you make it public.',
       h('div', { class: 'settings-form' },
         h('label', { class: 'settings-field' }, h('span', { class: 'settings-field__label' }, 'Where it meets'), where),
