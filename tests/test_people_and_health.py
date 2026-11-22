@@ -35,7 +35,7 @@ with sync_playwright() as p:
     pg.evaluate("location.hash='#week'"); pg.wait_for_timeout(800)
     print('69 week:', pg.locator('.week').inner_text().replace('\n',' | ')[:400])
     pg.screenshot(path='test-output/week.png', full_page=True)
-    print('   card on a Sunday:', pg.evaluate("(async()=>{const RealDate=Date; const w=await import('./js/feed/week-page.js'); const s=await import('./js/state/store.js'); const orig=Date.prototype.getDay; Date.prototype.getDay=function(){return 0}; const c=w.renderWeekCard(s.getCurrentUser()); Date.prototype.getDay=orig; return c?c.innerText:null})()"))
+    # (The Feed's Sunday card for it was removed Nov 22.)
     # 70 help with: directory as organizer
     gid='juniper'
     print('70 group:', gid); pg.evaluate(f"location.hash='#directory-{gid}'"); pg.wait_for_timeout(800)

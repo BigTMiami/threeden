@@ -737,24 +737,6 @@ a.feed-attach__title:hover {
 .feed-article__dek { color: var(--color-text-muted); font-size: 15px; line-height: 1.45; }
 .feed-article__more { margin-top: 4px; color: var(--color-accent); font-size: 13px; }
 
-/* Your week (js/feed/week-page.js) */
-.week-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
-  color: inherit;
-  text-decoration: none;
-}
-
-.week-card__icon { display: inline-flex; color: var(--color-accent); }
-.week-card__text { display: flex; flex: 1; flex-direction: column; font-size: 14px; color: var(--color-text-muted); }
-.week-card__text strong { color: var(--color-text); font-size: 15px; }
-.week-card__go { display: inline-flex; align-items: center; gap: 2px; color: var(--color-accent); font-size: 14px; }
 
 .week { max-width: 640px; margin: 0 auto; }
 .week__title { margin: 0; }

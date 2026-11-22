@@ -42,7 +42,6 @@ import { showToast } from '../ui/toast.js';
 import { timeAgo } from '../utils/dates.js';
 import { changeState, getCurrentUser, getMember, getSpaces, getModule, updateModuleData, publicTabsOf } from '../state/store.js';
 import { renderNeedsYou } from './feed-needs.js';
-import { renderWeekCard } from './week-page.js';
 import { renderFriends } from './friends-page.js';
 import { areaOf, eventsNear, getPublicEvents } from '../state/events.js';
 import { getFriendIds, usesSocial } from '../state/friends.js';
@@ -197,8 +196,8 @@ function renderFeed(me, redraw) {
       type: 'button', class: `chip feed-filters__chip${feedFilter === f.id ? ' is-on' : ''}`, 'aria-pressed': String(feedFilter === f.id),
       onClick: () => { feedFilter = f.id; shown = PAGE_SIZE; draw(); },
     }, f.label)));
-    // Sundays: "Your week" first (week-page.js), then what your groups need.
-    replaceChildren(needs, feedFilter === 'all' ? [renderWeekCard(me), renderNeedsYou(me, redraw)] : null);
+    // What your groups need, first. ("Your week" on Sundays came off the Feed Nov 22.)
+    replaceChildren(needs, feedFilter === 'all' ? [renderNeedsYou(me, redraw)] : null);
     const items = itemsForFilter();
     if (items === null) {
       replaceChildren(list, h('li', { class: 'feed__end' }, 'Set your area to see public events near you. ', h('a', { href: '#account-location' }, 'Set my area')));

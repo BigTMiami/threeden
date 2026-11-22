@@ -1,7 +1,6 @@
 // @ts-check
 /**
- * week-page.js — "Your week" (#week), and its card at the top of the Feed
- * on Sundays.
+ * week-page.js — "Your week" (#week).
  *
  *   Your week · Nov 15 – 21
  *   COMING UP
@@ -14,8 +13,9 @@
  *   3 new posts in Juniper Tenants Union
  *   That’s all for this week. ✓
  *
- * Short on purpose, and it ends: "That's all". The Feed shows a small card
- * that links here on Sundays (renderWeekCard); the page works any day.
+ * Short on purpose, and it ends: "That's all". It works any day, from
+ * search (Jump to). Its card at the top of the Feed on Sundays was removed
+ * on Nov 22.
  */
 
 import { h, replaceChildren } from '../ui/dom.js';
@@ -50,25 +50,6 @@ export function weekFor(me) {
     return { space, count };
   }).filter((g) => g.count > 0).sort((a, b) => b.count - a.count).slice(0, 3);
   return { start, end, upcoming, tasks, thanks, busy };
-}
-
-const isSunday = () => new Date().getDay() === 0;
-
-/** The Feed's card, on Sundays only. */
-export function renderWeekCard(me) {
-  if (!me || me.isGuest || !isSunday()) return null;
-  const week = weekFor(me);
-  const bits = [
-    week.upcoming.length ? `${week.upcoming.length} ${week.upcoming.length === 1 ? 'thing' : 'things'} coming up` : null,
-    week.tasks.length ? `${week.tasks.length} to do` : null,
-    week.thanks.length ? 'a thank-you' : null,
-  ].filter(Boolean);
-  return h('a', { class: 'week-card', href: '#week' },
-    h('span', { class: 'week-card__icon', 'aria-hidden': 'true' }, icon('calendar', 18)),
-    h('span', { class: 'week-card__text' },
-      h('strong', {}, 'Your week'),
-      h('span', {}, bits.length ? bits.join(' · ') : 'A quiet one. Nothing on the calendar yet.')),
-    h('span', { class: 'week-card__go' }, 'See it', icon('chevronRight', 14)));
 }
 
 export function renderWeekPage(container) {
