@@ -274,7 +274,13 @@ functions, no build step.
     closing it (it lives in guest.js, which has the stray edits).
   - Uncommitted, not mine: at 15:23–15:24 someone edited
     js/onboarding/guest.js and js/groups/join-page.js to drop the quick
-    sign-up (for invites and event RSVPs). Left as is, waiting on Leo.
+    sign-up (for invites and event RSVPs). Nov 22, Leo chose invites only:
+    join-page.js's edit (no `quick: true`) is committed, so invite links
+    make a full account (the board's AK). guest.js stays as committed, so
+    answering an event keeps the quick sign-up (BK). The guest.js edits
+    are still in the working copy, uncommitted: discarding them was
+    blocked here, so Leo can discard them (git checkout -- js/onboarding/guest.js)
+    or keep them. Never stage or publish them.
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**
