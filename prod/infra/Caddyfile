@@ -1,0 +1,20 @@
+# One site: /api/* goes to FastAPI, everything else is the web app's static files.
+# See docs/development_setup.md §6.
+
+:8080 {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv/web
+		file_server
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

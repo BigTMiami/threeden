@@ -1,0 +1,42 @@
+# The local development stack. Run from prod/: `make up` or `docker compose up -d`.
+# See docs/development_setup.md §3.
+
+name: threeden # containers and the data volume are named threeden-…, not after the folder
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: threeden
+      POSTGRES_USER: threeden
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" # only this Mac can reach it
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U threeden -d threeden"]
+      interval: 2s
+      retries: 30
+
+  api:
+    build: ./server
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    volumes:
+      - ./server:/srv/server # edit on the Mac, reload in the container
+      - ./shared:/srv/shared:ro
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    image: caddy:2
+    ports:
+      - "8080:8080" # open to your Wi-Fi so your iPhone can reach it
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+    depends_on: [api]
+
+volumes:
+  pgdata:

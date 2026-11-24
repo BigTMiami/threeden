@@ -52,12 +52,12 @@ restart, on both Macs.
 
 | | Step | Who | Done when |
 |---|---|---|---|
-| [ ] | **1.1** `prod/compose.yaml` (db, api, web), `infra/Caddyfile`, `.env.example`, and the `Makefile` | 🤖 Claude | `docker compose config` is valid (run in `prod/`) |
-| [ ] | **1.2** FastAPI skeleton: `server/pyproject.toml` (uv), Dockerfile, settings from the environment, a SQLAlchemy engine, and `GET /api/health` that checks the database | 🤖 Claude | `make up`, then `curl localhost:8080/api/health` returns `{"status":"ok","database":"ok"}` |
-| [ ] | **1.3** Alembic set up in `server/migrations/`, with a first migration creating a `greetings` table (id, message, created_at) | 🤖 Claude | `make migrate` creates the table |
-| [ ] | **1.4** `GET /api/v1/hello` (count and latest five greetings) and `POST /api/v1/hello` (add one, 1–200 characters) | 🤖 Claude | Both work from `/api/docs` |
-| [ ] | **1.5** pytest set up against a separate test database, with tests for health and hello (including a too-long message being refused) | 🤖 Claude | `make test` passes |
-| [ ] | **1.6** `web/hello.html`: shows the server and database status, the greetings, and a form to add one. Uses a copy of the prototype's `css/tokens.css` (in `web/css/`) so it looks like 3den | 🤖 Claude | Works in the browser |
+| [x] | **1.1** `prod/compose.yaml` (db, api, web), `infra/Caddyfile`, `.env.example`, and the `Makefile` | 🤖 Claude | `docker compose config` is valid (run in `prod/`) |
+| [x] | **1.2** FastAPI skeleton: `server/pyproject.toml` (uv), Dockerfile, settings from the environment, a SQLAlchemy engine, and `GET /api/health` that checks the database | 🤖 Claude | `make up`, then `curl localhost:8080/api/health` returns `{"status":"ok","database":"ok"}` |
+| [x] | **1.3** Alembic set up in `server/migrations/`, with a first migration creating a `greetings` table (id, message, created_at) | 🤖 Claude | `make migrate` creates the table |
+| [x] | **1.4** `GET /api/v1/hello` (count and latest five greetings) and `POST /api/v1/hello` (add one, 1–200 characters) | 🤖 Claude | Both work from `/api/docs` |
+| [x] | **1.5** pytest set up against a separate test database, with tests for health and hello (including a too-long message being refused) | 🤖 Claude | `make test` passes |
+| [x] | **1.6** `web/hello.html`: shows the server and database status, the greetings, and a form to add one. Uses a copy of the prototype's `css/tokens.css` (in `web/css/`) so it looks like 3den | 🤖 Claude | Works in the browser |
 | [ ] | **1.7** Try it: `cd prod`, `cp .env.example .env`, `make up`, `make migrate`, open `localhost:8080/hello.html`, add a greeting, run `make down` then `make up`, and check it's still there. Open `/api/docs` and try an endpoint | 🧑 You | Works on the desktop |
 | [ ] | **1.8** Pull on the laptop and do the same | 🧑 You | Works on the laptop |
 | [ ] | **1.9** Fix anything in development_setup.md that turned out wrong, and mark sections 3 to 7 as checked | 🤖 Claude | Doc matches reality |
