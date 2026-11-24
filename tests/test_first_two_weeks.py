@@ -15,7 +15,7 @@ with sync_playwright() as p:
     pg.get_by_role('button', name='Create account').click(); pg.wait_for_timeout(400)
     splash=pg.locator('.welcome-splash')
     print('splash:', splash.count(), '|', splash.inner_text() if splash.count() else '', '| drawing:', pg.locator('.welcome-splash__tree').count())
-    if not splash.count() or 'Welcome back to 3den' not in splash.inner_text(): errs.append('no welcome splash')
+    if not splash.count() or 'Welcome to 3den' not in splash.inner_text(): errs.append('no welcome splash')
     print('no question:', pg.locator('.welcome__choice').count() == 0)
     pg.screenshot(path='test-output/welcome-splash.png')
     pg.wait_for_timeout(2600)

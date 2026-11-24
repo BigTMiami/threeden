@@ -292,11 +292,10 @@ function findLayoutDrop(x, y) {
   const { column } = best;
   const drop = column.dataset.drop;
   if (drop === 'featured') return { drop, slot: column.dataset.slot, column };
-  const horizontal = column.classList.contains('layout-col--lanes') || column.classList.contains('layout-col--tiles');
+  const horizontal = column.classList.contains('layout-col--lanes');
   const frames = [...column.querySelectorAll('.module-frame')];
   const target = frames.find((frame) => {
     const r = frame.getBoundingClientRect();
-    if (column.classList.contains('layout-col--tiles')) return y < r.bottom && (y < r.top || x < r.left + r.width / 2);
     return horizontal ? x < r.left + r.width / 2 : y < r.top + r.height / 2;
   });
   return {

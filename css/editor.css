@@ -442,22 +442,18 @@ body.is-dragging-module * {
 .module-frame--grow { height: auto; min-height: 360px; overflow: visible; }
 .module-frame--grow > .module-frame__body { overflow: visible; flex: none; }
 .module-frame--fill { height: max(480px, calc(100vh - 260px)); }
-.module-frame--tile { height: 380px; }
 
 /* Spotlight: sides, a wide middle. */
 .layout-col--side { flex: 1 1 0; }
 .layout-col--center { flex: 2.3 1 0; }
 .layout-row--spotlight .layout-col--side { max-width: 340px; }
-/* Main and sidebar; storefront's main and rail. */
+/* Main and sidebar. */
 .layout-col--main { flex: 2.4 1 0; }
-.layout-row--sidebar .layout-col--side, .layout-row--storefront .layout-col--side { flex: 1 1 0; max-width: 380px; }
-.layout-col--hero > .module-frame { width: 100%; }
+.layout-row--sidebar .layout-col--side { flex: 1 1 0; max-width: 380px; }
 .layout-col--third, .layout-col--half { flex: 1 1 0; }
 /* Single column. */
 .layout-row--single { justify-content: center; }
 .layout-col--single { flex: 0 1 720px; }
-/* Even tiles: three across. */
-.layout-col--tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 /* Lanes: sideways. */
 .layout-col--lanes { flex-direction: row; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
 .layout-col--lanes > .module-frame { flex: 0 0 340px; scroll-snap-align: start; }
@@ -477,11 +473,10 @@ body.is-dragging-module * {
 .channels__panel { flex: 1 1 0; }
 /* Narrower screens: side columns go under the main one. */
 @media (max-width: 1000px) {
-  .layout-row--spotlight, .layout-row--sidebar, .layout-row--storefront, .layout-row--three { flex-wrap: wrap; }
+  .layout-row--spotlight, .layout-row--sidebar, .layout-row--three { flex-wrap: wrap; }
   .layout-row--spotlight .layout-col--center, .layout-col--main { flex-basis: 100%; order: -1; }
-  .layout-row--spotlight .layout-col--side, .layout-row--sidebar .layout-col--side, .layout-row--storefront .layout-col--side { max-width: none; flex: 1 1 280px; }
+  .layout-row--spotlight .layout-col--side, .layout-row--sidebar .layout-col--side { max-width: none; flex: 1 1 280px; }
   .layout-col--third { flex: 1 1 260px; }
-  .layout-col--tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .drop-indicator--outline { background: transparent; border: 3px solid var(--color-accent); border-radius: 12px; box-shadow: 0 0 0 4px var(--color-accent-soft); }
 
@@ -518,7 +513,7 @@ body.is-dragging-module * {
 
 /* Edit mode: where a module comes on phones (module-frame.js renderPhoneNumber). */
 /* In layouts, only modules with a set height can be resized (the rest follow their content or their column). */
-.module-frame--grow:not(.module-frame--featured) .resize-handle, .module-frame--fill .resize-handle, .module-frame--tile .resize-handle { display: none; }
+.module-frame--grow:not(.module-frame--featured) .resize-handle, .module-frame--fill .resize-handle { display: none; }
 
 /* ─── File from vault: choosing a file (js/editor/vault-file-picker.js) ──── */
 

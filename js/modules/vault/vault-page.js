@@ -43,7 +43,7 @@ import { openPublishDialog, publishVerb } from '../../ui/publish-dialog.js';
 import { vaultFileModule } from '../vaultfile/vaultfile-module.js';
 import { getSpaceOfModule } from '../../state/store.js';
 import {
-  TOP_LEVEL_NAME, renderNewMenu, createFilePicker, renderCreateForm, renderOpenItem,
+  TOP_LEVEL_NAME, renderNewMenu, createFilePicker, renderCreateForm, renderOpenItem, enableFileDrop,
 } from './vault-parts.js';
 
 const SEARCH_DELAY_MS = 200;
@@ -565,6 +565,14 @@ export function renderVaultPage(container, context) {
   }
 
   container.append(toolbar, grid, fileInput);
+  // Drag files from the computer anywhere on the vault page (Nov 20).
+  if (!context.isVisitor) {
+    enableFileDrop(grid, {
+      onFiles: (files, folderId) => actions.uploadFiles(files, folderId ?? view.folderId),
+      folderName: () => (view.folderId ? (context.getData().items ?? []).find((i) => i.id === view.folderId)?.name : 'your vault'),
+      isFolder: (id) => (context.getData().items ?? []).some((i) => i.id === id && i.kind === 'folder'),
+    });
+  }
   drawAll();
 
   return () => document.removeEventListener('click', handleDocumentClick);

@@ -40,6 +40,7 @@ import { getCurrentUser, getMember, getSpace, getSpaces } from '../state/store.j
 import { findAccountByLogin, getAccounts } from '../state/accounts.js';
 import { findEvent, updateEvent, canViewEvent, canEditEvent, hostGroupsOf } from '../state/events.js';
 import { can } from '../state/permissions.js';
+import { addToCalendarButton } from './event-ics.js';
 import { VISIBILITY, isMultiDay, applyRsvp, colorValue, rsvpOf, hostIdsOf, isFull, promoteWaitlist } from '../modules/calendar/calendar-data.js';
 import { repeatLabel } from './event-series.js';
 import { todayKey, addDays } from '../utils/dates.js';
@@ -167,7 +168,9 @@ export function renderEventPage(container, eventId, friendCode = null) {
       limitsLine ? h('p', { class: 'event-details__muted' }, limitsLine) : null,
       fullAccountNudge(me, redraw),
       availabilityChip(event, { offerConnect: true }),
-      reminderControl(event, me, redraw)),
+      reminderControl(event, me, redraw),
+      // Going or Maybe: put it on the phone's calendar too (a .ics file; the tour's B2 card outlines it).
+      ['going', 'maybe'].includes(rsvpOf(event, me.id)) ? h('p', { class: 'event-page__ics' }, addToCalendarButton(event)) : null),
     facts: h('section', { class: 'event-page__facts' },
       event.location || event.area ? h('p', {}, icon('pin', 14), ' ', event.location ? mapLink(event.location) : null, areaLabel(event), ' ', directionsButton(event)) : null,
       h('p', {}, hosts.length ? [h('span', { class: 'avatar-row' }, hosts.map((m) => avatar(m, 22))), ` Hosted by ${hostNames(hosts, me, hostGroups)}`] : 'Host unknown'),

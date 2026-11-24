@@ -51,6 +51,8 @@ import { renderSeriesPage } from './events/event-series.js';
 import { renderDirectoryPage } from './groups/directory-page.js';
 import { syncTour } from './onboarding/demo-tour.js';
 import { syncGroupTour } from './onboarding/group-tour.js';
+import { syncTutorial } from './onboarding/tutorial.js';
+import { syncGroupSetup } from './groups/group-setup.js';
 import { renderSavedPage } from './feed/saved-page.js';
 import { renderWeekPage } from './feed/week-page.js';
 import { renderBringPage, renderHiPage } from './feed/bring-page.js';
@@ -190,6 +192,8 @@ function syncView() {
   }
   syncTour(); // the organizer demo (#tour), if one is running
   syncGroupTour(); // the look around a group you just made, if one is running
+  syncTutorial(); // a new account's tutorial, as on the onboarding board (js/onboarding/tutorial.js)
+  syncGroupSetup(); // just made a group: pick its modules, then how to move and resize them
 }
 
 /** 'groups' or 'messages' if this page belongs to a part of 3den they turned off. */

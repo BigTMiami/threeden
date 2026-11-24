@@ -13,6 +13,11 @@
  *   { headline: '', text: '', askMeAbout: ['bike repair'], links: [{ label, url }], showGroups: false }
  * The name, photo, and area come from their account; the groups listed are
  * the public ones they're in.
+ *
+ * On a group's public page (Nov 20) it's the group's About instead: the
+ * group's name, description, and member count, then what its admins write
+ * ("Ask us about" and links too). Whoever may edit the group's name and
+ * description (editDetails) edits it. showGroups doesn't apply there.
  */
 
 import { blogShownIn } from '../../state/groups.js';
@@ -28,6 +33,7 @@ const safeUrl = (url) => (/^https?:\/\//i.test(url) ? url : `https://${url}`);
 
 function render(container, context) {
   const space = getSpaceOfModule(context.moduleId);
+  if (space?.kind === 'group') { renderForGroup(container, context, space); return; }
   const owner = getMember(space?.memberIds[0]);
   const canEdit = !context.isVisitor && owner?.id === context.currentUser.id;
   let editing = false;
@@ -100,6 +106,73 @@ function render(container, context) {
   replaceChildren(container, root);
 }
 
+/** The group's About: the same block, about the group. */
+function renderForGroup(container, context, space) {
+  const canEdit = !context.isVisitor && context.can('editDetails');
+  let editing = false;
+  const root = h('div', { class: 'about-block about-block--group' });
+  const members = space.memberIds?.length ?? 0;
+
+  function view() {
+    const d = context.getData();
+    const empty = !d.headline && !d.text && !(d.askMeAbout ?? []).length && !(d.links ?? []).length;
+    return [
+      h('div', { class: 'about-block__who' },
+        h('span', { class: 'about-block__badge', 'aria-hidden': 'true' }, icon('people', 28)),
+        h('div', {},
+          h('p', { class: 'about-block__name' }, h('strong', {}, space.name), h('span', { class: 'about-block__handle' }, ` · ${members === 1 ? '1 member' : `${members} members`}`)),
+          d.headline || space.description ? h('p', { class: 'about-block__headline' }, d.headline || space.description) : null)),
+      d.text ? h('p', { class: 'about-block__text' }, renderText(d.text)) : null,
+      (d.askMeAbout ?? []).length ? h('div', { class: 'about-block__row' }, h('span', { class: 'about-block__label' }, 'Ask us about'), h('span', { class: 'about-block__chips' }, d.askMeAbout.map((t) => h('span', { class: 'chip' }, t)))) : null,
+      (d.links ?? []).length ? h('div', { class: 'about-block__row about-block__facts' },
+        d.links.map((l) => h('a', { href: safeUrl(l.url), target: '_blank', rel: 'noopener noreferrer' }, icon('link', 13), ` ${l.label || l.url.replace(/^https?:\/\//, '')}`))) : null,
+      canEdit ? h('div', { class: 'about-block__edit' },
+        empty ? h('span', { class: 'about-block__hint' }, 'Tell visitors who you are, what you do, and how to reach you.') : null,
+        h('button', { type: 'button', class: 'button button--small', onClick: () => { editing = true; draw(); } }, icon('pencil', 12), empty ? ' Write the group’s About' : ' Edit')) : null,
+    ];
+  }
+
+  function editor() {
+    const d = context.getData();
+    const headline = h('input', { type: 'text', class: 'input', maxlength: '120', value: d.headline ?? '', placeholder: space.description || 'One line about the group', 'aria-label': 'Headline' });
+    const text = h('textarea', { class: 'input', rows: '4', maxlength: '1200', placeholder: 'A few sentences. #tags and @mentions work.', 'aria-label': 'About the group' });
+    text.value = d.text ?? '';
+    const ask = h('input', { type: 'text', class: 'input', value: (d.askMeAbout ?? []).join(', '), placeholder: 'booking, lessons, merch', 'aria-label': 'Ask us about (separate with commas)' });
+    const links = h('textarea', { class: 'input', rows: '3', placeholder: 'One per line: Label | https://…', 'aria-label': 'Links' });
+    links.value = (d.links ?? []).map((l) => (l.label ? `${l.label} | ${l.url}` : l.url)).join('\n');
+    const field = (label, control, hint) => h('label', { class: 'settings-field' }, h('span', { class: 'settings-field__label' }, label), control, hint ? h('span', { class: 'settings-field__hint' }, hint) : null);
+    return h('form', {
+      class: 'about-block__form',
+      onSubmit: (event) => {
+        event.preventDefault();
+        context.saveData({
+          ...d,
+          headline: headline.value.trim(),
+          text: text.value.trim(),
+          askMeAbout: ask.value.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8),
+          links: links.value.split('\n').map((line) => line.trim()).filter(Boolean).slice(0, 6).map((line) => {
+            const [a, b] = line.split('|').map((x) => x.trim());
+            return b ? { label: a, url: b } : { label: '', url: a };
+          }),
+        });
+        editing = false;
+        draw();
+      },
+    },
+    field('Headline', headline, 'Shown under the group’s name. Leave empty to use its description.'),
+    field('About the group', text),
+    field('Ask us about', ask, 'A few topics, separated with commas.'),
+    field('Links', links, 'Up to six. “Label | address”, or just the address.'),
+    h('div', { class: 'form-row' },
+      h('button', { type: 'submit', class: 'button button--primary button--small' }, 'Save'),
+      h('button', { type: 'button', class: 'link-button', onClick: () => { editing = false; draw(); } }, 'Cancel')));
+  }
+
+  function draw() { replaceChildren(root, editing ? editor() : view()); }
+  draw();
+  replaceChildren(container, root);
+}
+
 export const aboutModule = {
   type: 'about',
   label: 'About',
@@ -108,7 +181,7 @@ export const aboutModule = {
   defaultSpan: 4,
   defaultRows: 10,
   available: true,
-  spaceKinds: ['blog'],
+  spaceKinds: ['blog', 'group'],  // a group's public page only (js/modules/module-lists.js)
   createInitialData: () => ({ headline: '', text: '', askMeAbout: [], links: [], showGroups: false }),
   render,
 };

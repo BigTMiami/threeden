@@ -56,7 +56,7 @@ with sync_playwright() as p:
     pg.evaluate("location.hash='#space-me'"); pg.wait_for_timeout(800)
     st(pg, 's.setEditMode(true)'); pg.wait_for_timeout(400)
     basics = [t.strip() for t in pg.locator('#module-library .library__list').first.locator('.library-item__label').all_inner_texts()]
-    want = ['Dashboard', 'Calendar', 'Upcoming events', 'Tasks', 'Vault', 'File from vault', 'Budget', 'Gantt chart', 'Recent groups']
+    want = ['Dashboard', 'Calendar', 'Tasks', 'Vault', 'File from vault', 'Budget', 'Gantt chart', 'Recent groups']  # Nov 20 review: no Upcoming events or Chat
     check(basics == want, f'My Homepage basics in order ({basics})')
     names = library_names(pg)
     check(not [n for n in names if n in GONE + ['Board', 'Announcements', 'Forum', 'Submissions']], f'no Announcements, Forum, Submissions, Document, Spreadsheet, Presentation, or Canvas ({[n for n in names if n in GONE + ["Announcements", "Forum", "Submissions"]]})')
@@ -88,7 +88,7 @@ with sync_playwright() as p:
     pg.evaluate("location.hash='#space-juniper'"); pg.wait_for_timeout(800)
     st(pg, 's.setEditMode(true)'); pg.wait_for_timeout(400)
     gbasics = [t.strip() for t in pg.locator('#module-library .library__list').first.locator('.library-item__label').all_inner_texts()]
-    check(gbasics == ['Board', 'Calendar', 'Chat', 'Tasks', 'File from vault', 'Vault'], f'group basics ({gbasics})')
+    check(gbasics == ['Board', 'Up next', 'Calendar', 'Chat', 'Vault', 'Tasks', 'File from vault'], f'group basics ({gbasics})')
     gnames = library_names(pg)
     check(not [n for n in gnames if n in GONE] and 'Forum' in gnames and 'Submissions' in gnames, 'group: Forum and Submissions stay; the four are gone')
 

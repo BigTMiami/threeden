@@ -149,6 +149,159 @@ functions, no build step.
     asks about event sign-ups, and thank-yous don't read them. Old
     `event.signups`/`event.rides` data is just ignored. Post sign-ups
     (Board, Feed) are unchanged.
+  - Groups' public pages: Carousel's spaceKinds now include groups; the
+    library (renderModuleList(kind, { publicTab })) puts General feed and
+    Carousel first under "For your public page" when the tab being edited
+    is public (`isOnPublicTab`). test_group_public_feeds.
+  - Invite links signed out: join-page.js shows only "Create an account and
+    join" (no "Show my blog to the members", no Not now). The guest has a
+    username ('guest'), so blog-choice.js's hasBlog now also checks
+    !isGuest. test_join_link_signed_out.
+  - The blog question (header bar, join-page checkbox, settings section)
+    now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
+    owned by them, not just a username. New accounts have none until they
+    say yes on the Blog tab. test_blog_question_new_account.
+  - Online groups (Nov 22): space.area 'online' → explore.js ONLINE
+    ({ id, name, online: true }, no lat/lng). groupPlace returns it;
+    inWhere: online places match 'near' and 'online', never a
+    neighborhood; rankGroups gives them no distance; whereChoices adds
+    Online when publicPlaces has it. Events have no Online (event.area is
+    a PLACES id). Known: test_bigger_demo's "thin groups" fails on the code
+    from before this too.
+  - Feed and friends for everyone (Nov 22): needsFullAccount() no longer
+    gates the Feed or other people's blogs (isTheirs counts someone else's
+    blog); only route.blogUsername === me.username, groups they aren't in,
+    and the empty Groups tab. needsBlogWelcome() only on their own blog
+    address (it used to show "Dive into 3den?" on the first Feed visit);
+    renderBlogWelcome is now "Start your blog?" [Start my blog] [Not now →
+    #feed]. account-page.js: `social` (Feed settings, Instagram) is for
+    everyone who uses blogs; `blogger` (blog settings) excludes quick
+    accounts. test_feed_friends_for_everyone; test_two_tabs_and_blog_start
+    updated.
+  - Onboarding tutorial (latest Nov 21): js/onboarding/tutorial.js replaced
+    joined-tour.js. syncTutorial() runs in main.js after each draw;
+    stepCard(tour) has one case per board step id (A1, A2, ATAB, B1, B2, C1,
+    C2, APP, WAIT, H0–H3, E2, P1, P2a, P2b, P3, N1, G1, G2, V1, V2, M1, M2,
+    END) and returns the card, or null when the step doesn't show on this
+    page (it waits there). Progress: member.onboarding.tour { at, i, since,
+    paused, was, lane, p1, base, from, groupId, eventId, host, myEvents,
+    after, appNext, mods, done }. maybeStart(): accounts under an hour old;
+    lane from onboarding.source (group A, event B, friend/blog C, direct E
+    after the splash, anything else straight to WAIT). onboarding.itemId
+    now keeps a friend link's inviterId. R1: a visit is a browser session
+    ('3den.tour.visit'); paused, or a step set before this page load, asks
+    on the next visit; Resume → goToStepPage(at). G2 waits for
+    isGroupSetupOpen() (group-setup.js). Outlines re-apply every 500 ms,
+    also when a redraw resets the element's classes (the RSVP buttons do).
+    body.has-tour-card pads the page by the card's height. The group
+    welcome checklist hides while a tour is going. replayTour() (Help)
+    starts at H0 for anyone, making an onboarding record if needed.
+    A2's words per module (MODULE_LINES) are on the board's panel "A2 ·
+    What the card says for each module" (e130; cards e132–e150, one per
+    module a group's page can have, "**Name** · type" then the quoted
+    words): when Leo edits one, copy the quote into MODULE_LINES.
+    Card words follow the board, except: G1 says "Give it a name. You can
+    change everything later." (no type to pick any more); C1's text is
+    mine (the board's reads "Make an account to ."); E2's title is "Where
+    to start" (the board's is the question). New: js/events/event-ics.js
+    (Add to calendar on event pages, Going or Maybe). Previews: four lanes
+    (no organizer, no follow). layout-tab.js templates use only modules the
+    page offers (modulesOf). test_onboarding_tutorial (every lane, ~3 min);
+    test_tour_resume_and_vault_drop reworked; test_joined_tour removed.
+    Known: test_quick_join_audience fails at line 29 on the code from
+    before Nov 21 too (not from this work).
+  - Vault drag-and-drop: enableFileDrop(target, { onFiles, folderName,
+    isFolder }) in vault-parts.js, on the card's container and the page's
+    grid; rows carry data-item-id so a drop on a folder goes into it.
+    test_tour_resume_and_vault_drop.
+  - Tabs in edit mode: makeTabDraggable() in space-header.js (pointer
+    events; link.draggable = false so the browser's own link drag doesn't
+    swallow the pointer; the drop spot is row-aware since tabs wrap on
+    phones) → moveTabTo(tabId, index) in store.js (Home stays first; returns
+    whether it moved). Clicking the open tab renames it; the rename box's
+    blur saves on a timeout and only if the box is still on the page (a
+    redraw draws a fresh one). The old List module is hiddenFromLibrary.
+    test_tab_drag_rename (desktop and phone).
+  - Chat module card: createThreadView({ compact: true }) leaves out the
+    disappearing-messages select and hides the bar unless it's on (then
+    it just says so). The full page and Messages keep the setting.
+    test_chat_card_no_timer.
+  - Create a group: the template picker now comes before Who can see it and
+    How people join (new-group-page.js); picking a template still sets them
+    until you touch them. (Superseded below.)
+  - Create a group, later Nov 20: no template picker and no access choices.
+    One question, "Do you want a searchable, public page for this group?"
+    (radios new-public no/yes). Always joining 'invite'; no → private with
+    the 'friends' template, yes → public with the hidden 'public-page'
+    template (chat + calendar on the Private tab, generalfeed + events on
+    the Public tab, via createGroup's two-tab split). Templates remain for
+    sample data and Settings → Layout. test_new_group_order rewritten;
+    test_group_setup and test_group_setup_access (now in Group settings)
+    updated.
+  - Group setup (later Nov 20): createGroup({ setup: true }) makes the tabs
+    only: private → [Home]; public → [home "Public" (public): upnext 8×14 +
+    events 4×14] and ["private" "Private"]. new-group-page.js then calls
+    startGroupSetup(groupId) (js/groups/group-setup.js) instead of the
+    group tour: a modal picker of setupChoices() (group modules minus
+    hidden, unavailable, and vaultfile; Up next and Board picked), then
+    addPickedModules onto membersTabOf(group), goTo that tab, edit mode
+    on, and tip cards (desktop: .module-frame__drag-strip, then
+    .resize-handle; phone: .mwidget__grip). State in sessionStorage
+    '3den.groupSetup'; syncGroupSetup() in main.js; leaving the group ends
+    it. group-tour.js is no longer started anywhere. test_group_setup_flow
+    (desktop and phone).
+  - Preview as a new user (sign-in page): js/account/preview-as-new.js,
+    PREVIEW_PATHS + startPreview(id). Accounts get `preview: true` (kept
+    out of renderDemoAccounts). Paths: group (supper24, addMember via
+    link), event (band-ev-2, applyRsvp going), friend (befriendByLink from
+    @jamal), follow (porchlights), organizer (#new-group), direct.
+    test_preview_as_new.
+  - Module lists (latest Nov 20): js/modules/module-lists.js holds
+    BASICS, LESS_COMMON, NOT_ON_PRIVATE_PAGE, offeredOn(type, kind,
+    {publicTab}), splitForList, and inListOrder. Group basics: announcements,
+    upnext, calendar, chat, vault, todo, vaultfile. NOT_ON_PRIVATE_PAGE:
+    events, articles, generalfeed, textfeed, relationship, survey,
+    carousel; filtered on any group tab that isn't public (library.js),
+    in setupChoices() (now in list order), and in Settings → Layout when
+    the first tab isn't public. Chat description changed; Survey moved
+    into NEW_MENU_ENTRIES (seven on top). test_private_page_modules;
+    test_group_setup_flow, test_vault_new_menu, test_file_from_vault, and
+    test_group_public_feeds updated.
+  - Module review (latest Nov 20): Leo checked every module against four
+    pages on https://claude.ai/artifact/CZcGaoMofgMdeSpcrgkLzs (slug
+    5da20f9c-f690-4e73-948b-c46e59376fd0; his checks are db docs
+    picks/<type> {groupPublic, groupPrivate, homepage, blog, note}; source
+    in /home/claude/module-matrix). module-lists.js now has OFFERED_ON
+    (replacing NOT_ON_PRIVATE_PAGE) and pageKey(kind, {publicTab}); types
+    not in it fall back to spaceKinds. About and gallery got spaceKinds
+    ['blog','group']; About renders renderForGroup on a group (editDetails
+    edits). createGroup setup public tab: generalfeed 8×14 + events 4×14.
+    The library's flat-list fallback keeps the basics order.
+    test_module_offers; test_file_from_vault, test_imports_library_
+    notifications, test_tab_drag_rename, test_simpler_modules_and_themes,
+    test_group_setup_flow, and test_private_page_modules updated.
+  - Preview as a new user, reworked (latest Nov 20): startPreview(id) now
+    only navigates, signed out (clears the joinedTour and groupSetup
+    session keys, setAfterSignIn('#new-group') for organizer): group
+    #join-supper24, event #event-band-ev-2, friend #hi-jamal, follow
+    #space-porchlights, organizer #signup, direct #welcome. No preview
+    accounts are made. renderFirstVisits and its CSS are gone.
+    mobile-widgets.js's hashchange handler tolerates guest.js's hand-made
+    HashChangeEvent (no oldURL/newURL), which threw "Failed to construct
+    'URL'" after every sheet sign-up (it also fixes
+    test_two_tabs_and_blog_start). test_preview_as_new rewritten (walks all
+    six through sign-up); test_add_menus expects Event in the Board's Add.
+    Known: an open sign-up sheet stays up if you navigate away without
+    closing it (it lives in guest.js, which has the stray edits).
+  - Uncommitted, not mine: at 15:23–15:24 someone edited
+    js/onboarding/guest.js and js/groups/join-page.js to drop the quick
+    sign-up (for invites and event RSVPs). Nov 22, Leo chose invites only:
+    join-page.js's edit (no `quick: true`) is committed, so invite links
+    make a full account (the board's AK). guest.js stays as committed, so
+    answering an event keeps the quick sign-up (BK). The guest.js edits
+    are still in the working copy, uncommitted: discarding them was
+    blocked here, so Leo can discard them (git checkout -- js/onboarding/guest.js)
+    or keep them. Never stage or publish them.
   - Tests: test_shift_details, test_calendar_sources_list;
     test_share_events_posts' Board part now uses Add → Event.
 - **Chat channels and Lists in Tasks (Nov 20):**

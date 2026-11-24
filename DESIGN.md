@@ -148,6 +148,11 @@ jumps anywhere.
 | **A blog's front page** | About, Photo gallery, Carousel | blog |
 | **Organizing** | Relationship map | group, personal |
 
+Which modules a page's module list offers, and in what order (The basics,
+More modules, Less common modules, and what a group's private tabs leave
+out), lives in `js/modules/module-lists.js`, shared by the module list,
+"Set up your group's page", and Settings → Layout.
+
 "Coming soon" entries in the library (`js/modules/coming-soon.js`) mark
 types that are planned but not built.
 
@@ -241,8 +246,12 @@ Both views get the same `context`: `saveData()`, `can(permission)`,
   follows without knowing.
 - **Onboarding:** guests can browse public pages; saving anything asks for an
   account at that moment; a starting homepage follows from how the person
-  arrived. The first tutorial (setup note, next steps, suggestions, and a
-  focused Dashboard) was removed on Nov 17; a new one is being designed.
+  arrived. The tutorial (js/onboarding/tutorial.js, Nov 21) follows the
+  onboarding board step for step, keyed by its step ids: the page they came
+  for (a group, an event, a friend, or none), their homepage, their people,
+  then what they choose to do next. One card at a time, paused by ×, and
+  offered again on the next visit. The board is the source of truth: change
+  a step there, then its case in stepCard().
 
 ## From prototype to a real service
 

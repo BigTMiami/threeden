@@ -9,9 +9,10 @@
  *
  * Already in the group? It just opens the group. A link that was turned
  * off or replaced says so. Someone who isn't signed in sees this page too;
- * Join asks only for their name and a phone number (or email), makes a
- * quick account (js/onboarding/guest.js), and joins. They finish the
- * account (username, password) later, when they want a blog or the Feed.
+ * the button makes a full account (js/onboarding/guest.js; Nov 20: no more
+ * quick name-and-phone accounts), then joins.
+ * Signed out, the page shows one button, "Create an account and join", and
+ * no blog choice or "Not now" (Nov 20).
  */
 
 import { blogJoinCheckbox } from './blog-choice.js';
@@ -43,7 +44,8 @@ export function renderJoinPage(container, inviteCode) {
   }
 
   const count = getSpaceMembers(group).length;
-  const blogChoice = blogJoinCheckbox(me); // show your blog to the members? (blog-choice.js)
+  const signedOut = Boolean(me?.isGuest);
+  const blogChoice = signedOut ? { element: null, shown: () => true } : blogJoinCheckbox(me); // show your blog to the members? (blog-choice.js)
   replaceChildren(container, h('div', { class: 'settings-section join-page' },
     h('p', { class: 'join-page__kicker' }, 'You’re invited to join'),
     h('div', { class: 'join-page__group' },
@@ -63,7 +65,6 @@ export function renderJoinPage(container, inviteCode) {
             reason: `to join ${group.name}`,
             action: 'join',
             arrival: { source: 'group', spaceId: group.id },
-            quick: true, // a name and a phone number; the rest of the account can wait
             then: (newId) => { addMember(group.id, newId); history.replaceState(null, '', spaceHref(group.id)); },
           })) return;
           if (addMember(group.id, me.id, 'member', { via: 'link' }) === 'asked') {
@@ -75,6 +76,6 @@ export function renderJoinPage(container, inviteCode) {
           showToast(`Welcome to ${group.name}!`);
           goTo(spaceHref(group.id));
         },
-      }, icon('plus', 14), ` Join ${group.name}`),
-      h('a', { href: '#', class: 'button button--quiet' }, 'Not now'))));
+      }, icon('plus', 14), signedOut ? ' Create an account and join' : ` Join ${group.name}`),
+      signedOut ? null : h('a', { href: '#', class: 'button button--quiet' }, 'Not now'))));
 }

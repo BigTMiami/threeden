@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * welcome-splash.js — the first thing a new account sees: the page's own
- * background, "Welcome back to 3den", and a small drawing of an apple
+ * background, "Welcome to 3den" (the onboarding board's E1; "Welcome back" until Nov 21), and a small drawing of an apple
  * hanging on a tree. After two seconds it fades away, leaving them on their
  * homepage (it replaced "What brought you here?" on Nov 15).
  *
@@ -42,7 +42,7 @@ export function showWelcomeSplash() {
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const splash = h('div', { class: 'welcome-splash', role: 'status', 'aria-live': 'polite' },
     appleTree(),
-    h('p', { class: 'welcome-splash__text' }, 'Welcome back to 3den'));
+    h('p', { class: 'welcome-splash__text' }, 'Welcome to 3den'));
   let done = false;
   function finish() {
     if (done) return;

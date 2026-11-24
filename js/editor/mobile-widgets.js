@@ -150,9 +150,11 @@ export function initMobileWidgets(gridElement) {
   // Coming back from a module's own page keeps the swipe view; arriving from anywhere else starts on the widgets.
   let lastHash = window.location.hash;
   window.addEventListener('hashchange', (event) => {
+    // A redraw sent by hand (guest.js after signing up) carries no addresses: treat it as staying put.
+    const hashOf = (url, fallback) => { try { return url ? new URL(url).hash : fallback; } catch { return fallback; } };
+    const from = hashOf(event.oldURL, lastHash);
+    const to = hashOf(event.newURL, window.location.hash);
     lastHash = window.location.hash;
-    const from = new URL(event.oldURL).hash;
-    const to = new URL(event.newURL).hash;
     if (!from.startsWith('#module-') && !to.startsWith('#module-')) view = 'widgets';
     requestAnimationFrame(update);
   });

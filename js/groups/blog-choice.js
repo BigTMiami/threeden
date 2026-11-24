@@ -2,7 +2,8 @@
 /**
  * blog-choice.js — show or hide your blog from a group's members (Nov 18).
  *
- * After joining (any way: an invitation, Explore, a link), the group asks once:
+ * After joining (any way: an invitation, Explore, a link), the group asks once,
+ * if you've set up a blog (Nov 20: not a new account that has none yet):
  *
  *   Show your blog to members of Porch Lights?   [Show it]  [Hide it]
  *   They can open it from the directory and the chat.
@@ -19,10 +20,11 @@
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
-import { blogShownIn, setBlogShownIn, shouldAskAboutBlog } from '../state/groups.js';
+import { blogShownIn, setBlogShownIn, shouldAskAboutBlog, hasSetUpBlog } from '../state/groups.js';
 import { getSpace, getMember } from '../state/store.js';
 
-const hasBlog = (member) => Boolean(member?.username) && member.features?.blog !== false;
+// Only for someone who has set up a blog (not the signed-out guest, not a brand-new account).
+const hasBlog = (member) => hasSetUpBlog(member);
 
 /** The one-time question after joining, or null. */
 export function renderBlogQuestion(space, me, redraw) {

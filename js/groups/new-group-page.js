@@ -2,54 +2,36 @@
 /**
  * new-group-page.js — "Create a group" (#new-group).
  *
- * One page with every option (no steps): name, type, description, who can
- * see it and how people join, then a template. You become the group's
- * owner. A template (a set of modules for a household, a band, a
- * newsroom…) or a blank slate can be changed in edit mode, and you add
- * people in Group settings → Members. Picking a template moves the access
- * choices to where that kind of group usually wants them (until you pick
- * them yourself). Every access choice can be picked: "Anyone can join" or
- * "Ask to join" on a private group makes it public, and the page says so
- * (reconcileAccess in settings-page.js). After it's made, a short tour shows you around (group-tour.js).
+ * One page (no steps): name, type, description, and one question (Nov 20):
+ *
+ *   Do you want a searchable, public page for this group?
+ *   This is useful for public facing groups like bands, businesses, official groups, and more.
+ *   ( ) No, keep it private      ( ) Yes, give it a public page
+ *
+ * Every new group is invite only. No: private, one tab, "Home". Yes:
+ * public, still invite only, two tabs: "Public" (Up next big, Upcoming
+ * events to its right) and "Private" (members only). Then "Set up your
+ * group's page" asks which modules go on the members' tab, and shows how
+ * to move and resize them (group-setup.js). There's no template picker
+ * and no "Who can see it" / "How people join" here any more; both can be
+ * changed later in Group settings. You become the group's owner.
  */
 
 import { isChild } from '../state/children.js';
 import { h, replaceChildren } from '../ui/dom.js';
-import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { createGroup } from '../state/groups.js';
 import { goTo, spaceHref } from '../router.js';
-import { section, field, accessChoices, readAccessChoices, reconcileAccess, groupTypeInput } from './settings-page.js';
-import { GROUP_TEMPLATES } from '../data/starter-layouts.js';
+import { section, field, groupTypeInput } from './settings-page.js';
 import { getOnboarding, updateOnboarding } from '../onboarding/onboarding-state.js';
 import { getCurrentUser } from '../state/store.js';
 import { usernameProblem, suggestUsername, finishAccount } from '../state/accounts.js';
 import { hashPassword, passwordProblem, MIN_PASSWORD_LENGTH } from '../account/password.js';
-import { accessFor } from './group-access-defaults.js';
-import { startGroupTour } from '../onboarding/group-tour.js';
+import { startGroupSetup } from './group-setup.js';
 
-const DEFAULT_TEMPLATE = 'friends';
-
-/** Four broad templates, then "See more templates" for the rest (js/data/starter-layouts.js). */
-function templateChoices() {
-  const choice = (template) => h('label', { class: 'template-choice' },
-    h('input', { type: 'radio', name: 'new-template', value: template.id, checked: template.id === DEFAULT_TEMPLATE }),
-    h('span', {}, h('strong', {}, template.label), h('span', { class: 'settings-field__hint' }, template.description)));
-  const offered = GROUP_TEMPLATES.filter((t) => !t.hidden);
-  const more = h('div', { class: 'template-choices template-choices--more', hidden: true }, offered.filter((t) => !t.featured).map(choice));
-  const toggle = h('button', {
-    type: 'button', class: 'link-button template-choices__more', 'aria-expanded': 'false',
-    onClick: () => {
-      more.hidden = !more.hidden;
-      toggle.setAttribute('aria-expanded', String(!more.hidden));
-      replaceChildren(toggle, icon(more.hidden ? 'chevronDown' : 'chevronUp', 13), more.hidden ? ' See more templates' : ' Fewer templates');
-    },
-  }, icon('chevronDown', 13), ' See more templates');
-  return h('div', { class: 'template-choices__wrap' },
-    h('div', { class: 'template-choices' }, offered.filter((t) => t.featured).map(choice)),
-    toggle,
-    more);
-}
+/** The modules a new group starts with (Nov 20: no template picker). */
+const PRIVATE_TEMPLATE = 'friends';
+const PUBLIC_TEMPLATE = 'public-page';
 
 export function renderNewGroupPage(container) {
   if (isChild(getCurrentUser())) {
@@ -83,18 +65,21 @@ export function renderNewGroupPage(container) {
         if (problem) { error.textContent = problem; return; }
         finishAccount(me.id, { name: me.name, username: usernameInput.value.trim(), password: await hashPassword(passwordInput.value) });
       }
+      const wantsPublic = form.querySelector('input[name=new-public]:checked')?.value === 'yes';
       const group = createGroup({
         name,
         description: descriptionInput.value,
-        ...readAccessChoices(form, 'new-'),
-        template: form.querySelector('input[name=new-template]:checked').value,
+        visibility: wantsPublic ? 'public' : 'private',
+        joining: 'invite', // every new group is invite only
+        template: wantsPublic ? PUBLIC_TEMPLATE : PRIVATE_TEMPLATE,
         groupType: groupTypeField.value,
+        setup: true, // tabs only: the setup picker chooses the members' modules
       });
       // Someone who came to 3den to organize: their Get started card follows this group.
       if (getOnboarding()?.source === 'organizer' && !getOnboarding().spaceId) updateOnboarding({ spaceId: group.id });
       goTo(spaceHref(group.id));
       showToast(`Created ${group.name}.`);
-      startGroupTour(group.id);
+      startGroupSetup(group.id);
     },
   },
     isQuick ? h('fieldset', { class: 'settings-field settings-fieldset new-group__account' },
@@ -108,41 +93,28 @@ export function renderNewGroupPage(container) {
       groupTypeField, groupTypeOptions,
       h('span', { class: 'settings-field__hint' }, 'What it is, in a word or two, like “Band” or “News outlet”. Shown with its name.')),
     field('Description (optional)', descriptionInput),
-    // Two separate choices: a band can be public but add its own members.
-    accessChoices(accessFor(DEFAULT_TEMPLATE), { prefix: 'new-' }),
-    // A template decides the first modules; the full library is always there.
-    h('div', { class: 'settings-field' },
-      h('span', { class: 'settings-field__label' }, 'Start from a template'),
-      h('span', { class: 'settings-field__hint' }, 'Each one is just a starting set of modules. You can change everything later in edit mode: add, remove, and rearrange modules.'),
-      templateChoices()),
+    // The one access question (Nov 20). Either way it's invite only.
+    h('fieldset', { class: 'settings-field settings-fieldset new-group__public' },
+      h('legend', { class: 'settings-field__label' }, 'Do you want a searchable, public page for this group?'),
+      h('p', { class: 'settings-field__hint' }, 'This is useful for public facing groups like bands, businesses, official groups, and more.'),
+      h('div', { class: 'new-group__public-choices' },
+        h('label', { class: 'template-choice' },
+          h('input', { type: 'radio', name: 'new-public', value: 'no', checked: true }),
+          h('span', {}, h('strong', {}, 'No, keep it private'), h('span', { class: 'settings-field__hint' }, 'Only members can see it or find it.'))),
+        h('label', { class: 'template-choice' },
+          h('input', { type: 'radio', name: 'new-public', value: 'yes' }),
+          h('span', {}, h('strong', {}, 'Yes, give it a public page'), h('span', { class: 'settings-field__hint' }, 'Anyone can find it and see its Public tab. It’s still invite only, and members get a Private tab of their own.')))),
+      h('p', { class: 'settings-field__hint' }, 'New groups are invite only. You can change who can see it and how people join later, in Group settings.')),
     error,
     h('div', { class: 'form-row' },
       h('button', { type: 'submit', class: 'button button--primary' }, 'Create group'),
       h('a', { class: 'button button--quiet', href: '#' }, 'Cancel')),
   );
 
-  // The access choices follow the template until you pick them yourself.
-  // Every choice can be picked: one that needs the other choice to change
-  // (a private group that anyone can join) changes it and says so.
-  let accessTouched = false;
-  const radio = (name, value) => form.querySelector(`input[name=new-${name}][value=${value}]`);
-  form.addEventListener('change', (event) => {
-    const { name, value } = event.target;
-    if (name === 'new-template' && !accessTouched) {
-      const access = accessFor(value);
-      radio('visibility', access.visibility).checked = true;
-      radio('joining', access.joining).checked = true;
-    }
-    if (name === 'new-visibility' || name === 'new-joining') {
-      accessTouched = true;
-      reconcileAccess(form, 'new-', name);
-    }
-  });
-
   replaceChildren(container,
     h('header', { class: 'settings-page__header' },
       h('h1', { class: 'settings-page__title' }, 'Create a group'),
-      h('p', { class: 'settings-page__subtitle' }, 'You’ll be its owner. Pick a template to start with, or a blank slate. You can change everything later.'),
+      h('p', { class: 'settings-page__subtitle' }, 'You’ll be its owner. You can change everything later.'),
     ),
     section('About the group', null, form),
   );

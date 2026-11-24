@@ -15,7 +15,9 @@
  *   │ [+] Write a message…              [Send] │   Enter sends, Shift+Enter = new line
  *   └──────────────────────────────────────────┘
  *    "+" adds an event, a photo or video, or someone's blog (attachments.js)
- *   ⏱ at the top: disappearing messages (off, 5 minutes … 4 weeks), for everyone in it
+ *   ⏱ at the top: disappearing messages (off, 5 minutes … 4 weeks), for everyone in it.
+ *     Compact (a Chat module's card, Nov 20): no setting, only a note when it's on;
+ *     change it in the module's full page or in Messages.
  *   🎙 next to Send: record a voice note (voice.js)
  *
  * On hover (or focus) each message has: reactions, ↩ Reply (quotes it above
@@ -163,13 +165,15 @@ export function createThreadView(conversationId, { compact = false, placeholder 
 
   function drawTimer(conversation) {
     const after = conversation.disappearAfter ?? 0;
-    const select = h('select', {
+    const select = compact ? null : h('select', {
       class: 'thread__timer-select', 'aria-label': 'Disappearing messages',
       onChange: (event) => setDisappearing(conversationId, me.id, Number(event.target.value)),
     }, DISAPPEAR_OPTIONS.map((o) => h('option', { value: String(o.ms), selected: o.ms === after }, o.ms ? `Disappear after ${o.label}` : 'Messages stay')));
     timerBar.classList.toggle('is-on', Boolean(after));
     const other = conversation.kind === 'direct' ? getMember(conversation.memberIds.find((id) => id !== me.id)) : null;
     const state = other ? verificationOf(conversation, other) : null;
+    // On a card the bar only shows when there's something to say.
+    timerBar.hidden = compact && !after && !(isEncrypted(conversation) && other);
     replaceChildren(timerBar,
       isEncrypted(conversation) && other ? h('button', {
         type: 'button', class: `thread__lock is-${state}`, title: 'End-to-end encrypted: only you and they can read these messages',

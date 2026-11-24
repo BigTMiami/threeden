@@ -1,8 +1,9 @@
 """
 Group setup access choices and Copy this page's layout (Nov 18).
 
-1. Create a group: every "Who can see it" and "How people join" choice can
-   be picked, on a computer and with taps on a phone; none is disabled.
+1. Group settings (Nov 20: Create a group no longer has these; a new group
+   starts private and invite only): every "Who can see it" and "How people
+   join" choice can be picked, on a computer and with taps on a phone; none is disabled.
    "Ask to join" on a private group makes it Public and says so; Private on
    an open group makes it Invite only and says so. The picked choice is
    highlighted. The group is created with what was picked.
@@ -23,7 +24,7 @@ def check(ok, label):
         fails.append(label)
 
 
-def state(pg, prefix='new-'):
+def state(pg, prefix=''):
     return pg.evaluate(f"""(() => {{
       const v = document.querySelector('input[name={prefix}visibility]:checked')?.value;
       const j = document.querySelector('input[name={prefix}joining]:checked')?.value;
@@ -52,8 +53,13 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
     pg.evaluate("location.hash='#new-group'"); pg.wait_for_timeout(700)
+    pg.fill('input[aria-label="Group name"]', 'Open Porch')
+    pg.get_by_role('button', name='Create group').click(); pg.wait_for_timeout(900)
+    gid = pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); return s.getState().spaces.find(x=>x.name==='Open Porch').id})()")
+    pg.evaluate("document.querySelector('.tour-card')?.remove()")
+    pg.evaluate(f"location.hash='#settings-{gid}'"); pg.wait_for_timeout(800)
     v, j, off = state(pg)
-    check((v, j, off) == ('private', 'invite', 0), f'starts Private, Invite only, nothing disabled ({v}, {j}, {off})')
+    check((v, j, off) == ('private', 'invite', 0), f'a new group starts Private, Invite only, nothing disabled ({v}, {j}, {off})')
     choose(pg, 'Ask to join')
     v, j, _ = state(pg)
     check((v, j) == ('public', 'request'), f'Ask to join on a private group makes it Public ({v}, {j})')
@@ -72,10 +78,9 @@ with sync_playwright() as p:
     v, j, _ = state(pg)
     check((v, j) == ('public', 'open'), f'Public, then Anyone can join ({v}, {j})')
     pg.screenshot(path='test-output/out/group-setup-access.png', full_page=True)
-    pg.fill('input[aria-label="Group name"]', 'Open Porch')
-    pg.get_by_role('button', name='Create group').click(); pg.wait_for_timeout(900)
+    pg.get_by_role('button', name='Save changes').first.click(); pg.wait_for_timeout(600)
     made = pg.evaluate("(async()=>{const s=await import('./js/state/store.js'); const g=s.getState().spaces.find(x=>x.name==='Open Porch'); return g && [g.visibility, g.joining, g.id]})()")
-    check(made and made[:2] == ['public', 'open'], f'created with what was picked ({made})')
+    check(made and made[:2] == ['public', 'open'], f'saved with what was picked ({made})')
 
     # 2. Group settings → General
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
@@ -110,7 +115,8 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True)
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://localhost:8765/index.html'); pg.evaluate('localStorage.clear(); sessionStorage.clear()'); pg.reload(); pg.wait_for_timeout(900)
-    pg.evaluate("location.hash='#new-group'"); pg.wait_for_timeout(700)
+    pid = pg.evaluate("(async()=>{const g=await import('./js/state/groups.js'); return g.createGroup({name:'Phone Porch'}).id})()")
+    pg.evaluate(f"location.hash='#settings-{pid}'"); pg.wait_for_timeout(800)
     seen = []
     for text, want in [('Public', ('public', 'invite')), ('Request', None), ('Ask to join', ('public', 'request')), ('Anyone can join', ('public', 'open')),
                        ('Invite only', ('public', 'invite')), ('Admins add people', ('public', 'admins')), ('Private', ('private', 'admins'))]:

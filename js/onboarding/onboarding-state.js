@@ -6,7 +6,7 @@
  * have one; the demo people don't):
  *
  *   {
- *     source: 'event' | 'host' | 'group' | 'blog' | 'follow' | 'message' | 'organizer' | 'organized' | 'direct',
+ *     source: 'event' | 'host' | 'group' | 'blog' | 'friend' | 'follow' | 'message' | 'organizer' | 'organized' | 'direct',
  *     itemId,        ← the event (event), or the person whose blog it was (blog)
  *     spaceId,       ← the group (group, organizer), or the event's space
  *     layout,        ← which starting homepage they got (js/data/starter-layouts.js)
@@ -33,7 +33,7 @@ export function newOnboarding(arrival) {
   const source = arrival?.source ?? 'direct';
   return {
     source,
-    itemId: arrival?.itemId ?? null,
+    itemId: arrival?.itemId ?? arrival?.inviterId ?? null, // a friend's invite link: who sent it
     spaceId: arrival?.spaceId ?? null,
     layout: layoutForArrival(source),
     startedAt: Date.now(),

@@ -27,6 +27,7 @@ import {
 } from '../state/accounts.js';
 import { hashPassword, checkPassword, passwordProblem, MIN_PASSWORD_LENGTH } from './password.js';
 import { goTo } from '../router.js';
+import { PREVIEW_PATHS, startPreview } from './preview-as-new.js';
 
 /**
  * Where to go once signed in: the homepage, unless the person came from
@@ -62,8 +63,8 @@ export function renderAuthView(container, mode = 'signin') {
       isChild ? renderChildSignUp() : isSignUp ? renderSignUpForm() : renderSignInForm(),
       // A small line under the form (child-account.js).
       mode === 'signup' ? h('p', { class: 'auth__child-link' }, h('a', { href: '#signup-child' }, 'Set up an account for a child')) : null,
+      isSignUp ? null : renderPreviewAsNew(),
       isSignUp ? null : renderDemoAccounts(),
-      isSignUp ? null : renderFirstVisits(),
       h('p', { class: 'auth__note' },
         'Prototype: accounts are stored only in this browser. Don’t use a password you use anywhere else.'),
     ),
@@ -118,30 +119,21 @@ function renderSignInForm() {
   return form;
 }
 
-/**
- * Prototype: start as a brand-new person who arrived a particular way, to
- * see each onboarding path (js/onboarding/). Each opens a public page you
- * can look at without an account; RSVP, Join or Add friend signs you up.
- */
-const FIRST_VISITS = [
-  { href: '#event-band-ev-2', label: 'Someone sent you an event', detail: 'Porch Lights at the Juniper Street Fair' },
-  { href: '#join-supper24', label: 'Someone sent you a group invite link', detail: 'Juniper Supper Club' },
-  { href: '#space-porchlights', label: 'You found a band’s public page', detail: 'Porch Lights' },
-  { href: '#blog-jamal', label: 'A friend sent you their blog', detail: 'Jamal Brooks' },
-  { href: '#signup', label: 'You came with no link', detail: 'Create an account from scratch' },
-];
-
-function renderFirstVisits() {
-  return h('section', { class: 'auth__demo auth__first-visits' },
-    h('h2', { class: 'auth__demo-title' }, 'Or try a first visit, as someone new'),
-    h('ul', { class: 'auth__first-visit-list' }, FIRST_VISITS.map((visit) => h('li', {},
-      h('a', { href: visit.href }, visit.label),
-      h('span', { class: 'auth__demo-roles' }, ` · ${visit.detail}`)))));
+/** Prototype (Nov 20): each way in, as a brand-new person, from the first page they'd see (preview-as-new.js). It replaced the "first visit" links. */
+function renderPreviewAsNew() {
+  return h('section', { class: 'auth__demo auth__preview-new' },
+    h('h2', { class: 'auth__demo-title' }, 'Preview as a new user'),
+    h('p', { class: 'auth__hint' }, 'Each opens the page that person would see, signed out. You make the account yourself, then see every tutorial from the start.'),
+    h('ul', { class: 'auth__demo-list' }, PREVIEW_PATHS.map((path) => h('li', {},
+      h('button', { type: 'button', class: 'auth__demo-account auth__preview-path', 'data-preview': path.id, onClick: () => startPreview(path.id) },
+        h('span', { class: 'auth__demo-text' },
+          h('span', { class: 'auth__demo-name' }, path.label),
+          h('span', { class: 'auth__demo-roles' }, path.detail)))))));
 }
 
 /** One button per demo account (the ones without a password). */
 function renderDemoAccounts() {
-  const demo = getAccounts().filter((account) => !account.password && !account.quick && (!account.growth || account.growth.starter));
+  const demo = getAccounts().filter((account) => !account.password && !account.quick && !account.preview && (!account.growth || account.growth.starter));
   if (demo.length === 0) return null;
 
   return h('section', { class: 'auth__demo' },

@@ -110,6 +110,9 @@ function itemsFor(space, me, redraw) {
 /** The next step for this group (one line), or null when it shouldn't show. */
 export function renderWelcomeChecklist(space, me) {
   if (!space || space.kind !== 'group' || !me || me.isGuest) return null;
+  // One thing at a time: not while their onboarding tutorial is going (js/onboarding/tutorial.js).
+  const tour = me.onboarding?.tour;
+  if (tour && tour.at !== 'DONE' && !tour.paused) return null;
   if (!space.memberIds.includes(me.id) || (space.roles?.[me.id] ?? 'member') !== 'member') return null;
   const joined = space.joinedAt?.[me.id];
   if (!joined || Date.now() - joined > SHOW_FOR_DAYS * 864e5) return null;

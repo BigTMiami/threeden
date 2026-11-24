@@ -8,7 +8,9 @@
  *   setInterests(id, ids)     saves them
  *   groupInterests(space)     space.interests, or a guess from its name and type
  *   eventInterests(event, space)  from its tags, plus its group's
- *   groupPlace(space)         where it meets: space.area, else where its events are
+ *   groupPlace(space)         where it meets: space.area ('online' → ONLINE), else where its events are
+ *   ONLINE                    the "Online" choice for where a group meets (Nov 22): no map spot,
+ *                             so it shows for Near me and Anywhere, and under its own Online
  *   rankGroups(me, groups, { where })    → [{ space, friends, place, distance, matches, score }]
  *   whereChoices(me)          "Near me", each neighborhood with something public, "Anywhere"
  *
@@ -74,9 +76,13 @@ export function eventInterests(event, space) {
   return [...new Set([...fromTags, ...(space ? groupInterests(space) : [])])];
 }
 
+/** "Online": a group that meets online, wherever its members are. */
+export const ONLINE = Object.freeze({ id: 'online', name: 'Online', online: true });
+
 /** Where a group meets: its own area (space.area), else where most of its events are. */
 export function groupPlace(space) {
   if (!space) return null;
+  if (space.area === ONLINE.id) return ONLINE;
   if (space.area) return placeById(space.area);
   const counts = new Map();
   for (const module of space.modules ?? []) {
@@ -103,7 +109,8 @@ export function whereChoices(me, publicPlaces) {
   const places = PLACES.filter((p) => publicPlaces.has(p.id))
     .sort((a, b) => (area ? distanceMiles(area.point, a) - distanceMiles(area.point, b) : a.name.localeCompare(b.name)))
     .map((p) => ({ id: p.id, label: p.name }));
-  return [...near, ...places, { id: 'anywhere', label: 'Anywhere' }];
+  const online = publicPlaces.has(ONLINE.id) ? [{ id: ONLINE.id, label: 'Online' }] : [];
+  return [...near, ...places, ...online, { id: 'anywhere', label: 'Anywhere' }];
 }
 
 /**
@@ -115,6 +122,9 @@ export function whereChoices(me, publicPlaces) {
 export function inWhere(place, where, area) {
   if (where === 'anywhere') return true;
   if (!place) return false;
+  // Online groups are a tap away for everyone: near you too, but not "in" a neighborhood.
+  if (place.online) return where === 'near' || where === ONLINE.id;
+  if (where === ONLINE.id) return false;
   if (where === 'near') return !area || area.radiusMiles == null || distanceMiles(area.point, place) <= area.radiusMiles;
   const hood = placeById(where);
   return Boolean(hood) && distanceMiles(hood, place) <= NEIGHBORHOOD_MILES;
@@ -131,11 +141,11 @@ export function rankGroups(me, groups, { where = 'near', only = null } = {}) {
   const friends = new Set(getFriendIds(me.id));
   const mine = new Set(interestsOf(me));
   return groups.map((space) => {
-    const place = groupPlace(space);
+    const place = /** @type {any} */ (groupPlace(space)); // a PLACES entry, ONLINE, or null
     const interests = groupInterests(space);
     const friendIds = space.memberIds.filter((id) => friends.has(id));
     const matches = interests.filter((id) => mine.has(id));
-    const distance = area && place ? distanceMiles(area.point, place) : null;
+    const distance = area && place && !place.online ? distanceMiles(area.point, place) : null;
     const score = friendIds.length * 10 + matches.length * 6
       + (distance == null ? 0 : Math.max(0, 4 - distance / 2))
       + Math.log2(1 + space.memberIds.length);

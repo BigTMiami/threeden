@@ -881,3 +881,13 @@
 .notifications-menu__answered.is-declined { color: #c62f2f; }
 
 .notifications-menu__answerable:has(.is-unread) { background: var(--color-accent-soft); }
+
+/* Dragging tabs in edit mode (Nov 20; makeTabDraggable in space-header.js) */
+.space-tabs__tab.is-movable { cursor: grab; touch-action: none; user-select: none; }
+.space-tabs__tab.is-dragging {
+  position: relative; z-index: 2; cursor: grabbing;
+  background: var(--color-surface); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); border-radius: 8px;
+}
+.space-tabs.is-reordering .space-tabs__tab:not(.is-dragging) { transition: box-shadow 0.12s; }
+.space-tabs__tab.is-drop-before { box-shadow: inset 3px 0 0 var(--color-accent); }
+.space-tabs__tab.is-drop-after { box-shadow: inset -3px 0 0 var(--color-accent); }

@@ -38,6 +38,7 @@ export const groceryModule = {
   defaultSpan: 4,
   defaultRows: 13,
   available: false, // folded into Tasks (Lists view), Nov 20
+  hiddenFromLibrary: true, // and not listed as "Soon" either
 
   createInitialData() {
     return { items: [], history: [] };

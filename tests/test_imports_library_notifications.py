@@ -28,8 +28,8 @@ with sync_playwright() as p:
         lib.locator('.library__more').first.click(); pg.wait_for_timeout(200)
         print(' after more:', lib.locator('.library-item:visible').count())
         print(' Spreadsheet in the list (should be False):', lib.locator('.library-item', has_text='Spreadsheet').count() > 0)
-        lib.locator('.library-item', has_text='Tasks').first.click(); pg.wait_for_timeout(500)
-        print(' task cards on page:', pg.locator('.module-frame[data-module-type="todo"]').count())
+        lib.locator('.library-item', has_text='Calendar').first.click(); pg.wait_for_timeout(500)  # Tasks is members-only now (Nov 20)
+        print(' calendar cards on page:', pg.locator('.module-frame[data-module-type="calendar"]').count())
         pg.screenshot(path=f'test-output/t124a_{vw}.png')
         # member import
         pg.evaluate("location.hash='#settings-porchlights--members'"); pg.wait_for_timeout(700)

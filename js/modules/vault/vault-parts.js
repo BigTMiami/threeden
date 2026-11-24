@@ -23,7 +23,7 @@ import { timeAgo } from '../../utils/dates.js';
 export const TOP_LEVEL_NAME = 'Vault';
 
 /**
- * The "+ New" menu, in order. The first six are always shown; "More" opens
+ * The "+ New" menu, in order. The first seven are always shown; "More" opens
  * the rest. 'module:<type>' makes a module file (see vault-module-files.js).
  * Module files use a short description here instead of the library's.
  */
@@ -31,6 +31,7 @@ export const NEW_MENU_ENTRIES = [
   { action: 'note', label: 'Document', description: 'Write together, with headings, lists, and tables', icon: 'note' },
   { action: 'module:sheet', label: 'Spreadsheet', description: 'Rows, formulas, and charts', icon: 'table' },
   { action: 'module:presentation', label: 'Presentation', description: 'Slides to present full screen', icon: 'slides' },
+  { action: 'module:survey', label: 'Survey', description: 'Ask questions, see the answers add up', icon: 'survey' },
   { action: 'article', label: 'Article', description: 'Write it here, then publish it to Articles', icon: 'newspaper' },
   { action: 'upload', label: 'Upload files', description: 'From your device', icon: 'upload' },
   { action: 'folder', label: 'Folder', description: 'Organize files', icon: 'folder' },
@@ -41,7 +42,6 @@ export const MORE_MENU_ENTRIES = [
   { action: 'module:todo', label: 'Tasks', description: 'Tasks for people, as a list or a board', icon: 'todo' },
   { action: 'module:relationship', label: 'Relationship map', description: 'Who is connected to whom', icon: 'relationship' },
   { action: 'module:gantt', label: 'Gantt chart', description: 'Plan phases over time', icon: 'gantt' },
-  { action: 'module:survey', label: 'Survey', description: 'Ask questions, see the answers add up', icon: 'survey' },
   { action: 'link', label: 'Link', description: 'Save a web page for the group', icon: 'link' },
 ];
 
@@ -81,6 +81,66 @@ export function renderNewMenu(onPick, { moreOpen = false } = {}) {
     toggle,
     more,
   );
+}
+
+/**
+ * Drop files from the computer onto the vault (Nov 20). While files are
+ * dragged over `target` it shows "Drop to add to <folder>"; dropping on a
+ * folder (a row or tile with data-item-id that `isFolder` says is one)
+ * puts them in that folder, anywhere else in the folder you're in.
+ *
+ *   enableFileDrop(element, { onFiles(files, folderId|null), folderName(), isFolder(id) })
+ *
+ * @param {HTMLElement} target
+ * @param {{ onFiles: (files: File[], folderId: string | null) => void, folderName: () => string | undefined, isFolder?: (id: string) => boolean }} options
+ */
+export function enableFileDrop(target, { onFiles, folderName, isFolder = (_id) => false }) {
+  const hint = h('div', { class: 'vault-drop', 'aria-hidden': 'true' }, icon('upload', 22), h('span', { class: 'vault-drop__text' }));
+  let depth = 0;
+  const hasFiles = (event) => [...(event.dataTransfer?.types ?? [])].includes('Files');
+  const folderUnder = (event) => {
+    const row = /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (event.target)?.closest?.('[data-item-id]'));
+    return row && isFolder(row.dataset.itemId) ? row : null;
+  };
+  let marked = null;
+  const mark = (row) => {
+    if (row === marked) return;
+    marked?.classList.remove('is-drop-folder');
+    row?.classList.add('is-drop-folder');
+    marked = row;
+  };
+  const stop = () => { depth = 0; target.classList.remove('is-dropping'); mark(null); hint.remove(); };
+  target.addEventListener('dragenter', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    depth += 1;
+    if (!target.classList.contains('is-dropping')) {
+      target.classList.add('is-dropping');
+      target.append(hint);
+    }
+  });
+  target.addEventListener('dragover', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    const row = folderUnder(event);
+    mark(row);
+    const name = row ? row.querySelector('.vault-item__name, .vault-tile__name, .vault-table__name button')?.textContent?.trim() : folderName();
+    hint.querySelector('.vault-drop__text').textContent = `Drop to add to ${name || 'your vault'}`;
+  });
+  target.addEventListener('dragleave', (event) => {
+    if (!hasFiles(event)) return;
+    depth -= 1;
+    if (depth <= 0) stop();
+  });
+  target.addEventListener('drop', (event) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    const row = folderUnder(event);
+    const files = [...(event.dataTransfer?.files ?? [])];
+    stop();
+    if (files.length) onFiles(files, row ? row.dataset.itemId : null);
+  });
 }
 
 /** A hidden <input type="file"> to open the device's file picker with. */

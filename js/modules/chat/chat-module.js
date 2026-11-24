@@ -30,7 +30,7 @@ import { renderChatCard, renderChatPage } from './chat-card.js';
 export const chatModule = {
   type: 'chat',
   label: 'Chat',
-  description: 'A group chat, also in everyone’s Messages',
+  description: 'Good for full conversations, mirrored in messages. Has channels.',
   icon: 'chat',
   defaultSpan: 5,
   defaultRows: 13,

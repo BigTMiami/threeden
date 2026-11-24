@@ -29,7 +29,7 @@ export const galleryModule = {
   defaultSpan: 6,
   defaultRows: 12,
   available: true,
-  spaceKinds: ['blog'],
+  spaceKinds: ['blog', 'group'],  // a group's public page only (js/modules/module-lists.js)
 
   createInitialData: () => ({ photos: [] }),
   render: (container, context) => renderGallery(container, context, false),
@@ -77,7 +77,7 @@ function renderGallery(container, context, isFullPage) {
   function draw() {
     const list = photos();
     replaceChildren(grid, list.length === 0
-      ? emptyState({ icon: 'image', title: 'No photos yet', text: canEdit ? 'Add some to share them on your blog.' : null })
+      ? emptyState({ icon: 'image', title: 'No photos yet', text: canEdit ? (context.spaceKind === 'group' ? 'Add some to share them here.' : 'Add some to share them on your blog.') : null })
       : list.map((photo, index) => h('button', {
         type: 'button',
         class: 'gallery__item',
