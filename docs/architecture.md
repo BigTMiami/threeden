@@ -166,7 +166,7 @@ flowchart TB
 ```
 
 ```
-server/
+prod/server/
   app/
     main.py            app setup, middleware, routers
     core/              settings, database, security helpers, errors
@@ -401,7 +401,7 @@ flowchart LR
 
 - **The permission table is shared.** The prototype's `ROLES` and
   `PERMISSIONS` (each permission and the lowest role allowed) move into one
-  file, `shared/permissions.json`, read by both the web app and the server.
+  file, `prod/shared/permissions.json`, read by both the web app and the server.
   A shared file of test cases ("a member may post on the board; a member may
   not pin") runs in both the JS checks and pytest, so the two can't drift.
 - **Queries are scoped, not filtered afterwards.** Repositories only ever ask

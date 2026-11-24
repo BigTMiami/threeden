@@ -1,0 +1,4 @@
+.env
+ios/*.xcodeproj
+__pycache__/
+.venv/

@@ -54,7 +54,7 @@ This section is for questions Claude has. Each one has a recommendation; write y
    - *Answer:*
 
 2. **Move the prototype into `web/`?** Recommended: yes, in Cycle 0 with `git mv`, so Caddy serves only the app (not docs, tests, or scripts). cloudflare-deploy.md planned the same move under the name `prototype_deploy/`; `web/` fits better now that it becomes the real web client. That doc would be updated to match.
-   - *Answer:*
+   - *Answer:* No. All production code goes under `prod/` (`prod/web/`, `prod/server/`, `prod/ios/`, …). The prototype stays at the repo root for now and moves into its own folder later. development_setup.md and dev_plan_1.md are updated to match.
 
 3. **OrbStack or Docker Desktop?** Neither is installed on this Mac yet. Recommended: OrbStack (lighter and faster on Apple silicon, free for personal use). Docker Desktop is fine too; nothing else changes.
    - *Answer:*
