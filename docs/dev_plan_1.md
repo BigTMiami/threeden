@@ -70,12 +70,12 @@ other way round.
 
 | | Step | Who | Done when |
 |---|---|---|---|
-| [ ] | **2.1** `ios/project.yml` (XcodeGen), a SwiftUI app named 3den with Debug and Release config files (`API_BASE_URL`), and Info.plist settings for local networking in Debug | 🤖 Claude | `xcodegen` makes the project; `xcodebuild` builds it for the Simulator |
-| [ ] | **2.2** An `APIClient` (URLSession, async/await, Codable, one error type) and a Hello screen: status, greetings list, pull to refresh, add form | 🤖 Claude | Builds |
-| [ ] | **2.3** Unit tests for decoding the hello responses and for error handling | 🤖 Claude | Tests pass with `make ios-test` |
-| [ ] | **2.4** Open the project in Xcode, choose your team under Signing & Capabilities, and run on the iPhone Simulator. Add a greeting; refresh the web page | 🧑 You | The greeting shows on the web |
-| [ ] | **2.5** Set your Mac's `.local` name in `Debug.xcconfig`, run on your iPhone (same Wi-Fi), allow Local Network access, and add a greeting from the phone | 🧑 You | It shows on the web, and a web greeting shows on the phone |
-| [ ] | **2.6** Update development_setup.md §8 with what you ran into | 🤖 Claude | Doc matches reality |
+| [x] | **2.1** `ios/project.yml` (XcodeGen), a SwiftUI app named 3den with Debug and Release config files (`API_BASE_URL`), an optional `Local.xcconfig` for per-Mac settings, and Info.plist settings for local networking | 🤖 Claude | `xcodegen` makes the project; `xcodebuild` builds it for the Simulator |
+| [x] | **2.2** An `APIClient` (URLSession, async/await, Codable, one error type) and a Hello screen: status, greetings list, pull to refresh, add form | 🤖 Claude | Builds |
+| [x] | **2.3** Unit tests for decoding the hello responses and for error handling | 🤖 Claude | Tests pass with `make ios-test` |
+| [x] | **2.4** With the stack up, `make ios`, open `ios/ThreeDen.xcodeproj` in Xcode, and run on the iPhone Simulator (no team needed). Add a greeting; refresh the web page | 🧑 You | The greeting shows on the web |
+| [x] | **2.5** `cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig`; set `DEVELOPMENT_TEAM` and your Mac's `.local` address in it; `make ios`; run on your iPhone (same Wi-Fi), allow Local Network access, and add a greeting from the phone | 🧑 You | It shows on the web, and a web greeting shows on the phone |
+| [x] | **2.6** Update development_setup.md §8 with what you ran into | 🤖 Claude | Doc matches reality |
 | [ ] | **2.7** Review and commit | 🧑 You | Committed |
 
 ## Cycle 3: Accounts and sign-in

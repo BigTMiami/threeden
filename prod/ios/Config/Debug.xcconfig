@@ -1,0 +1,15 @@
+// Debug builds: talk to the local Docker stack.
+//
+// The Simulator shares the Mac's network, so localhost works there. For your
+// iPhone, put your Mac's address in Local.xcconfig (not committed, since each
+// Mac has its own name), for example:
+//
+//   API_BASE_URL = http:/$()/afmstudio.local:8080
+//   DEVELOPMENT_TEAM = ABCDE12345
+//
+// ("/$()/" because "//" starts a comment in .xcconfig files.)
+
+API_BASE_URL = http:/$()/localhost:8080
+APP_BUNDLE_ID = com.threeden.ThreeDen
+
+#include? "Local.xcconfig"

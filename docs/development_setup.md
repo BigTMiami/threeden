@@ -346,24 +346,43 @@ there is exactly what was tested. Details come in a later plan.
   (`ios/*.xcodeproj` is in `prod/.gitignore`). After pulling changes that
   touch `project.yml` or add files, run `make ios` (which runs `xcodegen`),
   then open `prod/ios/ThreeDen.xcodeproj`.
-- **Signing:** in Xcode, choose your team under Signing & Capabilities once
-  (it's saved in a local file that isn't committed). A free Apple ID is
-  enough to run on the Simulator and your own iPhone (the app expires after
-  7 days and needs a fresh install). Push notifications and TestFlight need
-  the paid Apple Developer Program.
-- **Which server the app talks to** is set per build configuration in
-  `prod/ios/Config/Debug.xcconfig` and `Release.xcconfig` (`API_BASE_URL`):
-  - Simulator: `http://localhost:8080` (the Simulator shares the Mac's
-    network).
-  - Your iPhone: `http://<your-mac-name>.local:8080`. Find the name in
-    System Settings → General → Sharing → Local hostname. The phone must be on
-    the same Wi-Fi. iOS asks once for Local Network permission; allow it.
-  - Plain `http` is allowed only in Debug builds, and only to local
-    addresses (`NSAllowsLocalNetworking` in Info.plist). Release builds use
-    HTTPS.
+- **Per-Mac settings go in `prod/ios/Config/Local.xcconfig`** (not committed;
+  copy it from `Local.xcconfig.example`). Settings chosen in Xcode's UI are
+  lost the next time `make ios` regenerates the project, so set them here
+  instead:
+  - `DEVELOPMENT_TEAM`: your signing team. A free Apple ID is enough for the
+    Simulator and your own iPhone (the app expires after 7 days and needs a
+    fresh install). Push notifications and TestFlight need the paid Apple
+    Developer Program. Not needed for the Simulator.
+  - `API_BASE_URL`: only for running on your iPhone (below).
+  - `APP_BUNDLE_ID`: only if `com.threeden.ThreeDen` is already taken under
+    your Apple ID.
+
+  Run `make ios` after changing it.
+- **Which server the app talks to** is `API_BASE_URL`, set per build
+  configuration in `prod/ios/Config/Debug.xcconfig` and `Release.xcconfig`
+  (and overridable in `Local.xcconfig` for Debug). Write `//` as `/$()/`,
+  since `//` starts a comment in these files:
+  - Simulator: `http:/$()/localhost:8080`, the Debug default (the Simulator
+    shares the Mac's network).
+  - Your iPhone: `API_BASE_URL = http:/$()/<your-mac-name>.local:8080` in
+    `Local.xcconfig`. Find the name in System Settings → General → Sharing →
+    Local hostname. The phone must be on the same Wi-Fi. iOS asks once for
+    Local Network permission; allow it.
+  - Plain `http` works only to local addresses (`NSAllowsLocalNetworking` in
+    Info.plist). Release builds always use HTTPS.
+- **The app's code** (`prod/ios/ThreeDen/`): `API/` holds `APIClient`
+  (URLSession, async/await, Codable, one `APIError` type), `Hello/` the Hello
+  screen and its model. The app reads `API_BASE_URL` through Info.plist,
+  which XcodeGen writes from `project.yml` (so `Info.plist` isn't committed
+  either).
 - **Firewall:** if macOS's firewall is on, allow incoming connections for
   OrbStack or Docker, or the phone can't reach port 8080.
-- **Tests:** ⌘U in Xcode, or `make ios-test` from the terminal.
+- **Tests:** ⌘U in Xcode, or `make ios-test` from `prod/` (Swift Testing, in
+  `prod/ios/ThreeDenTests/`; they use a fake server, so the Docker stack
+  needn't be running). It uses the iPhone 17 Simulator; pick another with
+  `make ios-test IOS_SIM="iPhone 16"` (`xcrun simctl list devices` lists
+  them). `make ios-build` just builds.
 
 ## 9. Other pieces
 
@@ -386,6 +405,8 @@ there is exactly what was tested. Details come in a later plan.
   | `make check` | Ruff lint and format check (ESLint and TypeScript for `prod/web/` join in Cycle 3) |
   | `make format` | Ruff: fix what it can and format |
   | `make ios` | regenerate the Xcode project |
+  | `make ios-build` | build the app for the Simulator |
+  | `make ios-test` | iOS unit tests in the Simulator |
 
 - **Linting:** Ruff for Python (format and lint), ESLint and TypeScript for
   `prod/web/` (its own config, copied from the prototype's when the app is
@@ -426,4 +447,6 @@ make down            # when you're done for the day (optional)
 | A package is missing in the container | `docker compose build api` after `uv add` |
 | iPhone can't connect | same Wi-Fi? Local Network permission allowed? macOS firewall? Try `http://<mac>.local:8080/api/health` in Safari on the phone |
 | Xcode says files are missing | `make ios` to regenerate the project |
+| Signing team or bundle ID reset in Xcode | set them in `prod/ios/Config/Local.xcconfig`, then `make ios` |
+| "Application failed preflight checks" / Simulator "Busy" | the Simulator was still booting; run the tests again (`make ios-test` waits for it) |
 | Start completely fresh | `docker compose down -v`, then `make up && make migrate && make seed` |

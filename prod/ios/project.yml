@@ -1,0 +1,79 @@
+# XcodeGen spec. The Xcode project is generated from this file and isn't
+# committed: run `make ios` (from prod/) after pulling, then open ThreeDen.xcodeproj.
+
+name: ThreeDen
+
+options:
+  bundleIdPrefix: com.threeden
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1" # iPhone only for now
+
+configFiles:
+  Debug: Config/Debug.xcconfig
+  Release: Config/Release.xcconfig
+
+targets:
+  ThreeDen:
+    type: application
+    platform: iOS
+    sources:
+      - path: ThreeDen
+    settings:
+      base:
+        PRODUCT_NAME: ThreeDen
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID) # set in Config/*.xcconfig
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+    info:
+      path: ThreeDen/Info.plist
+      properties:
+        CFBundleDisplayName: 3den
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Which server the app talks to; set per configuration in Config/*.xcconfig.
+        APIBaseURL: $(API_BASE_URL)
+        # Plain http only to local addresses (localhost, *.local, LAN IPs).
+        # Release builds use https, so this has no effect there.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: >-
+          3den connects to the development server on your Mac over your Wi-Fi.
+
+  ThreeDenTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ThreeDenTests
+    dependencies:
+      - target: ThreeDen
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ThreeDen.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ThreeDen
+        BUNDLE_LOADER: $(TEST_HOST)
+
+schemes:
+  ThreeDen:
+    build:
+      targets:
+        ThreeDen: all
+        ThreeDenTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [ThreeDenTests]
+    archive:
+      config: Release

@@ -1,0 +1,9 @@
+// Release builds: the testing server over https (set when the EC2 server exists).
+
+API_BASE_URL = https:/$()/api.example.invalid
+APP_BUNDLE_ID = com.threeden.ThreeDen
+
+// Local.xcconfig can set DEVELOPMENT_TEAM for signing; its API_BASE_URL is
+// overridden again below so a Release build never uses a local address.
+#include? "Local.xcconfig"
+API_BASE_URL = https:/$()/api.example.invalid

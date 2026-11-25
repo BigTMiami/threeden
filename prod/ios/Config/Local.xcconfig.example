@@ -1,0 +1,14 @@
+// Copy to Local.xcconfig (not committed) and fill in for this Mac.
+// Then run `make ios` from prod/.
+
+// Your Apple developer team, so signing survives `make ios`. Find it in
+// Xcode → Settings → Accounts, or in the project's Signing & Capabilities
+// after choosing a team once (Build Settings → Development Team).
+DEVELOPMENT_TEAM =
+
+// For running on your iPhone: this Mac's Local hostname (System Settings →
+// General → Sharing) plus ".local". Leave commented out for the Simulator.
+// API_BASE_URL = http:/$()/your-mac-name.local:8080
+
+// Only if com.threeden.ThreeDen is taken under your Apple ID:
+// APP_BUNDLE_ID = com.yourname.ThreeDen

@@ -1,5 +1,9 @@
 .env
 ios/*.xcodeproj
+ios/ThreeDen/Info.plist
+ios/Config/Local.xcconfig
+xcuserdata/
+DerivedData/
 __pycache__/
 .venv/
 .pytest_cache/

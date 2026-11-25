@@ -1,9 +1,10 @@
 # Short names for common commands. Run from prod/. See docs/development_setup.md §9.
 
+SHELL := /bin/bash
 COMPOSE := docker compose
 RUN_API := $(COMPOSE) run --rm api
 
-.PHONY: help up down build logs migrate revision test psql seed reset-db check format ios
+.PHONY: help up down build logs migrate revision test psql seed reset-db check format ios ios-build ios-test
 
 help: ## list the commands
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-10s %s\n", $$1, $$2}'
@@ -49,5 +50,18 @@ format: ## Ruff: fix what it can and format
 	$(RUN_API) ruff check --fix .
 	$(RUN_API) ruff format .
 
-ios: ## regenerate the Xcode project (Cycle 2)
-	@echo "Not yet: the iOS project comes in Cycle 2."
+IOS_SIM ?= iPhone 17
+IOS_DEST := platform=iOS Simulator,name=$(IOS_SIM)
+
+ios: ## regenerate the Xcode project (after pulling, or adding Swift files)
+	cd ios && xcodegen generate
+
+ios-build: ios ## build the app for the Simulator
+	xcodebuild -project ios/ThreeDen.xcodeproj -scheme ThreeDen -destination '$(IOS_DEST)' -quiet build
+
+ios-test: ios ## iOS unit tests in the Simulator (IOS_SIM="iPhone 16" to pick another)
+	@# Boot first and wait: a Simulator that's still starting refuses to launch the tests.
+	xcrun simctl bootstatus '$(IOS_SIM)' -b > /dev/null
+	set -o pipefail; xcodebuild -project ios/ThreeDen.xcodeproj -scheme ThreeDen \
+		-destination '$(IOS_DEST)' test 2>&1 \
+		| grep -E '✘|Test run with|TEST (SUCCEEDED|FAILED)|error:|Failure Reason'
