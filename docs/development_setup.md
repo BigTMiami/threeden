@@ -82,9 +82,11 @@ threeden/
     web/                the production web app (served by Caddy): the prototype's
                         files plus server mode (js/api/), hello.html, and its own
                         package.json, eslint.config.js, jsconfig.json for the checks
+      tests/            JS tests (Node's test runner), run by make check-web
     server/
       app/              FastAPI application
       migrations/       Alembic
+      seed/             the demo groups: export.mjs (from web/'s sample data) and load.py
       tests/            pytest
       pyproject.toml    dependencies (uv)
       uv.lock
@@ -98,6 +100,8 @@ threeden/
       Caddyfile
     shared/
       permissions.json  the permission table, read by web and server
+      permission-cases.json  can() test cases, run by both
+      openapi.json      the API's description (make openapi); the iOS types come from it
     e2e/                browser checks for the production web app (make e2e)
     compose.yaml        the local stack
     .env.example        settings to copy into .env (which is never committed)
@@ -122,10 +126,12 @@ reference.
 
 **Demo mode and server mode** (`prod/web/js/api/server-mode.js`). Served by
 the stack at `http://localhost:8080`, the web app starts in server mode:
-sign-up, sign-in, and sign-out go to the API, and everything else still
-works from data in the browser for now (each area moves to the server in
-later cycles). The sign-in screen says which mode it's in and switches; demo
-mode is the prototype as it was, with the demo accounts.
+your account (sign-up, sign-in, sign-out), your groups, their events, and
+RSVPs come from the API, and everything else still works from data in the
+browser for now (each area moves to the server in later cycles). The
+sign-in screen says which mode it's in and switches; demo mode is the
+prototype as it was, with the demo accounts. How server mode fits into the
+app is in `prod/README.md`.
 
 ## 3. Docker: the local stack
 
@@ -261,7 +267,12 @@ The server code is laid out as:
 prod/server/app/
   main.py          the FastAPI app; routes all start with /api
   health.py        GET /api/health
-  core/            settings (from the environment) and the database
+  openapi.py       prints the OpenAPI document (make openapi)
+  core/            settings, the database, ids, the Origin check, rate limits
+  accounts/        accounts and /me
+  auth/            sign-up, sign-in, sessions, passwords
+  spaces/          groups, memberships, and can() (from shared/permissions.json)
+  events/          events, RSVPs, and who may see which (visibility.py)
   hello/           Hello World: the greetings model and endpoints
 ```
 
@@ -282,6 +293,24 @@ After `make up`, the API takes about 10 seconds to start (Caddy answers
 - Sign-in and sign-up are rate limited per address and per login, in memory
   (`app/core/ratelimit.py`). The API sees each visitor's address through
   Caddy because compose sets `FORWARDED_ALLOW_IPS`.
+
+**Groups, events, and RSVPs** (Cycle 4; design note in dev_plan_1.md):
+
+- `GET /api/v1/me/spaces`, `GET /api/v1/spaces/{id}/members`,
+  `GET /api/v1/spaces/{id}/events?from=&to=`, `GET /api/v1/events/{id}`,
+  `PUT /api/v1/events/{id}/rsvp` (`{"answer": "going", "version": 1}`).
+- Who may see an event is a WHERE clause (`app/events/visibility.py`), so
+  queries only return what the person may see. Private things you can't see
+  are 404, as if they didn't exist. Public events are open to everyone, even
+  someone not signed in.
+- Refusals are `{"detail": "a sentence to show"}`; they're listed in the
+  OpenAPI document so generated clients can read them.
+- `make seed` loads two demo groups (14 Juniper Lane, private; Eastside
+  Mutual Aid, public) and their people: sign in as `leo`, `maya`, `theo`,
+  `owen`, `grace`, `priya`, or `nora` with the password `3den-demo`
+  (development only). Their dates are relative to today, at your Mac's time
+  zone. Running it again changes nothing new; answers given while testing
+  are kept.
 
 Useful addresses once it's running:
 
@@ -396,9 +425,25 @@ there is exactly what was tested. Details come in a later plan.
   - Plain `http` works only to local addresses (`NSAllowsLocalNetworking` in
     Info.plist). Release builds always use HTTPS.
 - **The app's code** (`prod/ios/ThreeDen/`): `API/` holds `APIClient`
-  (URLSession, async/await, Codable, one `APIError` type), `Session/` signing
-  in (the token in the Keychain, the sign-in and Me screens), `Hello/` the
-  Hello screen and its model. The Simulator keeps its Keychain between runs;
+  (URLSession, async/await, Codable, one `APIError` type) and `EventsAPI`,
+  `Session/` signing in (the token in the Keychain, the sign-in and Me
+  screens), `Groups/` the Coming up tab (events in all your groups, with
+  RSVP buttons) and the Groups tab (your groups → a group's events → an
+  event's page), and `Hello/` the server check (Me → Server check).
+- **Generated API types:** Apple's `swift-openapi-generator` runs as a build
+  plugin and makes the types and client for the groups and events endpoints
+  from `ThreeDen/openapi.json` (`openapi-generator-config.yaml` says which).
+  That file is a copy of `prod/shared/openapi.json`, made by `make ios` and
+  not committed. When the API changes, run `make openapi` (a server test
+  fails until you do), then `make ios`. Xcode downloads the generator and
+  its runtime (Swift packages) the first time; **the first time you open the
+  project, Xcode asks you to trust the generator plugin: choose "Trust &
+  Enable"**. Command-line builds (`make ios-build`, `make ios-test`) work
+  only after that.
+- **Looking at screens from the terminal (Debug builds only):** the app
+  starts signed in with a token passed at launch, e.g.
+  `SIMCTL_CHILD_THREEDEN_DEV_TOKEN=<token> xcrun simctl launch 'iPhone 17' com.threeden.ThreeDen`
+  (get a token by signing in with `"client": "ios"`). The Simulator keeps its Keychain between runs;
   to start signed out, sign out in the app or erase the Simulator. The app reads `API_BASE_URL` through Info.plist,
   which XcodeGen writes from `project.yml` (so `Info.plist` isn't committed
   either).
@@ -424,19 +469,27 @@ there is exactly what was tested. Details come in a later plan.
   | `make logs` | follow the API's logs |
   | `make migrate` | `alembic upgrade head` |
   | `make revision m="add events"` | new autogenerated migration |
+  | `make openapi` | write the API description to `shared/openapi.json` (then `make ios`) |
   | `make test` | pytest in the container, against a separate test database |
   | `make e2e` | browser checks of the web app (Chromium in Docker) against the running stack |
   | `make psql` | a database prompt |
-  | `make seed` | load the demo groups (Cycle 4) |
+  | `make seed` | load two demo groups and their people (password `3den-demo`) |
   | `make reset-db` | delete the database and start fresh |
   | `make check` | `check-server` and `check-web` |
   | `make check-server` | Ruff lint and format check |
-  | `make check-web` | ESLint and TypeScript for `prod/web/`, in a Node container (about 80 seconds) |
-  | `make format` | Ruff: fix what it can and format |
-  | `make ios` | regenerate the Xcode project |
+  | `make check-web` | ESLint, TypeScript, and the JS tests for `prod/web/`, in a Node container (about 80 seconds) |
+  | `make format` | Ruff: format, then fix what it can |
+  | `make ios` | copy the API description into the app and regenerate the Xcode project |
   | `make ios-build` | build the app for the Simulator |
   | `make ios-test` | iOS unit tests in the Simulator |
 
+- **Which version is running:** `prod/shared/version.json` (0.4.x is
+  Cycle 4) is shown in the web app's footer ("3den 0.4.1"; both versions if
+  the web and server differ), in `/api/health`, and in the iOS app (on the
+  sign-in screen and in Me → This app, with the time it was built and the
+  server's version). Caddy tells browsers to check for changed files on every
+  load (`Cache-Control: no-cache`), so a reload always gets the newest web
+  app. After changing the version: `make openapi`, then `make ios`.
 - **Linting:** Ruff for Python (format and lint), ESLint 9 and TypeScript 5.9
   for `prod/web/` (pinned in `prod/web/package.json`; they run in a Node
   container with their packages in a Docker volume, so nothing is installed
@@ -445,7 +498,9 @@ there is exactly what was tested. Details come in a later plan.
 - **Browser tests:** the prototype's Playwright tests in `tests/` keep using
   demo mode. Production checks are in `prod/e2e/` and run with `make e2e`, in
   Microsoft's Playwright image (Chromium) on the compose network, so they
-  open `http://web:8080`. Each run makes an account `web.check<number>`.
+  open `http://web:8080`. `web_auth.py` checks signing up and in (each run
+  makes an account `web.check<number>`); `web_events.py` checks groups,
+  events, and RSVPs as Leo and Maya in two browsers (run `make seed` first).
 - **Debugging Python from VS Code (optional):** start the API with `debugpy`
   listening on port 5678, published to localhost only, and attach with a
   "Remote Attach" launch configuration. Cycle 1 can add this if you want it.
@@ -484,4 +539,9 @@ make down            # when you're done for the day (optional)
 | Xcode says files are missing | `make ios` to regenerate the project |
 | Signing team or bundle ID reset in Xcode | set them in `prod/ios/Config/Local.xcconfig`, then `make ios` |
 | "Application failed preflight checks" / Simulator "Busy" | the Simulator was still booting; run the tests again (`make ios-test` waits for it) |
+| `make seed`: "a username or email it uses is already taken" | an account you made has a demo username (`leo`, `maya`, …); use another name, or `make reset-db` |
+| `test_shared_openapi_is_up_to_date` fails | the API changed: `make openapi`, then `make ios` |
+| Xcode: "OpenAPIGenerator must be enabled before it can be used" | open the project in Xcode and choose "Trust & Enable" for the plugin (Xcode shows it as a build error with that button) |
+| "…’s account is on the 3den server" when signing in | the page is in demo mode (the stack was down when it loaded, or demo mode was picked): `make up`, reload, or "Use the 3den server" |
+| The web app shows no groups in server mode | `make seed`, then sign in as `leo` (password `3den-demo`) |
 | Start completely fresh | `docker compose down -v`, then `make up && make migrate && make seed` |

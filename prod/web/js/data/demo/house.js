@@ -45,7 +45,11 @@ export function createHouse() {
         data: {
           events: [
             event('house-ev-1', 'Plumber (upstairs shower)', daysFromToday(2), { time: '13:00', endTime: '16:00', location: 'Upstairs bathroom', notes: 'Water off while he works.', color: 'orange', attendeeIds: ['m-owen'], createdBy: 'm-owen' }),
-            event('house-ev-2', 'House meeting', daysFromToday(4), { time: '19:00', endTime: '20:30', location: 'Living room', notes: 'Agenda is in the note on the homepage.', color: 'blue', attendeeIds: HOUSEMATE_IDS, createdBy: 'm-maya' }),
+            // An event (with RSVPs), not just a calendar entry: Maya and Theo have said they're going.
+            event('house-ev-2', 'House meeting', daysFromToday(4), {
+              kind: 'event', visibility: 'group', time: '19:00', endTime: '20:30', location: 'Living room', notes: 'Agenda is in the note on the homepage.', color: 'blue',
+              attendeeIds: ['m-maya', 'm-theo'], rsvps: { 'm-maya': 'going', 'm-theo': 'going' }, inviteeIds: [], createdBy: 'm-maya',
+            }),
             event('house-ev-3', 'Rent due', daysFromToday(19), { allDay: true, color: 'red', repeat: 'monthly', createdBy: 'm-leo' }),
             event('house-ev-4', 'Recycling out', daysFromToday(-1), { time: '20:00', endTime: '20:15', location: 'Curb', notes: 'Pickup is early Tuesday.', color: 'green', attendeeIds: ['m-theo'], repeat: 'weekly', createdBy: 'm-theo' }),
             event('house-ev-5', 'Maya away (conference)', daysFromToday(8), { endDate: daysFromToday(10), allDay: true, notes: 'Water the fern please!', color: 'purple', attendeeIds: ['m-maya'], createdBy: 'm-maya' }),

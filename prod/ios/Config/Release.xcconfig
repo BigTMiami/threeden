@@ -5,5 +5,8 @@ APP_BUNDLE_ID = com.threeden.ThreeDen
 
 // Local.xcconfig can set DEVELOPMENT_TEAM for signing; its API_BASE_URL is
 // overridden again below so a Release build never uses a local address.
+// MARKETING_VERSION, from prod/shared/version.json (written by `make ios`).
+#include? "Version.xcconfig"
+
 #include? "Local.xcconfig"
 API_BASE_URL = https:/$()/api.example.invalid

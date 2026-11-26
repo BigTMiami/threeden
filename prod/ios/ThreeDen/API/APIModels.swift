@@ -6,6 +6,8 @@ import Foundation
 struct Health: Codable, Sendable, Equatable {
     let status: String
     let database: String
+    /// The server's version (prod/shared/version.json); missing from servers before 0.4.1.
+    var version: String?
 
     var databaseOK: Bool { database == "ok" }
 }

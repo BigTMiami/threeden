@@ -1,28 +1,20 @@
 import SwiftUI
 
-struct HelloView<AccountButton: View>: View {
+/// The server check (Cycle 2's Hello World): is the server up, and can it
+/// read and write the database? Opened from the Me tab.
+struct HelloView: View {
     @Bindable var model: HelloModel
-    /// Shown at the top right (the Me button when signed in).
-    let accountButton: AccountButton
     @FocusState private var draftFocused: Bool
 
-    init(model: HelloModel, @ViewBuilder accountButton: () -> AccountButton) {
-        self.model = model
-        self.accountButton = accountButton()
-    }
-
     var body: some View {
-        NavigationStack {
-            List {
-                statusSection
-                greetingsSection
-                addSection
-            }
-            .navigationTitle("3den")
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { accountButton } }
-            .refreshable { await model.load() }
-            .task { await model.load() }
+        List {
+            statusSection
+            greetingsSection
+            addSection
         }
+        .navigationTitle("Server check")
+        .refreshable { await model.load() }
+        .task { await model.load() }
     }
 
     private var statusSection: some View {
@@ -135,12 +127,8 @@ private struct StatusRow: View {
     }
 }
 
-extension HelloView where AccountButton == EmptyView {
-    init(model: HelloModel) {
-        self.init(model: model) { EmptyView() }
-    }
-}
-
 #Preview {
-    HelloView(model: HelloModel(api: APIClient(baseURL: URL(string: "http://localhost:8080")!)))
+    NavigationStack {
+        HelloView(model: HelloModel(api: APIClient(baseURL: URL(string: "http://localhost:8080")!)))
+    }
 }

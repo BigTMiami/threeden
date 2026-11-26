@@ -58,9 +58,14 @@ import { setPageMeta } from '../ui/page-meta.js';
 import { eventCoverBanner, hasCover, coverPicker } from './event-cover.js';
 import { normalizePage, SECTION_LABELS, ALWAYS_SHOWN, BLOCK_KINDS, newBlock, renderBlock, renderBlockEditor } from './event-page-layout.js';
 import { eventShareButton } from './event-share.js';
+import { isServerMode } from '../api/server-mode.js';
+import { fetchServerEvent, isServerId } from '../api/sync.js';
 
 /** Events whose page is being customized right now (by id). */
 const customizing = new Set();
+
+/** Server events this page has already asked the server for (each is asked once per visit). */
+const checkedWithServer = new Set();
 
 /** "Remind me": for people going (or maybe), and the host, before the event starts. */
 function reminderControl(event, me, redraw) {
@@ -97,6 +102,15 @@ export function renderEventPage(container, eventId, friendCode = null) {
   const redraw = () => renderEventPage(container, eventId, friendCode);
   // A guest link from someone going (js/events/event-extras.js): their friend can see it and RSVP.
   const guestOf = found ? friendCodeOwner(found.event, friendCode) : null;
+
+  // Server mode: an event that isn't in local data yet (a link to a public
+  // event, say) is asked for, then the page draws again (js/api/sync.js).
+  if (!found && isServerMode() && isServerId(eventId) && !checkedWithServer.has(eventId)) {
+    checkedWithServer.add(eventId);
+    replaceChildren(container, h('p', { class: 'module-empty' }, 'Loading the event…'));
+    fetchServerEvent(eventId).finally(() => { if (container.isConnected) redraw(); });
+    return;
+  }
 
   if (!found || !(canViewEvent(found, me.id) || guestOf)) {
     replaceChildren(container,

@@ -23,26 +23,22 @@
  * Saved on each group space:
  *   roles:       { [memberId]: 'owner' | 'admin' | 'member' }
  *   permissions: { [permissionId]: 'owner' | 'admin' | 'member' }  ← only the changed ones
+ *
+ * The roles and permissions themselves are in prod/shared/permissions.json,
+ * which the server reads too (server/app/spaces/permissions.py), with test
+ * cases both run (shared/permission-cases.json). The import path climbs out
+ * of web/ on purpose: on disk it reaches prod/shared/ (for the checks and
+ * tests), and in the browser it's /shared/permissions.json, which Caddy
+ * serves from the same file (infra/Caddyfile).
  */
 
-export const ROLES = [
-  { id: 'owner', label: 'Owner', rank: 3, description: 'Can do everything, including deleting the group' },
-  { id: 'admin', label: 'Admin', rank: 2, description: 'Manages settings, members, and roles' },
-  { id: 'member', label: 'Member', rank: 1, description: 'Takes part in the group' },
-];
+import table from '../../../shared/permissions.json' with { type: 'json' };
 
-export const PERMISSIONS = [
-  { id: 'editHomepage', label: 'Edit the homepage', description: 'Add, move, resize, and remove modules', defaultRole: 'admin' },
-  { id: 'customizeAppearance', label: 'Change how the group looks', description: 'Fonts, colors, background, and cover photo', defaultRole: 'admin' },
-  { id: 'editDetails', label: 'Edit the group’s name and description', description: 'And whether it’s private', defaultRole: 'admin' },
-  { id: 'manageMembers', label: 'Add and remove members', description: 'Members can always leave on their own', defaultRole: 'admin' },
-  { id: 'postAnnouncements', label: 'Post on the board', description: 'Everyone can like and comment', defaultRole: 'member' },
-  { id: 'postToFeeds', label: 'Post in the group’s feeds', description: 'Photo, text, and general feeds on the homepage', defaultRole: 'member' },
-  { id: 'pinPosts', label: 'Pin board posts and forum threads', description: 'Pinned posts stay at the top, for as long as they choose', defaultRole: 'admin' },
-  { id: 'createInVault', label: 'Add to vaults', description: 'Create folders, notes, and links, and upload files', defaultRole: 'member' },
-  { id: 'moderate', label: 'Remove other people’s posts and files', description: 'Everyone can remove their own', defaultRole: 'admin' },
-  { id: 'manageSubmissions', label: 'Create assignments and review submissions', description: 'Everyone else turns work in and sees only their own', defaultRole: 'admin' },
-];
+/** @type {{ id: string, label: string, rank: number, description: string }[]} */
+export const ROLES = table.roles;
+
+/** @type {{ id: string, label: string, description: string, defaultRole: string }[]} */
+export const PERMISSIONS = table.permissions;
 
 const RANKS = Object.fromEntries(ROLES.map((role) => [role.id, role.rank]));
 

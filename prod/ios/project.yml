@@ -13,7 +13,6 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1" # iPhone only for now
 
@@ -21,12 +20,29 @@ configFiles:
   Debug: Config/Debug.xcconfig
   Release: Config/Release.xcconfig
 
+# Apple's OpenAPI generator makes the API types and client from
+# ThreeDen/openapi.json (copied from prod/shared/ by `make ios`) when the app
+# builds. The first time you open the project, Xcode asks you to trust the
+# plugin ("Trust & Enable").
+packages:
+  OpenAPIGenerator:
+    url: https://github.com/apple/swift-openapi-generator
+    from: 1.14.4
+  OpenAPIRuntime:
+    url: https://github.com/apple/swift-openapi-runtime
+    from: 1.13.4
+
 targets:
   ThreeDen:
     type: application
     platform: iOS
     sources:
       - path: ThreeDen
+    dependencies:
+      - package: OpenAPIRuntime
+    buildToolPlugins:
+      - plugin: OpenAPIGenerator
+        package: OpenAPIGenerator
     settings:
       base:
         PRODUCT_NAME: ThreeDen

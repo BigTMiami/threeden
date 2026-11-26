@@ -85,6 +85,12 @@ struct APIClient: Sendable {
 
     /// Sends the request; returns the body of a 2xx answer, or throws.
     private func exchange(_ request: URLRequest) async throws(APIError) -> Data {
+        try await exchangeHTTP(request).0
+    }
+
+    /// Sends the request; returns a 2xx answer and its headers, or throws.
+    /// Also used by the generated client's transport (ServerTransport).
+    func exchangeHTTP(_ request: URLRequest) async throws(APIError) -> (Data, HTTPURLResponse) {
         let data: Data
         let response: URLResponse
         do {
@@ -99,7 +105,7 @@ struct APIClient: Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw .http(status: http.statusCode, detail: Self.detail(from: data))
         }
-        return data
+        return (data, http)
     }
 
     private func sendExpectingNothing(_ request: URLRequest) async throws(APIError) {

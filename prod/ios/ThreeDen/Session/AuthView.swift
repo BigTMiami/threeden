@@ -53,6 +53,12 @@ struct AuthView: View {
                         Text(error).foregroundStyle(.red)
                     }
                 }
+
+                Section {
+                } footer: {
+                    Text(AppConfig.versionText)
+                        .frame(maxWidth: .infinity)
+                }
             }
             .navigationTitle(mode == .signIn ? "Sign in to 3den" : "Join 3den")
             .onChange(of: mode) { error = nil }

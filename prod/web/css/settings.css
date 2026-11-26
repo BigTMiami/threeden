@@ -822,6 +822,17 @@ body.is-signed-out .page__note {
   color: var(--color-text-muted);
 }
 
+/* Server mode: what's saved on the server so far (js/api/sync.js). */
+.space-header__server-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 640px;
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+}
+
 .page[data-cards='raised'] .module-frame {
   border-color: transparent;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 4px 14px rgba(0, 0, 0, 0.08);

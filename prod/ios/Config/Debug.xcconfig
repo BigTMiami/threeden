@@ -12,4 +12,7 @@
 API_BASE_URL = http:/$()/localhost:8080
 APP_BUNDLE_ID = com.threeden.ThreeDen
 
+// MARKETING_VERSION, from prod/shared/version.json (written by `make ios`).
+#include? "Version.xcconfig"
+
 #include? "Local.xcconfig"

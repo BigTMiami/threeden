@@ -1,0 +1,12 @@
+# Apple's swift-openapi-generator: what to make from openapi.json at build time.
+# Only the groups and events endpoints for now; sign-in and Hello still use
+# the hand-written APIClient.
+generate:
+  - types
+  - client
+accessModifier: internal
+namingStrategy: idiomatic
+filter:
+  tags:
+    - spaces
+    - events

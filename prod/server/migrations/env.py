@@ -8,7 +8,9 @@ from sqlalchemy import create_engine
 # Importing the models registers their tables with Base.metadata.
 import app.accounts.models  # noqa: F401
 import app.auth.models  # noqa: F401
+import app.events.models  # noqa: F401
 import app.hello.models  # noqa: F401
+import app.spaces.models  # noqa: F401
 from app.core.db import Base
 from app.core.settings import get_settings
 

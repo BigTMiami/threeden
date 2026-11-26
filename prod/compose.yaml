@@ -40,9 +40,11 @@ services:
     volumes:
       - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./web:/srv/web:ro
+      # Caddy serves only the shared files the browser reads (infra/Caddyfile).
+      - ./shared:/srv/shared:ro
     depends_on: [api]
 
-  # ESLint and TypeScript for web/ (make check-web). Not started by `make up`.
+  # ESLint, TypeScript, and the JS tests for web/ (make check-web). Not started by `make up`.
   webcheck:
     image: node:24-slim
     profiles: [tools]
@@ -52,19 +54,30 @@ services:
       sh -c "cmp -s package-lock.json node_modules/.installed-from-lock ||
       (npm ci --no-audit --no-fund --loglevel=error --update-notifier=false &&
       cp package-lock.json node_modules/.installed-from-lock) &&
-      npm run --silent check"
+      npm run --silent check && npm run --silent test"
     volumes:
       - ./web:/srv/web
+      - ./shared:/srv/shared:ro
       - webnode:/srv/web/node_modules # packages stay in Docker, not in the repo folder
 
   # Browser checks against the running stack (make e2e). Not started by `make up`.
   e2e:
     build: ./e2e
     profiles: [tools]
-    command: python3 web_auth.py
+    # Every web_*.py check, each in its own browser; fails if any fails.
+    command: sh -c 'fail=0; for t in web_*.py; do echo "── $$t"; python3 $$t || fail=1; done; exit $$fail'
     volumes:
       - ./e2e:/srv/e2e:ro
     depends_on: [web]
+
+  # Prints the demo groups from web/'s sample data as JSON (make seed).
+  seedexport:
+    image: node:24-slim
+    profiles: [tools]
+    command: node /srv/server/seed/export.mjs
+    volumes:
+      - ./web:/srv/web:ro
+      - ./server/seed:/srv/server/seed:ro
 
 volumes:
   pgdata:

@@ -1,0 +1,16 @@
+{
+  "about": "can(space, person, permission) cases, run by web/tests/permissions.test.js and server/tests/test_permissions.py so the two can't drift. `as` is the person's role in the space, or null if they aren't in it.",
+  "cases": [
+    { "name": "a member may post on the board", "space": { "kind": "group" }, "as": "member", "permission": "postAnnouncements", "expect": true },
+    { "name": "a member may not pin", "space": { "kind": "group" }, "as": "member", "permission": "pinPosts", "expect": false },
+    { "name": "an admin may pin", "space": { "kind": "group" }, "as": "admin", "permission": "pinPosts", "expect": true },
+    { "name": "the owner may do what admins may", "space": { "kind": "group" }, "as": "owner", "permission": "manageMembers", "expect": true },
+    { "name": "a member may not edit the homepage", "space": { "kind": "group" }, "as": "member", "permission": "editHomepage", "expect": false },
+    { "name": "a group can let members edit the homepage", "space": { "kind": "group", "permissions": { "editHomepage": "member" } }, "as": "member", "permission": "editHomepage", "expect": true },
+    { "name": "a group can keep posting to admins", "space": { "kind": "group", "permissions": { "postAnnouncements": "admin" } }, "as": "member", "permission": "postAnnouncements", "expect": false },
+    { "name": "a group can keep something to the owner", "space": { "kind": "group", "permissions": { "moderate": "owner" } }, "as": "admin", "permission": "moderate", "expect": false },
+    { "name": "someone not in the group may do nothing", "space": { "kind": "group" }, "as": null, "permission": "postAnnouncements", "expect": false },
+    { "name": "a personal homepage's owner may do everything", "space": { "kind": "personal" }, "as": "member", "permission": "editHomepage", "expect": true },
+    { "name": "so may a blog's", "space": { "kind": "blog" }, "as": "member", "permission": "moderate", "expect": true }
+  ]
+}

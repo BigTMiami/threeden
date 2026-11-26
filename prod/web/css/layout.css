@@ -247,6 +247,12 @@
   text-align: center;
 }
 
+/* Demo or server mode (js/api/server-mode.js sets data-mode on <html>). */
+html[data-mode='server'] .page__note-demo,
+html:not([data-mode='server']) .page__note-server {
+  display: none;
+}
+
 /* ─── Group header ─────────────────────────────────────────────────────── */
 
 .space-header {

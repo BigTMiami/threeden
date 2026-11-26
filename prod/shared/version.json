@@ -1,0 +1,4 @@
+{
+  "about": "3den's version, shown by the web app (page footer), the API (/api/health), and the iOS app (Me tab). Bump it with every change you hand over, so you can tell which one is running. 0.4.x is Cycle 4.",
+  "version": "0.4.1"
+}

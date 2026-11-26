@@ -123,11 +123,11 @@ def _unauthorized() -> HTTPException:
     )
 
 
-def current_auth(request: Request, db: Annotated[Session, Depends(get_db)]) -> Auth:
+def _auth_from(request: Request, db: Session) -> Auth | None:
     token = token_from(request)
     session = find_session(db, token) if token else None
     if session is None:
-        raise _unauthorized()
+        return None
     now = datetime.now(UTC)
     if now - session.last_used_at > TOUCH_EVERY:
         session.last_used_at = now
@@ -135,7 +135,21 @@ def current_auth(request: Request, db: Annotated[Session, Depends(get_db)]) -> A
     return Auth(account=session.account, session=session)
 
 
+def current_auth(request: Request, db: Annotated[Session, Depends(get_db)]) -> Auth:
+    """Who's asking; 401 if no one is signed in."""
+    auth = _auth_from(request, db)
+    if auth is None:
+        raise _unauthorized()
+    return auth
+
+
+def optional_auth(request: Request, db: Annotated[Session, Depends(get_db)]) -> Auth | None:
+    """Who's asking, or None for a visitor (for things visitors may read, like public events)."""
+    return _auth_from(request, db)
+
+
 CurrentAuth = Annotated[Auth, Depends(current_auth)]
+MaybeAuth = Annotated[Auth | None, Depends(optional_auth)]
 
 
 # ─── Device names ───────────────────────────────────────────────────────────

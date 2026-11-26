@@ -22,8 +22,9 @@ const browser = Object.fromEntries([
 
 export default [
   {
-    files: ['js/**/*.js', 'hello.js'],
-    languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: browser },
+    files: ['js/**/*.js', 'hello.js', 'tests/**/*.js'],
+    // 2025: import attributes, for the shared JSON files (js/state/permissions.js).
+    languageOptions: { ecmaVersion: 2025, sourceType: 'module', globals: browser },
     rules: {
       'no-undef': 'error',
       'no-unused-vars': ['error', { args: 'none', varsIgnorePattern: '^_', caughtErrors: 'none', ignoreRestSiblings: true }],

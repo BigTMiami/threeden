@@ -1,0 +1,1292 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "3den API",
+    "version": "0.4.1"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Whether the API can reach the database, and which version is running.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hello": {
+      "get": {
+        "tags": [
+          "hello"
+        ],
+        "summary": "Read Hello",
+        "description": "How many greetings there are, and the latest five (newest first).",
+        "operationId": "read_hello",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelloOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hello"
+        ],
+        "summary": "Add Hello",
+        "description": "Add a greeting (1 to 200 characters, after trimming spaces).",
+        "operationId": "add_hello",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GreetingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GreetingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign Up",
+        "description": "Make an account and sign in as it.",
+        "operationId": "sign_up",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signin": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign In",
+        "description": "Sign in with a username (or @username) or email, and a password.",
+        "operationId": "sign_in",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign Out",
+        "description": "End this device's session. Other devices stay signed in. Fine to call twice.",
+        "operationId": "sign_out",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Read Me",
+        "description": "The signed-in account.",
+        "operationId": "read_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Read Sessions",
+        "description": "Your signed-in devices, most recently used first. `current` is this one.",
+        "operationId": "read_sessions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SessionOut"
+                  },
+                  "type": "array",
+                  "title": "Response Read Sessions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Delete Session",
+        "description": "Sign out one of your devices (this one too, if you pick it).",
+        "operationId": "delete_session",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/spaces": {
+      "get": {
+        "tags": [
+          "spaces"
+        ],
+        "summary": "My Spaces",
+        "description": "Your groups, by name, with your role and how many people are in each.",
+        "operationId": "my_spaces",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaceOut"
+                  },
+                  "type": "array",
+                  "title": "Response My Spaces"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/spaces/{space_id}/members": {
+      "get": {
+        "tags": [
+          "spaces"
+        ],
+        "summary": "Space Members",
+        "description": "Who's in a group (members only), the owner and admins first, then by name.",
+        "operationId": "space_members",
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Space Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberOut"
+                  },
+                  "title": "Response Space Members"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/spaces/{space_id}/events": {
+      "get": {
+        "tags": [
+          "spaces"
+        ],
+        "summary": "Space Events",
+        "description": "A group's events and calendar entries in a time range that you can see, soonest first.\n\nAnything that overlaps the range counts (it started before `from` but\nhasn't ended). A public group's public events are open to everyone.",
+        "operationId": "space_events",
+        "parameters": [
+          {
+            "name": "space_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Space Id"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Default: now",
+              "title": "From"
+            },
+            "description": "Default: now"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Default: 60 days after `from`",
+              "title": "To"
+            },
+            "description": "Default: 60 days after `from`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventOut"
+                  },
+                  "title": "Response Space Events"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Read Event",
+        "description": "One event: details, host, counts, your answer, and who answered.\n\nPublic events are open to everyone, even someone not signed in.",
+        "operationId": "read_event",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/rsvp": {
+      "put": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Answer Event",
+        "description": "Going, Maybe, or Can't go (`null` takes your answer back). Returns the event.\n\n409 if `version` is out of date (the event changed since you looked) or\nit's full; 400 for a calendar entry.",
+        "operationId": "answer_event",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RsvpIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "email",
+          "name",
+          "created_at"
+        ],
+        "title": "AccountOut"
+      },
+      "Answer": {
+        "type": "string",
+        "enum": [
+          "going",
+          "maybe",
+          "no"
+        ],
+        "title": "Answer"
+      },
+      "ErrorOut": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorOut",
+        "description": "Every refusal: a sentence to show the person."
+      },
+      "EventKind": {
+        "type": "string",
+        "enum": [
+          "event",
+          "entry"
+        ],
+        "title": "EventKind",
+        "description": "An event has a page and RSVPs; an entry is something to remember, like \"Rent due\"."
+      },
+      "EventOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "space": {
+            "$ref": "#/components/schemas/SpaceBrief"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends At"
+          },
+          "all_day": {
+            "type": "boolean",
+            "title": "All Day"
+          },
+          "time_zone": {
+            "type": "string",
+            "title": "Time Zone",
+            "description": "Where it happens (IANA name); show its times there"
+          },
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/EventVisibility"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "host": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Send it back with an RSVP; 409 if the event changed since"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/RsvpCounts"
+          },
+          "my_answer": {
+            "$ref": "#/components/schemas/Answer"
+          },
+          "rsvps": {
+            "items": {
+              "$ref": "#/components/schemas/RsvpOut"
+            },
+            "type": "array",
+            "title": "Rsvps",
+            "description": "Everyone who answered, earliest first"
+          },
+          "invitees": {
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            },
+            "type": "array",
+            "title": "Invitees"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "space",
+          "kind",
+          "title",
+          "starts_at",
+          "all_day",
+          "time_zone",
+          "location",
+          "notes",
+          "color",
+          "visibility",
+          "version",
+          "counts",
+          "rsvps",
+          "invitees"
+        ],
+        "title": "EventOut",
+        "description": "An event or a calendar entry, as the person asking may see it."
+      },
+      "EventVisibility": {
+        "type": "string",
+        "enum": [
+          "group",
+          "invite",
+          "public"
+        ],
+        "title": "EventVisibility"
+      },
+      "GreetingIn": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Message",
+            "examples": [
+              "Hello from the desktop"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "GreetingIn"
+      },
+      "GreetingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "message",
+          "created_at"
+        ],
+        "title": "GreetingOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HelloOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "latest": {
+            "items": {
+              "$ref": "#/components/schemas/GreetingOut"
+            },
+            "type": "array",
+            "title": "Latest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "latest"
+        ],
+        "title": "HelloOut"
+      },
+      "MemberOut": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Joined At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "role",
+          "joined_at"
+        ],
+        "title": "MemberOut"
+      },
+      "Person": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "username"
+        ],
+        "title": "Person",
+        "description": "Someone, as others see them."
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "admin",
+          "member"
+        ],
+        "title": "Role"
+      },
+      "RsvpCounts": {
+        "properties": {
+          "going": {
+            "type": "integer",
+            "title": "Going"
+          },
+          "maybe": {
+            "type": "integer",
+            "title": "Maybe"
+          },
+          "no": {
+            "type": "integer",
+            "title": "No"
+          }
+        },
+        "type": "object",
+        "required": [
+          "going",
+          "maybe",
+          "no"
+        ],
+        "title": "RsvpCounts"
+      },
+      "RsvpIn": {
+        "properties": {
+          "answer": {
+            "$ref": "#/components/schemas/Answer",
+            "description": "null (or left out) takes your answer back"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "The event's version you were looking at, if you know it"
+          }
+        },
+        "type": "object",
+        "title": "RsvpIn"
+      },
+      "RsvpOut": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/Answer"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Answered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "answer",
+          "answered_at"
+        ],
+        "title": "RsvpOut"
+      },
+      "SessionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client"
+          },
+          "device_name": {
+            "type": "string",
+            "title": "Device Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Used At"
+          },
+          "current": {
+            "type": "boolean",
+            "title": "Current",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "client",
+          "device_name",
+          "created_at",
+          "last_used_at"
+        ],
+        "title": "SessionOut"
+      },
+      "SignInIn": {
+        "properties": {
+          "login": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Login",
+            "description": "Username or email",
+            "examples": [
+              "rosa.parks"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Password",
+            "examples": [
+              "correct horse battery"
+            ]
+          },
+          "client": {
+            "type": "string",
+            "enum": [
+              "web",
+              "ios",
+              "android"
+            ],
+            "title": "Client",
+            "default": "web"
+          },
+          "device_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Device Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "login",
+          "password"
+        ],
+        "title": "SignInIn"
+      },
+      "SignUpIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Name",
+            "examples": [
+              "Rosa Parks"
+            ]
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Username",
+            "examples": [
+              "rosa.parks"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Email",
+            "examples": [
+              "rosa@example.com"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Password",
+            "examples": [
+              "correct horse battery"
+            ]
+          },
+          "client": {
+            "type": "string",
+            "enum": [
+              "web",
+              "ios",
+              "android"
+            ],
+            "title": "Client",
+            "default": "web"
+          },
+          "device_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Device Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "SignUpIn"
+      },
+      "SignedIn": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountOut"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account"
+        ],
+        "title": "SignedIn"
+      },
+      "SpaceBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpaceKind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/SpaceVisibility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "visibility"
+        ],
+        "title": "SpaceBrief"
+      },
+      "SpaceKind": {
+        "type": "string",
+        "enum": [
+          "group",
+          "personal",
+          "blog"
+        ],
+        "title": "SpaceKind"
+      },
+      "SpaceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpaceKind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/SpaceVisibility"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "visibility",
+          "description",
+          "role",
+          "member_count"
+        ],
+        "title": "SpaceOut",
+        "description": "One of your groups."
+      },
+      "SpaceVisibility": {
+        "type": "string",
+        "enum": [
+          "private",
+          "public"
+        ],
+        "title": "SpaceVisibility"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

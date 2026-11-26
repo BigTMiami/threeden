@@ -117,6 +117,15 @@ function renderSignInForm() {
         showToast(`Welcome back, ${account.name.split(' ')[0]}. (A real 3den would have sent you a sign-in code.)`);
         return;
       }
+      // An account made in server mode has a copy here (for its name), but its password is on the server.
+      if (account.server) {
+        const first = account.name.split(' ')[0];
+        replaceChildren(error, isServerAvailable()
+          ? [`${first}’s account is on the 3den server, and this is demo mode. `,
+            h('button', { type: 'button', class: 'link-button', onClick: () => switchMode('server') }, 'Use the 3den server')]
+          : `${first}’s account is on the 3den server, which isn’t answering. Start it (make up in prod/), then reload this page.`);
+        return;
+      }
       if (!account.password) {
         error.textContent = `${account.name} is a demo account with no password. Pick it from the list below.`;
         return;
@@ -296,7 +305,11 @@ async function submitToServer(form, error, send, onRefused = null) {
 
 /** Which mode this is, and a way to switch (only when a server is there to switch to). */
 function renderModeSwitch() {
-  if (!isServerAvailable()) return null;
+  // Served without a reachable API (the stack is down, or still starting): say so, rather than look like the server's sign-in.
+  if (!isServerAvailable()) {
+    return h('p', { class: 'auth__note auth__mode' },
+      'Demo mode: the 3den server isn’t answering, so only demo accounts work here. Reload once it’s running.');
+  }
   const server = isServerMode();
   return h('p', { class: 'auth__note auth__mode' },
     server ? 'Server mode. ' : 'Demo mode: sample groups and demo accounts, kept in this browser. ',

@@ -143,6 +143,8 @@ export function renderSpaceHeader() {
           blogAbout ? [' · ', blogAbout.toggle] : null),
         // A blog keeps its header to the name and one line; the rest opens under "About".
         blogEditing ? aboutInPlace(space) : blogAbout ? blogAbout.panel : space.description ? h('p', { class: 'space-header__description' }, space.description) : null,
+        // A group from the 3den server (js/api/sync.js): only its events and RSVPs are saved there so far.
+        space.server ? h('p', { class: 'space-header__server-note' }, icon('info', 13), ' Events and RSVPs are saved on the 3den server. Anything else you change here stays in this browser for now.') : null,
         // Organizers: one quiet line when something needs a nudge (health-tab.js).
         space.kind === 'group' && !editMode && canManageRoles(space, me.id) && !isPreviewing(space.id) ? healthNudge(space, me) : null,
       ),

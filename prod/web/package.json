@@ -5,9 +5,10 @@
   "description": "3den's web app: no framework, no build step. Checks run in Docker: `make check` from prod/.",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "lint": "eslint js hello.js",
+    "lint": "eslint js hello.js tests",
     "typecheck": "tsc -p jsconfig.json",
-    "check": "eslint js hello.js & e=$!; tsc -p jsconfig.json; t=$?; wait $e && exit $t"
+    "check": "eslint js hello.js tests & e=$!; tsc -p jsconfig.json; t=$?; wait $e && exit $t",
+    "test": "node --test --test-reporter=dot \"tests/**/*.test.js\""
   },
   "devDependencies": {
     "eslint": "9.39.5",

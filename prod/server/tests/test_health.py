@@ -2,13 +2,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
 
 from app.core.db import get_db
+from app.core.version import VERSION
 from app.main import app
 
 
 def test_health_ok(client: TestClient) -> None:
     response = client.get("/api/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "database": "ok"}
+    assert response.json() == {"status": "ok", "database": "ok", "version": VERSION}
 
 
 class _BrokenSession:
@@ -23,4 +24,4 @@ def test_health_reports_database_down() -> None:
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 503
-    assert response.json() == {"status": "degraded", "database": "unavailable"}
+    assert response.json() == {"status": "degraded", "database": "unavailable", "version": VERSION}
