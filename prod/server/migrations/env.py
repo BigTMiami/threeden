@@ -5,7 +5,10 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine
 
-import app.hello.models  # noqa: F401  (registers the tables with Base.metadata)
+# Importing the models registers their tables with Base.metadata.
+import app.accounts.models  # noqa: F401
+import app.auth.models  # noqa: F401
+import app.hello.models  # noqa: F401
 from app.core.db import Base
 from app.core.settings import get_settings
 

@@ -10,6 +10,11 @@ enum APIError: Error, Equatable {
     case decoding(String)
     /// Not an HTTP response at all.
     case invalidResponse
+
+    var isUnauthorized: Bool {
+        if case .http(401, _) = self { return true }
+        return false
+    }
 }
 
 extension APIError: LocalizedError {
@@ -21,10 +26,15 @@ extension APIError: LocalizedError {
             "The server took too long to answer."
         case .network:
             "Couldn't reach the server."
-        case .http(422, _):
-            "A greeting needs 1 to 200 characters."
-        case .http(let status, let detail?):
-            "The server said no (\(status)): \(detail)"
+        // The server's own words, when it gives them ("@rosa is taken.").
+        case .http(_, let detail?):
+            detail
+        case .http(401, nil):
+            "Please sign in again."
+        case .http(429, nil):
+            "Too many tries. Wait a few minutes and try again."
+        case .http(let status, nil) where status >= 500:
+            "The 3den server had a problem. Try again in a moment."
         case .http(let status, nil):
             "The server said no (\(status))."
         case .decoding, .invalidResponse:

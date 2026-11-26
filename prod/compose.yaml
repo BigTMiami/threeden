@@ -23,6 +23,10 @@ services:
     build: ./server
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file: .env
+    environment:
+      # Trust Caddy's X-Forwarded-For, so the API sees each visitor's address
+      # (for rate limits). Safe because only Caddy can reach the API.
+      FORWARDED_ALLOW_IPS: "*"
     volumes:
       - ./server:/srv/server # edit on the Mac, reload in the container
       - ./shared:/srv/shared:ro
@@ -38,5 +42,30 @@ services:
       - ./web:/srv/web:ro
     depends_on: [api]
 
+  # ESLint and TypeScript for web/ (make check-web). Not started by `make up`.
+  webcheck:
+    image: node:24-slim
+    profiles: [tools]
+    working_dir: /srv/web
+    # Installs packages only when package-lock.json has changed since last time.
+    command: >-
+      sh -c "cmp -s package-lock.json node_modules/.installed-from-lock ||
+      (npm ci --no-audit --no-fund --loglevel=error --update-notifier=false &&
+      cp package-lock.json node_modules/.installed-from-lock) &&
+      npm run --silent check"
+    volumes:
+      - ./web:/srv/web
+      - webnode:/srv/web/node_modules # packages stay in Docker, not in the repo folder
+
+  # Browser checks against the running stack (make e2e). Not started by `make up`.
+  e2e:
+    build: ./e2e
+    profiles: [tools]
+    command: python3 web_auth.py
+    volumes:
+      - ./e2e:/srv/e2e:ro
+    depends_on: [web]
+
 volumes:
   pgdata:
+  webnode:

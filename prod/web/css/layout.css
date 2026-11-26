@@ -1,0 +1,893 @@
+/*
+ * layout.css — the page frame: top bar, sidebar, group header.
+ */
+
+/* ─── Top bar ──────────────────────────────────────────────────────────── */
+
+.app-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 8px 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-bar__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+}
+
+.app-bar__logo:hover {
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.app-bar__wordmark {
+  font-family: var(--font-wordmark);
+  font-size: 20px;
+  color: var(--color-text);
+}
+
+.app-bar__wordmark:hover {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+/* "Home" in the top bar: a little house before the word. */
+.app-bar__home svg {
+  margin-top: -1px;
+}
+
+.app-bar__nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.app-bar__nav > a,
+.app-bar__menu-trigger,
+.app-bar__home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-bar__nav > a:hover,
+.app-bar__menu-trigger:hover,
+.app-bar__home-link:hover {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+/* The section you're in. */
+.app-bar__nav > a[aria-current='page'],
+.app-bar__menu-trigger[aria-current='page'],
+.app-bar__home-link[aria-current='page'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-weight: bold;
+}
+
+/* Right side: "My homepage" and your avatar */
+.app-bar__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.app-bar__user {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.app-bar__user:hover {
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+/* ─── Groups dropdown ──────────────────────────────────────────────────── */
+
+.app-bar__menu {
+  position: relative;
+}
+
+.groups-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 120;
+  width: 320px;
+  padding: 6px;
+  margin-top: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
+}
+
+/* Invisible bridge over the 4px gap, so moving the mouse down doesn't close the menu. */
+.groups-menu::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -6px;
+  height: 6px;
+}
+
+.app-bar__menu.is-open .groups-menu {
+  display: block;
+}
+
+.groups-menu__heading {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.groups-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  color: var(--color-text);
+}
+
+.groups-menu__item:hover,
+.groups-menu__item:focus-visible {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.groups-menu__item.is-current .groups-menu__name {
+  font-weight: bold;
+}
+
+.groups-menu__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.groups-menu__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.groups-menu__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groups-menu__meta,
+.groups-menu__visited {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.groups-menu__visited {
+  flex: none;
+}
+
+.groups-menu__create {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 0;
+  border-top: 1px solid var(--color-border-faint);
+  background: none;
+  color: var(--color-link);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.groups-menu__create:hover {
+  background: var(--color-accent-soft);
+}
+
+/* ─── Page: sidebar + main column ──────────────────────────────────────── */
+
+.page {
+  display: flex;
+  align-items: flex-start;
+}
+
+.page__main {
+  flex: 1;
+  min-width: 0;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page__note {
+  margin-top: 24px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-faint);
+  text-align: center;
+}
+
+/* ─── Group header ─────────────────────────────────────────────────────── */
+
+.space-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.space-header__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.space-header__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-family: var(--font-serif);
+  font-size: 22px;
+}
+
+.space-header__name {
+  font-size: 30px;
+}
+
+.space-header__name-input {
+  width: min(480px, 100%);
+  padding: 0 6px;
+  margin-left: -7px;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface);
+  font-family: var(--font-serif);
+  font-size: 30px;
+}
+
+.space-header__meta {
+  color: var(--color-text-muted);
+}
+
+/* The lock or globe before "Private group · …", lined up with the text. */
+.space-header__meta > svg {
+  vertical-align: -2px;
+}
+
+.space-header__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Small screens ────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  /* The Groups menu spans the screen under the top bar, instead of hanging
+     off the "Groups" button (which would push it off the right edge). */
+  .app-bar {
+    position: relative;
+  }
+
+  .app-bar__menu {
+    position: static;
+  }
+
+  .groups-menu {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .page {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page__main {
+    width: 100%; /* auto margins would otherwise let wide content (a kanban board) stretch the page */
+    padding: 16px;
+  }
+
+  .space-header__name,
+  .space-header__name-input {
+    font-size: 24px;
+  }
+}
+
+/* ─── Module full page (js/editor/module-page.js) ──────────────────────── */
+
+.module-page__header {
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.module-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-body);
+}
+
+.module-page__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.module-page__title {
+  margin: 0;
+  font-size: 30px;
+}
+
+.module-page__icon {
+  display: inline-flex;
+  color: var(--color-accent);
+}
+
+/* A personal homepage shows the owner's avatar instead of initials in a square. */
+.space-header__badge--personal {
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* ─── Notification bell (js/editor/notification-bell.js) ───────────────── */
+
+.app-bar__bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.app-bar__bell:hover,
+.app-bar__menu.is-open .app-bar__bell {
+  background: var(--color-page);
+  color: var(--color-text);
+}
+
+.app-bar__bell-count {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+}
+
+.notifications-menu {
+  right: 0;
+  left: auto;
+  width: 360px;
+  max-width: calc(100vw - 16px);
+  padding: 0;
+}
+
+.notifications-menu__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-small);
+}
+
+.notifications-menu__title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+}
+
+.notifications-menu__list {
+  max-height: 420px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.notifications-menu__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-faint);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notifications-menu__item:hover {
+  background: var(--color-page);
+}
+
+.notifications-menu__item.is-unread {
+  background: var(--color-accent-soft);
+}
+
+.notifications-menu__item.is-unread:hover {
+  background: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface));
+}
+
+.notifications-menu__text {
+  flex: 1 1 auto;
+}
+
+.notifications-menu__time {
+  color: var(--color-text-muted);
+}
+
+.notifications-menu__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.notifications-menu__empty {
+  margin: 0;
+  padding: 16px 12px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+/* ─── Search box (js/editor/search-box.js) ─────────────────────────────── */
+
+.app-bar__search {
+  flex: 0 1 380px;
+  min-width: 200px;
+}
+
+.app-search {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.app-search:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.app-search__field {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 8px;
+  color: var(--color-text-muted);
+}
+
+.app-search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  outline: none;
+}
+
+.app-search__scope {
+  flex: none;
+  max-width: 120px;
+  margin: 0;
+  padding: 0 26px 0 10px;
+  border: 0;
+  border-left: 1px solid var(--color-border);
+  /* Rounded on the right to match the search bubble, so it never pokes out of it. */
+  border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-page);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6672' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.app-search__results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 130;
+  width: max(100%, 420px);
+  max-width: calc(100vw - 16px);
+  max-height: min(520px, calc(100vh - 80px));
+  overflow-y: auto;
+  padding: 4px 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.app-search__heading {
+  margin: 6px 12px 2px;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-search__result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  color: var(--color-text);
+}
+
+.app-search__result:hover,
+.app-search__result.is-active {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.app-search__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-search__title {
+  overflow: hidden;
+  color: var(--color-link);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-search__detail {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-search__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-muted);
+}
+
+.app-search__badge {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+.app-search__empty {
+  margin: 6px 12px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+/* Small screens: the search gets its own row under the top bar. */
+@media (max-width: 760px) {
+  .app-bar__search {
+    order: 10;
+    flex: 1 1 100%;
+  }
+
+  .app-search__results {
+    width: 100%;
+  }
+}
+
+.app-bar__link .unread-badge {
+  margin-left: 2px;
+}
+
+/* ─── Homepage tabs (js/editor/space-header.js) ────────────────────────── */
+
+.space-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 2px;
+  width: 100%;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.space-tabs__tab {
+  margin-bottom: -1px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  color: var(--color-link);
+}
+
+.space-tabs__tab:hover {
+  background: var(--color-surface);
+  text-decoration: none;
+}
+
+.space-tabs__tab.is-active {
+  border-color: var(--color-border-strong);
+  background: var(--color-page);
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.space-tabs__rename {
+  width: 160px;
+  margin-bottom: 4px;
+}
+
+.space-tabs__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px auto;
+  font-size: var(--font-size-small);
+}
+
+/* With tabs, the tabs' line is the header's bottom edge. */
+.space-header.has-tabs {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* A group's public tab: a small globe before its name (members see it). */
+.space-tabs__globe {
+  display: inline-flex;
+  vertical-align: -1px;
+  margin-right: 4px;
+  color: var(--color-text-muted);
+}
+
+/* Muting a group's news: the bell button in the header. */
+.space-header__mute.is-muted {
+  color: var(--color-text-muted);
+}
+
+/* Feed · Friends · My blog, across the top of a blog page. It's the app's
+   navigation, so it keeps the app's font and link color, not the blog's. */
+.space-header > .blog-tabs {
+  flex: 1 1 100%;
+  margin-bottom: 4px;
+}
+
+.blog-tabs {
+  font-family: var(--ui-font);
+}
+
+.blog-tabs .settings-tabs__tab:not(.is-active) {
+  color: var(--ui-link);
+}
+
+/* "Advanced search →" at the bottom of the top bar's search menu */
+.app-search__advanced {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+/* A module shared from (or with) other groups (js/state/shared-modules.js). */
+.module-frame__shared {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-module {
+  max-width: 460px;
+}
+
+.share-module__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--radius);
+}
+
+.share-module__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.share-module__row + .share-module__row {
+  border-top: 1px solid var(--color-border-faint);
+}
+
+.share-module__group {
+  flex: 1;
+  cursor: pointer;
+}
+
+/* ─── Who else is here (js/state/live.js) ─── */
+.presence-pill {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-size: var(--font-size-small);
+}
+.presence-pill[hidden] { display: none; }
+.presence-pill__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success, #14866d); }
+@media (max-width: 640px) { .presence-pill { bottom: 76px; left: 10px; } }
+
+/* The Home menu (js/editor/app-bar.js): My homepage, My blog, Friends. */
+.home-menu { min-width: 200px; }
+.home-menu__item { margin-top: 0; border-top: 0; color: var(--color-text); gap: 8px; text-decoration: none; }
+.home-menu__item + .home-menu__item { border-top: 1px solid var(--color-border-faint); }
+.home-menu__item.is-current { font-weight: bold; color: var(--color-link); }
+.home-menu__item .unread-badge { margin-left: auto; }
+
+/* An "assigned you" notification: ✓ accept / ✕ pass beside it (notification-bell.js). */
+.notifications-menu__answerable {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-faint);
+}
+
+.notifications-menu__answerable .notifications-menu__item {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.notifications-menu__answer {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.notifications-menu__accept,
+.notifications-menu__decline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+}
+
+.notifications-menu__accept { background: #1f8a4c; }
+.notifications-menu__accept:hover { background: #18703d; }
+.notifications-menu__decline { background: #c62f2f; }
+.notifications-menu__decline:hover { background: #a42424; }
+
+.notifications-menu__accept:focus-visible,
+.notifications-menu__decline:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.notifications-menu__answered {
+  flex: none;
+  padding-right: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.notifications-menu__answered.is-accepted { color: #1f8a4c; }
+.notifications-menu__answered.is-declined { color: #c62f2f; }
+
+.notifications-menu__answerable:has(.is-unread) { background: var(--color-accent-soft); }
+
+/* Dragging tabs in edit mode (Nov 20; makeTabDraggable in space-header.js) */
+.space-tabs__tab.is-movable { cursor: grab; touch-action: none; user-select: none; }
+.space-tabs__tab.is-dragging {
+  position: relative; z-index: 2; cursor: grabbing;
+  background: var(--color-surface); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); border-radius: 8px;
+}
+.space-tabs.is-reordering .space-tabs__tab:not(.is-dragging) { transition: box-shadow 0.12s; }
+.space-tabs__tab.is-drop-before { box-shadow: inset 3px 0 0 var(--color-accent); }
+.space-tabs__tab.is-drop-after { box-shadow: inset -3px 0 0 var(--color-accent); }

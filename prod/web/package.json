@@ -1,0 +1,16 @@
+{
+  "name": "3den-web",
+  "private": true,
+  "type": "module",
+  "description": "3den's web app: no framework, no build step. Checks run in Docker: `make check` from prod/.",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "lint": "eslint js hello.js",
+    "typecheck": "tsc -p jsconfig.json",
+    "check": "eslint js hello.js & e=$!; tsc -p jsconfig.json; t=$?; wait $e && exit $t"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "typescript": "5.9.3"
+  }
+}

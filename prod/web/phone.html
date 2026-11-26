@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3den on iPhone · prototype preview</title>
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <!--
+    phone.html — 3den shown inside an iPhone frame, for looking at the phone
+    version on a computer. The app inside is the real one (index.html with
+    ?frame=iphone), so everything works and it shares this browser's saved
+    data. On an actual iPhone, open index.html instead and use
+    Share → Add to Home Screen.
+
+    Left: the phone. Right: which iPhone, links to try (as if someone had
+    sent them to you), and how to put 3den on your Home Screen.
+  -->
+  <style>
+    :root {
+      --page: #eef0f3;
+      --text: #202122;
+      --muted: #54595d;
+      --link: #0645ad;
+      --border: #c8ccd1;
+      --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.5 var(--font);
+    }
+
+    .stage {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 48px;
+      padding: 24px;
+    }
+
+    /* ─── The phone ─────────────────────────────────────────────────────── */
+
+    .phone-slot {
+      flex: none;
+    }
+
+    /* The phone is always drawn at its real size (width: max-content keeps
+       its parent from squeezing it) and then scaled as a whole to fit the
+       window, from its top left corner, so it never changes shape. */
+    .phone {
+      position: relative;
+      width: max-content;
+      padding: 12px;
+      border-radius: 64px;
+      background: #1c1c1e;
+      box-shadow: 0 0 0 2px #3a3a3c, 0 30px 60px rgba(0, 0, 0, 0.28);
+      transform-origin: top left;
+    }
+
+    .phone__screen {
+      position: relative;
+      flex: none;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border-radius: 52px;
+      background: #fff;
+    }
+
+    .status-bar {
+      position: relative;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 54px;
+      padding: 14px 30px 0 44px;
+      font-weight: 600;
+      font-size: 16px;
+      background: #fff;
+    }
+
+    .status-bar__icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .island {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      width: 124px;
+      height: 36px;
+      transform: translateX(-50%);
+      border-radius: 20px;
+      background: #000;
+    }
+
+    .phone iframe {
+      display: block;
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: #f8f9fa;
+    }
+
+    .home-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      width: 134px;
+      height: 5px;
+      transform: translateX(-50%);
+      border-radius: 3px;
+      background: #000;
+      pointer-events: none;
+    }
+
+    /* iPhone SE: square screen, a slim status bar, a Home button. */
+    .phone.is-se {
+      padding: 64px 14px 82px;
+      border-radius: 54px;
+    }
+
+    .phone.is-se .phone__screen {
+      border-radius: 2px;
+    }
+
+    .phone.is-se .status-bar {
+      height: 20px;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .phone.is-se .island,
+    .phone.is-se .home-indicator {
+      display: none;
+    }
+
+    .home-button,
+    .speaker {
+      display: none;
+    }
+
+    .phone.is-se .home-button {
+      display: block;
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      width: 52px;
+      height: 52px;
+      transform: translateX(-50%);
+      border: 2px solid #3a3a3c;
+      border-radius: 50%;
+    }
+
+    .phone.is-se .speaker {
+      display: block;
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      width: 60px;
+      height: 6px;
+      transform: translateX(-50%);
+      border-radius: 3px;
+      background: #3a3a3c;
+    }
+
+    /* ─── The side panel ────────────────────────────────────────────────── */
+
+    .panel {
+      flex: 0 1 380px;
+      padding-top: 24px;
+    }
+
+    .panel h1 {
+      margin: 0 0 4px;
+      font: 400 30px/1.2 Georgia, 'Times New Roman', serif;
+    }
+
+    .panel h2 {
+      margin: 28px 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .panel p {
+      margin: 0 0 10px;
+    }
+
+    .lede {
+      color: var(--muted);
+    }
+
+    .devices {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .devices button {
+      padding: 7px 14px;
+      border: 0;
+      background: none;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .devices button + button {
+      border-left: 1px solid var(--border);
+    }
+
+    .devices button[aria-pressed='true'] {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    .links {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .links li {
+      margin-bottom: 6px;
+    }
+
+    .links button,
+    .link-button {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--link);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .links button:hover,
+    .link-button:hover {
+      text-decoration: underline;
+    }
+
+    .links .hint {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    ol.steps {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    ol.steps li {
+      margin-bottom: 4px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    a {
+      color: var(--link);
+    }
+
+    /* Narrow windows: the phone first, the notes underneath. */
+    @media (max-width: 860px) {
+      .stage {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .panel {
+        flex: none;
+        width: 100%;
+        max-width: 480px;
+        padding-top: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stage {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone-slot" id="phone-slot">
+      <div class="phone" id="phone">
+        <span class="speaker" aria-hidden="true"></span>
+        <div class="phone__screen" id="screen">
+          <div class="status-bar" aria-hidden="true">
+            <span id="clock">9:41</span>
+            <span class="island"></span>
+            <span class="status-bar__icons">
+              <!-- signal -->
+              <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+              <!-- wifi -->
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1.5 4.5a9.5 9.5 0 0 1 13 0"/><path d="M4 7.3a6 6 0 0 1 8 0"/><circle cx="8" cy="10.2" r="1.2" fill="currentColor" stroke="none"/></svg>
+              <!-- battery -->
+              <svg width="27" height="13" viewBox="0 0 27 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity="0.4"/><rect x="2" y="2" width="17" height="9" rx="2"/><rect x="24.5" y="4" width="2" height="5" rx="1" opacity="0.4"/></svg>
+            </span>
+          </div>
+          <iframe id="app" title="3den, as on an iPhone" src="index.html?frame=iphone"></iframe>
+          <span class="home-indicator" aria-hidden="true"></span>
+        </div>
+        <span class="home-button" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h1>3den on iPhone</h1>
+      <p class="lede">The real app, at iPhone size: a tab bar at the bottom, sheets that slide up, and room for the notch and home indicator. Click and type in it as you would tap on a phone.</p>
+
+      <h2>Phone</h2>
+      <div class="devices" role="group" aria-label="Which iPhone">
+        <button type="button" data-device="pro" aria-pressed="true">iPhone 15 Pro</button>
+        <button type="button" data-device="se" aria-pressed="false">iPhone SE</button>
+      </div>
+
+      <h2>Try a link someone sent you</h2>
+      <ul class="links">
+        <li><button type="button" data-hash="#space-me">Your homepage</button><span class="hint">Leo's Dashboard, tasks, and calendar</span></li>
+        <li><button type="button" data-hash="#event-band-ev-2">An event invitation</button><span class="hint">Porch Lights at the Juniper Street Fair, with RSVP</span></li>
+        <li><button type="button" data-hash="#join-supper24">A group invite link</button><span class="hint">Juniper Supper Club (invite only)</span></li>
+        <li><button type="button" data-hash="#space-porchlights">A group's public page</button><span class="hint">Porch Lights' photos and gigs</span></li>
+        <li><button type="button" data-hash="#blog-jamal">A friend's blog</button><span class="hint">Jamal's photos and shows</span></li>
+        <li><button type="button" data-hash="#messages">Messages</button><span class="hint">Conversations, with unread counts</span></li>
+      </ul>
+
+      <h2>On your own iPhone</h2>
+      <ol class="steps">
+        <li>Open <a id="app-link" href="index.html">3den</a> in Safari on the iPhone.</li>
+        <li>Tap <strong>Share</strong> (the square with an arrow), then <strong>Add to Home Screen</strong>.</li>
+        <li>Tap <strong>Add</strong>. 3den now opens from its icon, full screen, like an app.</li>
+      </ol>
+      <p class="lede">It's still the prototype: everything is saved in that phone's browser only.</p>
+
+      <div class="actions">
+        <button type="button" class="link-button" id="reset">Reset the demo</button>
+        <a href="index.html">Open 3den full size</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ─── Which iPhone ─────────────────────────────────────────────────────
+    // Screen sizes in CSS pixels: what each phone's browser actually gets.
+    const DEVICES = {
+      pro: { width: 393, height: 852, frame: 'iphone' },
+      se: { width: 375, height: 667, frame: 'iphone-se' },
+    };
+
+    const phone = document.getElementById('phone');
+    const slot = document.getElementById('phone-slot');
+    const screen = document.getElementById('screen');
+    const app = document.getElementById('app');
+    let device = 'pro';
+
+    function setDevice(id) {
+      device = id;
+      const { width, height, frame } = DEVICES[id];
+      phone.classList.toggle('is-se', id === 'se');
+      screen.style.width = `${width}px`;
+      screen.style.height = `${height}px`;
+      const hash = currentHash();
+      app.src = `index.html?frame=${frame}${hash}`;
+      for (const button of document.querySelectorAll('.devices button')) {
+        button.setAttribute('aria-pressed', String(button.dataset.device === id));
+      }
+      fitToWindow();
+    }
+
+    /** The page the phone is showing ('#space-me'), kept when switching phones. */
+    function currentHash() {
+      try { return app.contentWindow.location.hash; } catch { return ''; }
+    }
+
+    /**
+     * Shrink the phone to fit the window, by height and by width, keeping its
+     * shape. It's measured at full size first (with the slot unset), so the
+     * slot can then be sized to the scaled phone and the page lays out
+     * around what you actually see.
+     */
+    function fitToWindow() {
+      phone.style.transform = '';
+      slot.style.width = '';
+      slot.style.height = '';
+      const width = phone.offsetWidth;
+      const height = phone.offsetHeight;
+      const pad = parseFloat(getComputedStyle(slot.parentElement).paddingLeft) || 0;
+      const roomWide = window.innerWidth - pad * 2;
+      const roomHigh = window.innerHeight - pad * 2;
+      const scale = Math.max(0.3, Math.min(1, roomHigh / height, roomWide / width));
+      phone.style.transform = scale < 1 ? `scale(${scale})` : '';
+      slot.style.width = `${Math.floor(width * scale)}px`;
+      slot.style.height = `${Math.floor(height * scale)}px`;
+    }
+
+    for (const button of document.querySelectorAll('.devices button')) {
+      button.addEventListener('click', () => setDevice(button.dataset.device));
+    }
+
+    // ─── Links to try ─────────────────────────────────────────────────────
+    for (const button of document.querySelectorAll('[data-hash]')) {
+      button.addEventListener('click', () => {
+        try {
+          app.contentWindow.location.hash = button.dataset.hash;
+        } catch {
+          app.src = `index.html?frame=${DEVICES[device].frame}${button.dataset.hash}`;
+        }
+      });
+    }
+
+    // ─── Reset ────────────────────────────────────────────────────────────
+    // The app inside shares this page's storage; clearing it brings back the
+    // sample data (the app's own "Reset demo" does the same).
+    document.getElementById('reset').addEventListener('click', () => {
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('3den.')) localStorage.removeItem(key);
+      }
+      app.src = `index.html?frame=${DEVICES[device].frame}`;
+    });
+
+    // ─── The clock in the status bar ──────────────────────────────────────
+    function drawClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+    drawClock();
+    setInterval(drawClock, 15 * 1000);
+
+    window.addEventListener('resize', fitToWindow);
+    setDevice('pro');
+  </script>
+</body>
+</html>

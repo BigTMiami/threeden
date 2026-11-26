@@ -88,12 +88,12 @@ phone, and signing out on one device doesn't sign out the other.
 
 | | Step | Who | Done when |
 |---|---|---|---|
-| [ ] | **3.1** Tables `accounts` and `sessions` (token stored only as a hash, device name, last used, revoked). Argon2id passwords | 🤖 Claude | Migration applies |
-| [ ] | **3.2** `POST /api/v1/auth/signup`, `/signin`, `/signout`; `GET /api/v1/me`; `GET` and `DELETE /api/v1/me/sessions` (your devices). Cookie for the web, bearer token for apps. Origin check on changes. A simple rate limit on sign-in and sign-up | 🤖 Claude | Works from `/api/docs` |
-| [ ] | **3.3** Tests, including the refusals: wrong password, a revoked session, a missing Origin, and too many attempts | 🤖 Claude | `make test` passes |
-| [ ] | **3.4** Copy the prototype's app files (index.html, phone.html, manifest.json, sw.js, css/, js/, icons/) into `web/`, with its ESLint and jsconfig settings so `make check` covers them. The prototype at the root is left as it is | 🤖 Claude | `make check` passes; `localhost:8080` shows the app in demo mode |
-| [ ] | **3.5** Web server mode, first part, in `web/`: the app checks for `/api/health` and offers server mode; the sign-up and sign-in screens (`web/js/account/auth-view.js`) call the API in server mode. Demo mode still works | 🤖 Claude | Sign up, sign out, and sign in work in the browser; the prototype's sweeps still pass |
-| [ ] | **3.6** iOS: sign-in and sign-up screens, the token in the Keychain, a Me screen with a sign-out button | 🤖 Claude | Builds; tests pass |
+| [x] | **3.1** Tables `accounts` and `sessions` (token stored only as a hash, device name, last used, revoked). Argon2id passwords | 🤖 Claude | Migration applies |
+| [x] | **3.2** `POST /api/v1/auth/signup`, `/signin`, `/signout`; `GET /api/v1/me`; `GET` and `DELETE /api/v1/me/sessions` (your devices). Cookie for the web, bearer token for apps. Origin check on changes. A simple rate limit on sign-in and sign-up | 🤖 Claude | Works from `/api/docs` |
+| [x] | **3.3** Tests, including the refusals: wrong password, a revoked session, a missing Origin, and too many attempts | 🤖 Claude | `make test` passes |
+| [x] | **3.4** Copy the prototype's app files (index.html, phone.html, manifest.json, sw.js, css/, js/, icons/) into `web/`, with its ESLint and jsconfig settings so `make check` covers them. The prototype at the root is left as it is | 🤖 Claude | `make check` passes; `localhost:8080` shows the app in demo mode |
+| [x] | **3.5** Web server mode, first part, in `web/`: the app checks for `/api/health` and offers server mode; the sign-up and sign-in screens (`web/js/account/auth-view.js`) call the API in server mode. Demo mode still works | 🤖 Claude | Sign up, sign out, and sign in work in the browser; the prototype's sweeps still pass |
+| [x] | **3.6** iOS: sign-in and sign-up screens, the token in the Keychain, a Me screen with a sign-out button | 🤖 Claude | Builds; tests pass |
 | [ ] | **3.7** Try it: make an account on the web, sign in on the phone, sign out on the web, and check the phone is still signed in. Look at the sessions in the database (`make psql`) | 🧑 You | Works |
 | [ ] | **3.8** Review and commit | 🧑 You | Committed |
 

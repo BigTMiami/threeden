@@ -1,0 +1,187 @@
+/*
+ * themes.css — the few things a theme changes beyond its colors, fonts,
+ * and corners (those are tokens, set on <html> by js/ui/themes.js).
+ *
+ * <html data-theme="daylight">   one per theme, for its signature details
+ * <html data-dark>           any dark theme: things drawn for a light page
+ * <html data-own-look>       a group with its own look is showing: the theme's
+ *                            extras step back (js/groups/appearance.js)
+ */
+
+/* ─── Dark themes ─────────────────────────────────────────────────────────── */
+
+[data-dark]:not([data-own-look]) {
+  color-scheme: dark;
+}
+
+/* Light tints used for statuses and badges: keep their meaning, darken the fill. */
+[data-dark]:not([data-own-look]) .event-badge,
+[data-dark]:not([data-own-look]) .sub-status,
+[data-dark]:not([data-own-look]) .feed__notice {
+  filter: brightness(0.85) saturate(1.1);
+}
+
+[data-dark]:not([data-own-look]) mark {
+  background: color-mix(in srgb, #ffd84a 75%, transparent);
+  color: #111;
+}
+
+[data-dark]:not([data-own-look]) ::placeholder {
+  color: var(--color-text-faint);
+}
+
+/* Daylight keeps a hairline around its cards as well as the shadow, for a clearer edge. */
+[data-theme="daylight"]:not([data-own-look]) .module-frame,
+[data-theme="daylight"]:not([data-own-look]) .settings-section {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-raised);
+}
+
+[data-theme="daylight"]:not([data-own-look]) .button {
+  border-radius: 999px;
+}
+
+/* ─── Midnight: soft dark cards ──────────────────────── */
+
+[data-theme="midnight"]:not([data-own-look]) .module-frame {
+  border-color: var(--color-border);
+}
+
+[data-theme="midnight"]:not([data-own-look]) .module-frame__header {
+  border-bottom-color: transparent;
+}
+
+/* ─── High contrast: underlined links, thick focus rings ────────────────── */
+
+[data-theme="contrast"]:not([data-own-look]) a {
+  text-decoration: underline;
+}
+
+[data-theme="contrast"]:not([data-own-look]) :focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 2px;
+}
+
+[data-theme="contrast"]:not([data-own-look]) .module-frame,
+[data-theme="contrast"]:not([data-own-look]) .button,
+[data-theme="contrast"]:not([data-own-look]) .input {
+  border-width: 2px;
+}
+
+/* ─── The theme picker (Account settings → Theme) ───────────────────────── */
+
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.theme-card.is-active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.theme-card__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 84px;
+  padding: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.theme-card__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-wordmark);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.theme-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.theme-card__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.theme-card__line {
+  height: 5px;
+  border-radius: 3px;
+}
+
+.theme-card__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.theme-card__description {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.theme-picker__groups {
+  margin-top: 12px;
+}
+
+/* ─── Dark themes: readable reds, ambers, and label colors ─────────────────
+ * The danger and warning colors, event colors, and tints were picked for
+ * light backgrounds; on a dark page (html[data-dark]) they're lightened so
+ * labels like "Overdue", "Full", and red or orange event chips stay readable
+ * (4.5:1 or better on the dark themes' cards). */
+:root[data-dark] {
+  --color-danger: #ff9b93;
+  --color-danger-soft: color-mix(in srgb, #ff9b93 16%, var(--color-surface));
+  --color-warning-text: #ffd27a;
+  --color-warning-soft: color-mix(in srgb, #ffc04d 15%, var(--color-surface));
+}
+:root[data-dark] .tint--orange{ --tint: #f0a64a; }
+:root[data-dark] .tint--red{ --tint: #ff8a80; }
+:root[data-dark] .tint--blue{ --tint: #7fa8f5; }
+:root[data-dark] .tint--green{ --tint: #4cc8a6; }
+:root[data-dark] .tint--purple{ --tint: #c39be0; }
+/* Event chips and calendar blocks: tinted dark backgrounds, light text. */
+:root[data-dark] .event-chip,
+:root[data-dark] .time-grid__event {
+  background: color-mix(in srgb, var(--event-color) 26%, var(--color-surface));
+  color: color-mix(in srgb, var(--event-color) 30%, #ffffff);
+}
+:root[data-dark] .event-chip:hover, :root[data-dark] .event-chip.is-selected,
+:root[data-dark] .time-grid__event:hover, :root[data-dark] .time-grid__event.is-selected {
+  background: color-mix(in srgb, var(--event-color) 40%, var(--color-surface));
+}
+:root[data-dark] .event-badge--invite{ border-color: #6b4f8c; background: color-mix(in srgb, #9b6fd0 18%, var(--color-surface)); color: #dcc6f4; }
+:root[data-dark] .event-badge--public{ border-color: #3d7a55; background: color-mix(in srgb, #4fb37a 16%, var(--color-surface)); color: #b6e8c8; }
+:root[data-dark] .toast__action{ color: #1f4fbf; }

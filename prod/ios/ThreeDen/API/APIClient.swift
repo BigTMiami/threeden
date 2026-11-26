@@ -1,16 +1,19 @@
 import Foundation
 
 /// Talks to the 3den API. Every call throws only `APIError`.
+/// Sends the session token (if there is one) as "Authorization: Bearer …".
 struct APIClient: Sendable {
     /// Sends a request and returns the raw answer. URLSession by default;
     /// tests pass their own so no network is needed.
     typealias Transport = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
     let baseURL: URL
+    let tokens: TokenStore
     private let transport: Transport
 
-    init(baseURL: URL, transport: Transport? = nil) {
+    init(baseURL: URL, tokens: TokenStore = TokenStore(keychain: nil), transport: Transport? = nil) {
         self.baseURL = baseURL
+        self.tokens = tokens
         self.transport = transport ?? { request in
             try await URLSession.shared.data(for: request)
         }
@@ -30,11 +33,42 @@ struct APIClient: Sendable {
         try await send(post("api/v1/hello", body: NewGreeting(message: message)))
     }
 
+    func signIn(_ body: SignInRequest) async throws(APIError) -> SignedIn {
+        try await send(post("api/v1/auth/signin", body: body))
+    }
+
+    func signUp(_ body: SignUpRequest) async throws(APIError) -> SignedIn {
+        try await send(post("api/v1/auth/signup", body: body))
+    }
+
+    /// Ends this device's session on the server. Other devices stay signed in.
+    func signOut() async throws(APIError) {
+        try await sendExpectingNothing(post("api/v1/auth/signout", body: Empty()))
+    }
+
+    func me() async throws(APIError) -> Account {
+        try await send(get("api/v1/me"))
+    }
+
+    func sessions() async throws(APIError) -> [DeviceSession] {
+        try await send(get("api/v1/me/sessions"))
+    }
+
+    /// Signs out one of your devices.
+    func deleteSession(_ id: UUID) async throws(APIError) {
+        var request = get("api/v1/me/sessions/\(id.uuidString.lowercased())")
+        request.httpMethod = "DELETE"
+        try await sendExpectingNothing(request)
+    }
+
     // MARK: Plumbing
 
     private func get(_ path: String) -> URLRequest {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = tokens.token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         request.timeoutInterval = 15
         return request
     }
@@ -47,7 +81,10 @@ struct APIClient: Sendable {
         return request
     }
 
-    private func send<T: Decodable>(_ request: URLRequest) async throws(APIError) -> T {
+    private struct Empty: Encodable {}
+
+    /// Sends the request; returns the body of a 2xx answer, or throws.
+    private func exchange(_ request: URLRequest) async throws(APIError) -> Data {
         let data: Data
         let response: URLResponse
         do {
@@ -62,6 +99,15 @@ struct APIClient: Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw .http(status: http.statusCode, detail: Self.detail(from: data))
         }
+        return data
+    }
+
+    private func sendExpectingNothing(_ request: URLRequest) async throws(APIError) {
+        _ = try await exchange(request)
+    }
+
+    private func send<T: Decodable>(_ request: URLRequest) async throws(APIError) -> T {
+        let data = try await exchange(request)
         do {
             return try Self.decoder.decode(T.self, from: data)
         } catch {

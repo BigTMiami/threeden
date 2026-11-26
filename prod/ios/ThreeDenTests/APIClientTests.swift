@@ -145,8 +145,13 @@ struct ErrorTests {
     }
 
     @Test func messagesForPeople() {
-        #expect(APIError.http(status: 422, detail: "x").localizedDescription
-            == "A greeting needs 1 to 200 characters.")
+        // The server's own words when it gives them…
+        #expect(APIError.http(status: 409, detail: "@rosa is taken.").localizedDescription
+            == "@rosa is taken.")
+        // …and plain ones when it doesn't.
+        #expect(APIError.http(status: 401, detail: nil).localizedDescription == "Please sign in again.")
+        #expect(APIError.http(status: 503, detail: nil).localizedDescription
+            == "The 3den server had a problem. Try again in a moment.")
         #expect(APIError.network(.cannotConnectToHost).localizedDescription
             == "Couldn't reach the server.")
     }

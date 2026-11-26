@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core import ratelimit
 from app.core.db import Base, get_db
 from app.core.settings import get_settings
 from app.main import app
@@ -63,9 +64,44 @@ def db(engine: Engine) -> Iterator[Session]:
         yield session
 
 
+@pytest.fixture(autouse=True)
+def fresh_rate_limits() -> None:
+    for limiter in ratelimit.ALL:
+        limiter.reset()
+
+
+ORIGIN = "http://testserver"  # TestClient's own address
+
+
+def _client(db: Session, **kwargs) -> TestClient:
+    app.dependency_overrides[get_db] = lambda: db
+    return TestClient(app, **kwargs)
+
+
 @pytest.fixture
 def client(db: Session) -> Iterator[TestClient]:
-    app.dependency_overrides[get_db] = lambda: db
-    with TestClient(app) as c:
+    """Like an app: no Origin header, no cookies unless a test adds them."""
+    with _client(db) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def browser(db: Session) -> Iterator[TestClient]:
+    """Like a browser on the site: sends Origin, keeps cookies."""
+    with _client(db, headers={"Origin": ORIGIN, "User-Agent": SAFARI_MAC}) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def other_browser(db: Session) -> Iterator[TestClient]:
+    """A second browser (its own cookies)."""
+    with _client(db, headers={"Origin": ORIGIN}) as c:
+        yield c
+
+
+SAFARI_MAC = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+    "(KHTML, like Gecko) Version/26.0 Safari/605.1.15"
+)

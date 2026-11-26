@@ -1,8 +1,15 @@
 import SwiftUI
 
-struct HelloView: View {
+struct HelloView<AccountButton: View>: View {
     @Bindable var model: HelloModel
+    /// Shown at the top right (the Me button when signed in).
+    let accountButton: AccountButton
     @FocusState private var draftFocused: Bool
+
+    init(model: HelloModel, @ViewBuilder accountButton: () -> AccountButton) {
+        self.model = model
+        self.accountButton = accountButton()
+    }
 
     var body: some View {
         NavigationStack {
@@ -12,6 +19,7 @@ struct HelloView: View {
                 addSection
             }
             .navigationTitle("3den")
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { accountButton } }
             .refreshable { await model.load() }
             .task { await model.load() }
         }
@@ -124,6 +132,12 @@ private struct StatusRow: View {
         case .down: downText
         case .unknown: "Unknown"
         }
+    }
+}
+
+extension HelloView where AccountButton == EmptyView {
+    init(model: HelloModel) {
+        self.init(model: model) { EmptyView() }
     }
 }
 

@@ -80,6 +80,9 @@ final class HelloModel {
             draft = ""
             await loadGreetings()
             return true
+        } catch .http(422, _) {
+            addError = "A greeting needs 1 to 200 characters."
+            return false
         } catch {
             addError = error.localizedDescription
             return false

@@ -1,0 +1,633 @@
+/*
+ * mobile.css — 3den on a phone, laid out like an iPhone app.
+ *
+ * Loaded last. Everything here only applies to screens 640 px wide or less:
+ *
+ *   ┌───────────────────────────────┐
+ *   │ 3den                 🔍  (LL) │  ← slim top bar (sticky, frosted)
+ *   │                               │
+ *   │   the page, one column        │
+ *   │                               │
+ *   ├──────┬──────┬──────┬─────┬────┤
+ *   │ Home │ Blog │Groups│ Msgs│ 🔔 │  ← tab bar (js/editor/tab-bar.js)
+ *   └──────┴──────┴──────┴─────┴────┘
+ *
+ * Menus (your account, notifications) open as sheets that slide up from
+ * the bottom. Room is left for the iPhone's rounded corners and home
+ * indicator ("safe areas"): env(safe-area-inset-*) on a real phone, or
+ * the pretend values phone.html's frame sets (html.in-phone-frame).
+ */
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tab-bar-height: 54px;
+  --module-strip-height: 46px; /* the module chips above the tab bar */
+  --sheet-radius: 14px;
+}
+
+/* Inside phone.html's iPhone frame: a pretend home indicator. */
+html.in-phone-frame {
+  --safe-bottom: 20px;
+}
+
+/* An iPhone SE has a Home button instead of a home indicator. */
+html.in-phone-frame[data-device='se'] {
+  --safe-bottom: 0px;
+}
+
+/* The tab bar and the search button are for phones only. */
+.tab-bar,
+.app-bar__search-toggle {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  /* ─── Touch basics ─────────────────────────────────────────────────── */
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom));
+  }
+
+  /* 16 px text in fields, so iPhones don't zoom in when you tap one.
+     (!important because many fields set a smaller size with a class, and
+     anything under 16 px makes Safari zoom the whole page.) */
+  input,
+  select,
+  textarea,
+  [contenteditable='true'] {
+    font-size: 16px !important;
+  }
+
+  .page__note {
+    display: none;
+  }
+
+  /* ─── Top bar: logo, search button, avatar ─────────────────────────── */
+
+  .app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-height: 52px;
+    padding: calc(6px + var(--safe-top)) 12px 6px 16px;
+    background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  }
+
+  /* Frosted glass behind the bar. (On a pseudo-element: blur on the bar
+     itself would trap the bottom sheets inside it.) */
+  .app-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+  }
+
+  .app-bar__wordmark {
+    font-size: 22px;
+  }
+
+  .app-bar__nav {
+    display: none;
+  }
+
+  .app-bar__account {
+    gap: 4px;
+  }
+
+  /* The bell stays in the top bar on phones (the tab bar's last spot is Blog). */
+  .app-bar__bell {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .app-bar__search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--color-text);
+  }
+
+  .app-bar__user {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Search: folded away until 🔍 is tapped, then a row under the bar. */
+  .app-bar__search {
+    display: none;
+  }
+
+  body.is-searching .app-bar {
+    flex-wrap: wrap;
+  }
+
+  body.is-searching .app-bar__search {
+    display: block;
+    order: 10;
+    flex: 1 1 100%;
+    padding-bottom: 4px;
+  }
+
+  .app-search__results {
+    max-height: calc(100dvh - 180px);
+  }
+
+  /* ─── Sheets: menus slide up from the bottom ───────────────────────── */
+
+  .app-bar__menu.is-open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(0, 0, 0, 0.32);
+    animation: sheet-fade 0.2s ease-out;
+  }
+
+  .app-bar__menu.is-open .groups-menu {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 120;
+    width: auto;
+    max-height: 78dvh;
+    margin: 0;
+    padding: 8px 8px calc(12px + var(--safe-bottom));
+    overflow-y: auto;
+    border: 0;
+    border-radius: var(--sheet-radius) var(--sheet-radius) 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+    animation: sheet-up 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* The grab handle at the top of a sheet. */
+  .app-bar__menu.is-open .groups-menu::before {
+    position: static;
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 0 auto 8px;
+    border-radius: 999px;
+    background: var(--color-border-strong);
+  }
+
+  .account-menu__item,
+  .notifications-menu__item {
+    min-height: 44px;
+  }
+
+  @keyframes sheet-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  @keyframes sheet-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ─── The tab bar ──────────────────────────────────────────────────── */
+
+  .tab-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    display: flex;
+    height: calc(var(--tab-bar-height) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    border-top: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+  }
+
+  .tab-bar[hidden] {
+    display: none;
+  }
+
+  .tab-bar__tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 4px 0 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-faint);
+    font: inherit;
+    font-size: 10px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .tab-bar__tab:hover {
+    text-decoration: none;
+  }
+
+  .tab-bar__tab.is-current {
+    color: var(--color-accent);
+  }
+
+  .tab-bar__icon {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .tab-bar__badge {
+    position: absolute;
+    top: -4px;
+    left: 15px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 10px;
+    border: 1.5px solid var(--color-surface);
+  }
+
+  .tab-bar__label {
+    white-space: nowrap;
+  }
+
+  /* ─── Pages ────────────────────────────────────────────────────────── */
+
+  .page__main {
+    padding: 12px 12px 20px;
+  }
+
+  /* Big, left-aligned page titles, as on an iPhone. */
+  .settings-page__title,
+  .space-header__name {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .space-header {
+    margin-bottom: 14px;
+  }
+
+  .space-header__actions {
+    width: 100%;
+  }
+
+  /* "‹ Back" on full pages: a bigger target. */
+  .module-page__back,
+  .thread-header__back {
+    min-height: 40px;
+    align-items: center;
+  }
+
+  /* Messages fill the screen between the two bars, edge to edge, no box
+     (Nov 18): out past the page's side padding, down to the tab bar. */
+  .messages-page {
+    /* 140 px: the top bar and the "Messages" heading above it. */
+    height: calc(100dvh - 140px - var(--safe-top) - var(--tab-bar-height) - var(--safe-bottom) + 10px);
+    margin: 0 -12px -20px;
+    border: 0;
+  }
+
+  .chat-module--page {
+    height: calc(100dvh - 210px - var(--tab-bar-height) - var(--safe-bottom));
+    flex-direction: column;
+  }
+
+  /* Phones: the channel list is a row of chips above the chat (chat-card.js). */
+  .chat-module--page .chat-channels {
+    width: auto;
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .chat-module--page .chat-channels__title { display: none; }
+  .chat-module--page .chat-channel { width: auto; flex: none; border: 1px solid var(--color-border); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .chat-module--page .chat-channel__unread { margin-left: 3px; }
+
+  /* Toasts sit above the tab bar. */
+  .toast-region {
+    bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + 8px);
+  }
+}
+
+@media (max-width: 640px) {
+  /* ─── Groups page: the table becomes a list ────────────────────────── */
+
+  .groups-page__header .settings-page__subtitle {
+    display: none;
+  }
+
+  .groups-table,
+  .groups-table tbody,
+  .groups-table tr,
+  .groups-table th,
+  .groups-table td {
+    display: block;
+  }
+
+  .groups-table thead {
+    display: none;
+  }
+
+  .groups-table tr {
+    position: relative;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .groups-table th,
+  .groups-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .groups-table td {
+    display: inline;
+    margin-right: 10px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .groups-table td[data-label]::before {
+    content: attr(data-label) ' ';
+    color: var(--color-text-faint);
+  }
+
+  .groups-table td.groups-table__actions {
+    position: absolute;
+    top: 12px;
+    right: 0;
+  }
+
+  /* Invitations: Accept / Decline go under the text. */
+  .invitations .explore-list__row {
+    flex-wrap: wrap;
+  }
+
+  .invitations .explore-list__text {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .invitations__actions {
+    flex: 1 1 100%;
+    padding-left: 52px;
+  }
+}
+
+/* ─── Swiping between modules (js/editor/module-swiper.js) ─────────────── */
+
+.module-strip {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  /* The chips: one per module, in a bar just above the tab bar, where a
+     thumb can reach them. */
+  .module-strip:not([hidden]) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--tab-bar-height) + var(--safe-bottom));
+    z-index: 89; /* just under the tab bar and the sheets */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--module-strip-height);
+    padding: 0 8px 0 12px;
+    background: color-mix(in srgb, var(--color-page) 94%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Room for it at the bottom of the page, while the homepage shows it. */
+  body:has(#homepage-view:not([hidden]) .module-strip:not([hidden])) {
+    padding-bottom: calc(var(--tab-bar-height) + var(--module-strip-height) + var(--safe-bottom));
+  }
+
+  body:has(#homepage-view:not([hidden]) .module-strip:not([hidden])) .toast-region {
+    bottom: calc(var(--tab-bar-height) + var(--module-strip-height) + var(--safe-bottom) + 8px);
+  }
+
+  .module-strip__chips {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .module-strip__chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .module-strip__chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* Unread messages, on a chat's chip. */
+  .module-strip__badge {
+    margin-left: 4px;
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .module-strip__chip.is-current {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .module-strip__mode {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  /* The modules side by side, one screen each, snapping into place. */
+  .module-grid.is-swiping {
+    display: flex;
+    gap: 12px;
+    margin: 0 -12px;
+    padding: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 12px;
+    scrollbar-width: none;
+  }
+
+  .module-grid.is-swiping::-webkit-scrollbar {
+    display: none;
+  }
+
+  .module-grid.is-swiping > .module-frame {
+    flex: 0 0 100%;
+    /* Just fits the screen: module-swiper.js measures where the modules
+       start and sets --swipe-height; the module's own contents scroll inside. */
+    height: var(--swipe-height, calc(100dvh - 52px - var(--safe-top) - 22px - var(--module-strip-height) - var(--tab-bar-height) - var(--safe-bottom) - 24px));
+    min-height: 320px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .module-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0 2px;
+  }
+
+  .module-dots__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-border-strong);
+  }
+
+  .module-dots__dot.is-current {
+    background: var(--color-accent);
+  }
+}
+
+/* ─── Editing on a phone: the module library is a sheet ──────────────────
+ * Hidden while you edit until you tap "Add modules" (js/editor/library.js);
+ * tapping a module adds it and closes the sheet.
+ */
+@media (max-width: 640px) {
+  .space-header__add-modules {
+    display: inline-flex;
+  }
+
+  .library {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    z-index: 1001; /* over the tab bar */
+    max-height: 78vh;
+    padding: 14px 16px calc(16px + var(--safe-bottom, 0px));
+    border-right: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition: transform 200ms ease, visibility 0s linear 200ms;
+  }
+
+  .library.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 200ms ease;
+  }
+
+  .library__close {
+    display: inline-flex;
+    position: absolute;
+    top: -4px;
+    right: -6px;
+  }
+
+  .library__title {
+    padding-right: 44px;
+  }
+
+  /* Dragging from the list is off on touch, so no grip. */
+  .library .library-item__grip {
+    display: none;
+  }
+
+  .library-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.35);
+  }
+}
+
+/*
+ * Touch screens: when a module's own scrolling reaches its top or bottom, the
+ * swipe carries on and scrolls the page (scroll chaining). Computers do the
+ * same now (css/editor.css); this stays for older phone rules that set it.
+ */
+@media (pointer: coarse), (max-width: 700px) {
+  .module-frame__body { overscroll-behavior-y: auto; }
+}
+
+/* ─── A group's module fills the screen; the page snaps (module-swiper.js) ─
+ * Two resting places: the module, right under the top bar (the group's name
+ * and description just out of view above it), and the top of the page. The
+ * browser's own scroll snapping picks one while the scroll is still moving,
+ * so it reads as the scroll's momentum: a small pull springs back, a flick
+ * carries on to the header, and a flick back lands on the module.
+ */
+@media (max-width: 640px) {
+  /* Only with a module open: on the widgets the page scrolls freely. */
+  html.phone-module-snap:not(.phone-widgets) {
+    scroll-snap-type: y mandatory;
+  }
+
+  html.phone-module-snap #space-header {
+    scroll-snap-align: start;
+    scroll-margin-top: 400px; /* rests at the very top of the page */
+  }
+
+  html.phone-module-snap .module-grid.is-swiping {
+    scroll-snap-align: start;
+    scroll-margin-top: var(--snap-top, 58px);
+  }
+}
