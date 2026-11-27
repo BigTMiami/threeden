@@ -650,3 +650,8 @@ body.is-dragging-module * {
 .copy-layout__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .copy-layout__title { margin: 0; font-size: var(--font-size-large, 18px); }
 .copy-layout__text { width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.45; resize: vertical; }
+
+/* Start fresh (js/ui/start-fresh.js) beside Reset demo: not on a phone's crowded edit header (it's on the sign-in page there). */
+@media (max-width: 640px) {
+  .space-header .start-fresh { display: none; }
+}

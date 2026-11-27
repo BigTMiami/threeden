@@ -214,7 +214,8 @@ export function upgradeState(original, makeDemo) {
   const seen = new Set(saved.demoSeen ?? collectIds(saved));
   const newIds = new Set(freshIds.filter((id) => !seen.has(id)));
   const counter = { added: 0 };
-  const state = newIds.size ? merge(saved, fresh, newIds, counter) : { ...saved };
+  // An emptied 3den (Start fresh, store.js) never gets sample content added.
+  const state = newIds.size && saved.samples !== false ? merge(saved, fresh, newIds, counter) : { ...saved };
   const from = saved.dataVersion ?? 67;
   for (const step of MIGRATIONS) {
     if (from < step.version) {

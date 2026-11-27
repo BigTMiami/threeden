@@ -20,7 +20,8 @@ import { renderChildSignUp } from './child-account.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { avatar } from '../ui/avatar.js';
 import { showToast } from '../ui/toast.js';
-import { getState } from '../state/store.js';
+import { getState, hasSamples } from '../state/store.js';
+import { startFreshButton, bringBackSamplesButton } from '../ui/start-fresh.js';
 import { roleOf } from '../state/permissions.js';
 import {
   getAccounts, findAccountByLogin, usernameProblem, emailProblem, suggestUsername, createAccount, signIn,
@@ -63,8 +64,9 @@ export function renderAuthView(container, mode = 'signin') {
       isChild ? renderChildSignUp() : isSignUp ? renderSignUpForm() : renderSignInForm(),
       // A small line under the form (child-account.js).
       mode === 'signup' ? h('p', { class: 'auth__child-link' }, h('a', { href: '#signup-child' }, 'Set up an account for a child')) : null,
-      isSignUp ? null : renderPreviewAsNew(),
+      isSignUp || !hasSamples() ? null : renderPreviewAsNew(), // the previews use the sample groups and people
       isSignUp ? null : renderDemoAccounts(),
+      isSignUp ? null : renderPrototypeData(),
       h('p', { class: 'auth__note' },
         'Prototype: accounts are stored only in this browser. Don’t use a password you use anywhere else.'),
     ),
@@ -129,6 +131,17 @@ function renderPreviewAsNew() {
         h('span', { class: 'auth__demo-text' },
           h('span', { class: 'auth__demo-name' }, path.label),
           h('span', { class: 'auth__demo-roles' }, path.detail)))))));
+}
+
+/** Prototype (Nov 27): empty this browser's 3den to fill it yourself, or bring the samples back (js/ui/start-fresh.js). */
+function renderPrototypeData() {
+  const samples = hasSamples();
+  return h('section', { class: 'auth__demo auth__prototype-data' },
+    h('h2', { class: 'auth__demo-title' }, samples ? 'Start with an empty 3den' : 'This 3den is empty'),
+    h('p', { class: 'auth__hint' }, samples
+      ? 'Deletes the sample people, groups, events, and posts in this browser, so you can fill 3den yourself. You can bring them back any time.'
+      : 'No sample data, so you can fill it yourself. Bringing the samples back deletes what you’ve made here. (Preview as a new user needs the samples.)'),
+    samples ? startFreshButton() : bringBackSamplesButton());
 }
 
 /** One button per demo account (the ones without a password). */

@@ -946,6 +946,39 @@ export function moveModuleToTab(moduleId, tabId) {
 
 // ─── Actions: demo ───────────────────────────────────────────────────────────
 
+/**
+ * Prototype (Nov 27): an empty 3den, to fill yourself. Every list the sample
+ * data has (members, spaces, conversations…) starts empty, nobody is signed
+ * in, and `samples: false` tells upgrade.js never to add sample content to
+ * it. Reset demo brings the samples back. Only this browser's copy changes.
+ */
+function createEmptyState() {
+  const demo = createDemoState();
+  const empty = {};
+  for (const [key, value] of Object.entries(demo)) {
+    if (Array.isArray(value)) empty[key] = [];
+    else if (value && typeof value === 'object') empty[key] = {};
+    else empty[key] = value;
+  }
+  empty.currentUserId = null;
+  empty.samples = false;
+  return stampFresh(empty);
+}
+
+/** Does this 3den have the sample data (false after Start fresh)? */
+export const hasSamples = () => state.samples !== false;
+
+/** Start fresh: throw away everything, samples included, and sign out. */
+export function startFresh() {
+  clearSavedState();
+  state = createEmptyState();
+  ui.spaceId = null;
+  persist();
+  emit('account');
+  emit('space');
+  emit('layout');
+}
+
 /** Throw away all changes and go back to the demo data. */
 export function resetToDemo() {
   clearSavedState();

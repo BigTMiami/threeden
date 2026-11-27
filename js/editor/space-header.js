@@ -42,6 +42,7 @@ import { uses } from '../state/features.js';
 import { h, replaceChildren } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
+import { startFreshButton } from '../ui/start-fresh.js';
 import { groupInitials } from '../utils/initials.js';
 import {
   getCurrentSpace, getCurrentUser, getMember, getSpaceMembers, isEditMode, setEditMode, renameCurrentSpace, resetToDemo, subscribe, isGuestBrowsing,
@@ -156,6 +157,7 @@ export function renderSpaceHeader() {
     editMode ? null : renderGroupSuggestion(space, me), // a new group grows when it needs to
     h('div', { class: 'space-header__actions' },
       editMode ? renderResetButton() : null,
+      editMode ? startFreshButton() : null, // prototype: empty 3den (js/ui/start-fresh.js)
       isVisitingGroup(space) ? renderFollowButton(me, { kind: 'space', id: space.id }, space.name, false) : null,
       isVisitingGroup(space) ? renderJoinButton(space, me) : null,
       space.kind === 'group' && isMine && !editMode ? renderMuteButton(space, me) : null,

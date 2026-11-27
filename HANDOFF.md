@@ -161,6 +161,15 @@ functions, no build step.
     now needs `hasSetUpBlog(member)` (js/state/groups.js): a blog space
     owned by them, not just a username. New accounts have none until they
     say yes on the Blog tab. test_blog_question_new_account.
+  - Start fresh (Nov 27): store.startFresh() → createEmptyState() (every
+    array/object key of createDemoState emptied, currentUserId null,
+    samples: false, stamped so demoSeen has every sample id);
+    hasSamples(). upgradeState skips merge() when saved.samples === false.
+    Buttons in js/ui/start-fresh.js (two clicks): startFreshButton() in the
+    edit-mode header (hidden under 640px) and the sign-in page's
+    renderPrototypeData(); bringBackSamplesButton() there when empty
+    (resetToDemo). The previews hide while empty. Leo chose this over
+    deleting the samples from the code (previews and tests use them).
   - Online groups (Nov 22): space.area 'online' → explore.js ONLINE
     ({ id, name, online: true }, no lat/lng). groupPlace returns it;
     inWhere: online places match 'near' and 'online', never a
